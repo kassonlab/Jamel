@@ -1,4 +1,32 @@
 import numpy as np
+def AlignmentFinder(AlignmentFile,SequenceofInterest):
+    import numpy as np
+    Alignment=open('SARS2onFullMERS.aln','r').readlines()
+    i=3
+    FirstSequence=''
+    SecondSequence=''
+    SequenceofInterest='ESIVRFPNITNLCPFGEVFNATRFASVYAWNRKRISNCVADYSVLYNSASFSTFKCYGVSPTKLNDLCFTNVYADSFVIRGDEVRQIAPGQTGKIADYNYKLPDDFTGCVIAWNSNNLDSYNYLYRNLKPFERDISTEIYNCYFPLQSYGFQPTVGYQPYRVVVLSFELLHAPATVCGPKKSTNLVKNKCVNFNFNGLT'
+    while i<(len(Alignment)-1):
+        x=Alignment[i].split()
+        print(x)
+        FirstSequence+=x[1].rstrip()
+        i+=1
+        x = Alignment[i].split()
+        print(x)
+        SecondSequence+=x[1].rstrip()
+        i+=3
+    print()
+    FirstSeqIndexing=[ind for ind, x in enumerate(FirstSequence) if x != '-']
+    print(FirstSeqIndexing)
+    NogapFirstSequence=''.join([x for ind, x in enumerate(FirstSequence) if x != '-'])
+    NogapSecondSequence = ''.join([x for ind, x in enumerate(SecondSequence) if x != '-'])
+    print(NogapFirstSequence.find(SequenceofInterest))
+    SpliceStart=FirstSeqIndexing[NogapFirstSequence.find(SequenceofInterest)]
+    print(SpliceStart)
+    SpliceEnd=FirstSeqIndexing[NogapFirstSequence.find(SequenceofInterest)+len(SequenceofInterest)]
+    print(SpliceEnd)
+    FoundAlignment=SecondSequence[SpliceStart:SpliceEnd].replace('-','')
+    print(FoundAlignment)
 def RBDExchange(Fastafile1,Fastafile2,Boundary1,Boundary2):
     file=open(Fastafile1,"r")
     file2=open(Fastafile2,"r")
