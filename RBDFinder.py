@@ -17,5 +17,5 @@ def AlignmentFinder(AlignmentFile):
     SpliceStart=FirstSeqIndexing[NogapFirstSequence.find(SequenceofInterest)]
     SpliceEnd=FirstSeqIndexing[NogapFirstSequence.find(SequenceofInterest)+len(SequenceofInterest)]
     FoundAlignment=SecondSequence[SpliceStart:SpliceEnd].replace('-','')
-    return FoundAlignment
+    return SpliceStart, SpliceEnd
 #write if statement to do reverse if there is an error
