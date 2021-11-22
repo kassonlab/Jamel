@@ -25,12 +25,10 @@ for line in ProteinList:
     x=line.split()
     Plddtfiles[l]=''
     Plddtfiles[l]=x[0]
-    l+=1
 for h in range(int(len(ProteinList)/4)):
     PercentDifference[h]=''
     PercentDifferenceRBD[h]=''
-    h+=1
-for k in range(Quadrupletsperlist):
+while k in range(Quadrupletsperlist):
     file=open(Plddtfiles[0+j],"r")
     file2=open(Plddtfiles[1+j],"r")
     if WhichChimera=='Chimera1':
@@ -52,7 +50,7 @@ for k in range(Quadrupletsperlist):
     i=0
     Sumofnonsplice1=0
     Sumofsplice1=0
-    for i in range(LengthofChimera1):
+    while i in range(LengthofChimera1):
 
         if i<(int(ProteinList[z+2].split()[1])):
             Sumofnonsplice1+=float(Score3[i])
@@ -70,7 +68,7 @@ for k in range(Quadrupletsperlist):
     i=0
     Sumofnonsplice2=0
     Sumofsplice2=0
-    for i in range(LengthofChimera2):
+    while i in range(LengthofChimera2):
         if i<int(ProteinList[z+3].split()[1]):
             Sumofnonsplice2+=float(Score4[i])
             i+=1
@@ -88,7 +86,7 @@ for k in range(Quadrupletsperlist):
     i=0
     Sumofnonrbd2=0
     Sumofrbd2=0
-    for i in range(LengthofProtein2):
+    while i in range(LengthofProtein2):
         if i<int(ProteinList[z+1].split()[1]):
             Sumofnonrbd2+=float(Score2[i])
             i+=1
@@ -106,7 +104,7 @@ for k in range(Quadrupletsperlist):
     i=0
     Sumofnonrbd1=0
     Sumofrbd1=0
-    for i in range(LengthofProtein1):
+    while i in range(LengthofProtein1):
         if i<int(ProteinList[z].split()[1]):
             Sumofnonrbd1+=float(Score1[i])
             i+=1
