@@ -1,6 +1,7 @@
-def AlignmentFinder(AlignmentFile):
+def AlignmentFinder(AlignmentFile,Protein):
     import numpy as np
     import Bio
+    import os
     Alignment=open(AlignmentFile,'r').readlines()
     i=3
     FirstSequence=''
@@ -18,9 +19,6 @@ def AlignmentFinder(AlignmentFile):
     SpliceStart=FirstSeqIndexing[NogapFirstSequence.find(SequenceofInterest)]
     SpliceEnd=FirstSeqIndexing[NogapFirstSequence.find(SequenceofInterest)+len(SequenceofInterest)]
     FoundAlignment=SecondSequence[SpliceStart:SpliceEnd].replace('-','')
-    from Bio.Emboss.Applications import WaterCommandline
-    SequenceSimilarity=Bio.Emboss.Applications.WaterCommandline(cmd='water',stdout='true',asequence=SequenceofInterest,bsequence=SequenceofInterest,similarity='true',sprotein='true',outfile='test.txt',gapopen=10,gapextend=0.5)
-    print(SequenceSimilarity)
+    os.system('/sfs/lustre/bahamut/scratch/jws6pq/EMBOSS-6.6.0/emboss/needle -sprotein -gapopen 10 -gapextend 0.5 -outfile /sfs/lustre/bahamut/scratch/jws6pq/Notebook/Emboss/'+Protein+'.emboss -asequence asis:'+SequenceofInterest+' -bsequence asis:'+FoundAlignment)
     return SpliceStart, SpliceEnd
 #write if statement to do reverse if there is an error
-AlignmentFinder('QuailHKU30onSARS2.aln')
