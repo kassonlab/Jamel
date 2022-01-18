@@ -24,6 +24,7 @@ def PieceWise(Protein):
     cmd.select(StalkName, selection=Stalkindex)
     StalkRMSD = cmd.align('SARS2Stalk', StalkName)[0]
     OverallRMSD = cmd.align('SARS2', Protein)[0]
+    cmd.delete('all')
     return RBDRMSD
 import numpy as np
 RMSD=list(map(PieceWise,ProteinList))
