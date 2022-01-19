@@ -8,6 +8,7 @@ FastasforRun=np.empty(len(ProteinList), dtype=object)
 k=0
 for line in ProteinList:
     x=line.split()
+
     AccessiontoFasta.AccessionNumbertoFasta(x[-1],x[0])
     AccessiontoFasta.FastatoAlignmentFinder(x[-1])
     SpliceBoundary=RBDFinder.AlignmentFinder('/sfs/lustre/bahamut/scratch/jws6pq/Notebook/Alignment/'+x[-1]+'onSARS2.aln', x[-1])

@@ -3,8 +3,9 @@ def AccessionNumbertoFasta(Protein,Accession):
     from Bio import Entrez
     Entrez.email = 'jws6pq@virginia.edu'
     handle = Entrez.efetch(db='protein', id=Accession,retmode='text',rettype='fasta').readlines()
-    #record = Entrez.read(handle)
-    np.savetxt('/sfs/lustre/bahamut/scratch/jws6pq/Notebook/Finished/Fastas/'+Protein+'.fasta', handle, fmt="%s", delimiter="")
+    handle= [x for x in handle if x!='']
+    np.savetxt('/sfs/lustre/bahamut/scratch/jws6pq/Notebook/Finished/Fastas/'+Protein+'.fasta', handle , fmt="%s", delimiter="")
+AccessionNumbertoFasta('Alpha','QWN56273')
 def FastatoAlignmentFinder(Protein):
     import os
     os.system('cp  /sfs/lustre/bahamut/scratch/jws6pq/CMfiles/SARS2.fasta  /sfs/lustre/bahamut/scratch/jws6pq/Notebook/Finished/Fastas/'+Protein+"onSARS2.fasta")
