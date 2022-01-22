@@ -20,5 +20,6 @@ def AlignmentFinder(AlignmentFile,Protein):
     SpliceEnd=FirstSeqIndexing[NogapFirstSequence.find(SequenceofInterest)+len(SequenceofInterest)]
     FoundAlignment=SecondSequence[SpliceStart:SpliceEnd].replace('-','')
     os.system('/sfs/lustre/bahamut/scratch/jws6pq/EMBOSS-6.6.0/emboss/needle -sprotein -gapopen 10 -gapextend 0.5 -outfile /sfs/lustre/bahamut/scratch/jws6pq/Notebook/Emboss/'+Protein+'.emboss -asequence asis:'+SequenceofInterest+' -bsequence asis:'+FoundAlignment)
+    os.system('/sfs/lustre/bahamut/scratch/jws6pq/EMBOSS-6.6.0/emboss/needle -sprotein -gapopen 10 -gapextend 0.5 -outfile /sfs/lustre/bahamut/scratch/jws6pq/Notebook/Overall/'+Protein+'.emboss -asequence asis:'+SequenceofInterest+' -bsequence asis:'+FoundAlignment)
     return SpliceStart, SpliceEnd
 #write if statement to do reverse if there is an error
