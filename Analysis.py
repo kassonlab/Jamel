@@ -20,13 +20,12 @@ def PieceWise(Protein):
     RBDName = Protein +'RBD'
     StalkName = Protein +'Stalk'
     cmd.select(NTDName, selection=NTDindex)
-    NTDRMSD=cmd.align('SARS2NTD', NTDName)[0]
+    NTDRMSD=cmd.super('SARS2NTD', NTDName)[0]
     cmd.select(RBDName, selection=RBDindex)
-    RBDRMSD = cmd.align('SARS2RBD', RBDName)[0]
+    RBDRMSD = cmd.super('SARS2RBD', RBDName)[0]
     cmd.select(StalkName, selection=Stalkindex)
-    StalkRMSD = cmd.align('SARS2Stalk', StalkName)[0]
-    OverallRMSD = cmd.align('SARS2', Protein)[0]
-    print(cmd.align('SARS2', Protein))
+    StalkRMSD = cmd.super('SARS2Stalk', StalkName)[0]
+    OverallRMSD = cmd.super('SARS2', Protein)[0]
     cmd.delete('all')
     return RBDRMSD, OverallRMSD
 RMSD=list(map(PieceWise,ProteinList))
@@ -48,9 +47,9 @@ EmbossScore=list(map(SequenceSimilarity,ProteinList))
 DataChart=np.empty((len(ProteinList)+1,6),dtype=object)
 DataChart[0,0]='Protein'
 DataChart[0,1]='RBDRMSD'
-DataChart[0,2]='RBDConfidence'
+DataChart[0,2]='OverallRMSD'
 DataChart[0,3]='Emboss'
-DataChart[0,4]='OverallRMSD'
+DataChart[0,4]='RBDConfidence'
 DataChart[0,5]='OverallConfidence'
 DataChart[1:,0]=ProteinList
 DataChart[1:,1]=RBDRMSD
