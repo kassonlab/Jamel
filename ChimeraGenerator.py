@@ -1,6 +1,6 @@
 import numpy as np
 
-def DomainExchange(Fastafile1,Fastafile2,Boundary1=224,Boundary2=424,Boundary3,Boundary4,Domain='RBD'):
+def DomainExchange(Fastafile1,Fastafile2,Boundary3,Boundary4,Boundary1=224,Boundary2=424,Domain='RBD'):
     Fasta1=open(Fastafile1,"r")
     Fasta2=open(Fastafile2,"r")
     Protein1=Fasta1.name.replace('.fasta','')
@@ -31,7 +31,6 @@ def DomainExchange(Fastafile1,Fastafile2,Boundary1=224,Boundary2=424,Boundary3,B
     NewSequence2[0,0]='>Chimera'
     NewSequence2[1,0]=Sections[0,1]+Sections[1,0]+Sections[2,1]
     #np.savetxt(Title2,NewSequence2,fmt="%s",delimiter=" ")
-    AlphaFoldEntry= "/scratch/jws6pq/Notebook/Finished/Fastas/" + Fasta2.name + ','+"/scratch/jws6pq/Notebook/Finished/Fastas/"+Title
-
-    return AlphaFoldEntry
-DomainExchange('SARS2.fasta','PermutedSARS2.fasta',234,432,234,432)
+    AlphaFoldEntry= "/scratch/jws6pq/Notebook/Finished/Fastas/" + Fasta2.name + ','
+    AlphaFoldEntry2="/scratch/jws6pq/Notebook/Finished/Fastas/"+Title+','
+    return AlphaFoldEntry,AlphaFoldEntry2

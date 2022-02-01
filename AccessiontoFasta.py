@@ -5,7 +5,6 @@ def AccessionNumbertoFasta(Protein,Accession):
     handle = Entrez.efetch(db='protein', id=Accession,retmode='text',rettype='fasta').readlines()
     handle= [x for x in handle if x!='']
     np.savetxt('/sfs/lustre/bahamut/scratch/jws6pq/Notebook/Finished/Fastas/'+Protein+'.fasta', handle , fmt="%s", delimiter="")
-AccessionNumbertoFasta('Alpha','QWN56273')
 def FastatoAlignmentFinder(Protein):
     import os
     os.system('cp  /sfs/lustre/bahamut/scratch/jws6pq/CMfiles/SARS2.fasta  /sfs/lustre/bahamut/scratch/jws6pq/Notebook/Finished/Fastas/'+Protein+"onSARS2.fasta")
