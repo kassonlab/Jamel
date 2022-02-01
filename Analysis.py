@@ -1,13 +1,12 @@
 import numpy as np
-ProteinList=[line.split()[-1] for line in open('List','r').readlines()]
-DomainSetting='S1'
+import Perresiduecomparison
+import RBDFinder
 def FoldXStability(Protein,Domain='RBD',ComparisonScore=199.12):
     import os
     os.system('/sfs/lustre/bahamut/scratch/jws6pq/FoldX/foldx_20221231 --command=Stability --clean-mode=1 --pdb=SARS2w'+Protein+Domain+'.pdb --pdb-dir=/sfs/lustre/bahamut/scratch/jws6pq/Notebook/PDB --output-dir=/sfs/lustre/bahamut/scratch/jws6pq/Notebook/FoldXResults/')
     FoldxScore=float(open('/sfs/lustre/bahamut/scratch/jws6pq/Notebook/FoldXResults/SARS2w'+Protein+Domain+'_0_ST.fxout','r').readlines()[0].split()[1])
     FoldXDifference=-((ComparisonScore-FoldxScore)/ComparisonScore)*100
     return FoldXDifference
-FoldXScore=list(map(FoldXStability,ProteinList,Domain=DomainSetting))
 def PieceWise(Protein,CPSplice1='224',CPSplice2='424',Domain='RBD',ComparisonProtein='alphasars2.pdb'):
     import RBDFinder
     cmd.load(ComparisonProtein,object='CP')
@@ -31,24 +30,22 @@ def PieceWise(Protein,CPSplice1='224',CPSplice2='424',Domain='RBD',ComparisonPro
     OverallRMSD = cmd.super('CP', Protein)[0]
     cmd.delete('all')
     return DomainRMSD, OverallRMSD
-RMSD=list(map(PieceWise,ProteinList,Domain=DomainSetting))
-DomainRMSD=[x[0] for x in RMSD]
-OverallRMSD=[x[1] for x in RMSD]
-import Perresiduecomparison
-import RBDFinder
+def SequenceSimilarity(Protein):
+    EmbossScore=open(Protein+'.emboss','r').readlines()[27].split()[2]
+    return EmbossScore
+ProteinList=[line.split()[-1] for line in open('List','r').readlines()]
 AlignmentFileNames=[x+'onSARS2.aln' for x in ProteinList]
 SpliceBoundaries=list(map(RBDFinder.AlignmentFinder,AlignmentFileNames,ProteinList))
 ChimeraBoundary1=[x[0] for x in SpliceBoundaries]
 ChimeraBoundary2=[x[1] for x in SpliceBoundaries]
-SARS2Boundary1=[234 for x in ProteinList]
+DomainSetting='S1'
+RMSD=list(map(PieceWise,ProteinList,Domain=DomainSetting))
+DomainRMSD=[x[0] for x in RMSD]
+OverallRMSD=[x[1] for x in RMSD]
 PercentDifference=list(map(Perresiduecomparison.ResidueConfidenceComparison,ProteinList,SARS2Boundary1,ChimeraBoundary1,ChimeraBoundary2))
 OverallPercentDifference=list(map(Perresiduecomparison.OverallConfidenceComparison,ProteinList))
-def SequenceSimilarity(Protein):
-    EmbossScore=open(Protein+'.emboss','r').readlines()[27].split()[2]
-    return EmbossScore
-
 EmbossScore=list(map(SequenceSimilarity,ProteinList))
-
+FoldXScore=list(map(FoldXStability,ProteinList,Domain=DomainSetting))
 DataChart=np.empty((len(ProteinList)+1,7),dtype=object)
 DataChart[0,0]='Protein'
 DataChart[0,1]=DomainSetting+'RMSD'
