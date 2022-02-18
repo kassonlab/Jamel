@@ -12,7 +12,7 @@ def FastatoAlignmentFinder(Protein):
     os.system('module load gcc/9.2.0 && module load muscle/3.8.31 && muscle -in ' + Protein+'onSARS2.fasta -clw -out /sfs/lustre/bahamut/scratch/jws6pq/Notebook/Alignment/'+ Protein+'onSARS2.aln')
 def MultipleSequenceAlignment(ProteinList):
     import os
-    List=[line.split()[-1] for line in open(ProteinList,'r').readlines]
+    List=[line.split()[-1] for line in open(ProteinList,'r').readlines()]
     ListLength=len(List)
     i=0
     os.system('cp  /sfs/lustre/bahamut/scratch/jws6pq/CMfiles/SARS2.fasta  /sfs/lustre/bahamut/scratch/jws6pq/Notebook/Finished/Fastas/SARS2wEverything.fasta')
