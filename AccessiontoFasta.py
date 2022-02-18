@@ -13,7 +13,8 @@ def FastatoAlignmentFinder(Protein):
 def MultipleSequenceAlignment(ProteinList):
     import os
     List=open(ProteinList,'r').readlines
-    List=[x for line.split()[-1] in List]
+    List=[x for x.split()[-1] in List]
+    #List=[x for x[-1] in List]
     ListLength=len(List)
     i=0
     os.system('cp  /sfs/lustre/bahamut/scratch/jws6pq/CMfiles/SARS2.fasta  /sfs/lustre/bahamut/scratch/jws6pq/Notebook/Finished/Fastas/SARS2wEverything.fasta')
