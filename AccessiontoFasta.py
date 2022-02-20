@@ -15,9 +15,9 @@ def MultipleSequenceAlignment(ProteinList):
     List=[line.split()[-1] for line in open(ProteinList,'r').readlines()]
     ListLength=len(List)
     i=0
-    os.system('cp  /sfs/lustre/bahamut/scratch/jws6pq/CMfiles/SARS2.fasta  /sfs/lustre/bahamut/scratch/jws6pq/Notebook/Finished/Fastas/SARS2wEverything.fasta')
+    os.system('cp  /sfs/lustre/bahamut/scratch/jws6pq/CMfiles/SARS2.fasta  /sfs/lustre/bahamut/scratch/jws6pq/Notebook/Finished/Fastas/SARS2wEverything')
     while i<ListLength:
-        os.system("cat /sfs/lustre/bahamut/scratch/jws6pq/Notebook/Finished/Fastas/" + List[i] + ".fasta >> /sfs/lustre/bahamut/scratch/jws6pq/Notebook/Finished/Fastas/SARS2wEverything.fasta")
+        os.system("cat /sfs/lustre/bahamut/scratch/jws6pq/Notebook/Finished/Fastas/" + List[i] + ".fasta >> /sfs/lustre/bahamut/scratch/jws6pq/Notebook/Finished/Fastas/SARS2wEverything")
         i+=1
-    os.system('module load gcc/9.2.0 && module load muscle/3.8.31 && muscle -in /sfs/lustre/bahamut/scratch/jws6pq/Notebook/Finished/Fastas/SARS2wEverything.fasta -out /sfs/lustre/bahamut/scratch/jws6pq/Notebook/Alignment/SARS2wEverything.aln')
+    os.system('module load gcc/9.2.0 && module load muscle/3.8.31 && muscle -in /sfs/lustre/bahamut/scratch/jws6pq/Notebook/Finished/Fastas/SARS2wEverything -out /sfs/lustre/bahamut/scratch/jws6pq/Notebook/Alignment/SARS2wEverything.aln')
 MultipleSequenceAlignment('List')

@@ -5,7 +5,6 @@ def FoldXStability(Protein,Domain,ComparisonScore=199.12):
     FoldXDifference=-((ComparisonScore-FoldxScore)/ComparisonScore)*100
     return FoldXDifference
 def PieceWiseRMSD(Protein,CPSplice1,CPSplice2,SpliceBoundary1,SpliceBoundary2,ComparisonProtein='6VSB_B.pdb'):
-    import RBDFinder
     from pymol import cmd
     cmd.load(ComparisonProtein,object='CP')
     cmd.remove('organic')

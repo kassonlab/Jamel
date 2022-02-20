@@ -1,22 +1,59 @@
-#def BlosumColorCoding
-import Bio.Align.substitution_matrices
+# def BlosumColorCoding
 import numpy as np
-Blosum62Matrix=Bio.Align.substitution_matrices.load('BLOSUM62')
-NumberofSequences=4
-#Alignment in FASTA format
-Sequences=open('SARS2wEverything.aln',"r")
-IDK=''.join([x for x in Sequences if  x[0]!='>'  if x!='']).rstrip().strip().replace('\n','').replace(' ','')
-DictionaryofSequences={}
-SequenceLength=int(len(IDK)/NumberofSequences)
-i=1
-j=0
-while i<=NumberofSequences:
-    DictionaryofSequences[i]=IDK[j:SequenceLength+j]
-    j+=SequenceLength
-    i+=1
-i=1
-j=0
-ConservationScore=np.empty(SequenceLength)
-while i<=NumberofSequences:
+# from pymol import cmd
+Blosum62Matrix = np.array([['','A','R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W','Y', 'V', 'B', 'Z', 'X', '-'],
+                       ['A', 4.0, -1.0, -2.0, -2.0, 0.0, -1.0, -1.0, 0.0, -2.0, -1.0, -1.0, -1.0, -1.0, -2.0, -1.0, 1.0,0.0, -3.0, -2.0, 0.0, -2.0, -1.0, 0.0, -4.0],
+                       ['R', -1.0, 5.0, 0.0, -2.0, -3.0, 1.0, 0.0, -2.0, 0.0, -3.0, -2.0, 2.0, -1.0, -3.0, -2.0, -1.0,-1.0, -3.0, -2.0, -3.0, -1.0, 0.0, -1.0, -4.0],
+                       ['N', -2.0, 0.0, 6.0, 1.0, -3.0, 0.0, 0.0, 0.0, 1.0, -3.0, -3.0, 0.0, -2.0, -3.0, -2.0, 1.0, 0.0,-4.0, -2.0, -3.0, 3.0, 0.0, -1.0, -4.0],
+                       ['D', -2.0, -2.0, 1.0, 6.0, -3.0, 0.0, 2.0, -1.0, -1.0, -3.0, -4.0, -1.0, -3.0, -3.0, -1.0, 0.0,-1.0, -4.0, -3.0, -3.0, 4.0, 1.0, -1.0, -4.0],
+                       ['C', 0.0, -3.0, -3.0, -3.0, 9.0, -3.0, -4.0, -3.0, -3.0, -1.0, -1.0, -3.0, -1.0, -2.0, -3.0,-1.0, -1.0, -2.0, -2.0, -1.0, -3.0, -3.0, -2.0, -4.0],
+                       ['Q', -1.0, 1.0, 0.0, 0.0, -3.0, 5.0, 2.0, -2.0, 0.0, -3.0, -2.0, 1.0, 0.0, -3.0, -1.0, 0.0,-1.0, -2.0, -1.0, -2.0, 0.0, 3.0, -1.0, -4.0],
+                       ['E', -1.0, 0.0, 0.0, 2.0, -4.0, 2.0, 5.0, -2.0, 0.0, -3.0, -3.0, 1.0, -2.0, -3.0, -1.0, 0.0,-1.0, -3.0, -2.0, -2.0, 1.0, 4.0, -1.0, -4.0],
+                       ['G', 0.0, -2.0, 0.0, -1.0, -3.0, -2.0, -2.0, 6.0, -2.0, -4.0, -4.0, -2.0, -3.0, -3.0, -2.0, 0.0,-2.0, -2.0, -3.0, -3.0, -1.0, -2.0, -1.0, -4.0],
+                       ['H', -2.0, 0.0, 1.0, -1.0, -3.0, 0.0, 0.0, -2.0, 8.0, -3.0, -3.0, -1.0, -2.0, -1.0, -2.0, -1.0,-2.0, -2.0, 2.0, -3.0, 0.0, 0.0, -1.0, -4.0],
+                       ['I', -1.0, -3.0, -3.0, -3.0, -1.0, -3.0, -3.0, -4.0, -3.0, 4.0, 2.0, -3.0, 1.0, 0.0, -3.0, -2.0,-1.0, -3.0, -1.0, 3.0, -3.0, -3.0, -1.0, -4.0],
+                       ['L', -1.0, -2.0, -3.0, -4.0, -1.0, -2.0, -3.0, -4.0, -3.0, 2.0, 4.0, -2.0, 2.0, 0.0, -3.0, -2.0,-1.0, -2.0, -1.0, 1.0, -4.0, -3.0, -1.0, -4.0],
+                       ['K', -1.0, 2.0, 0.0, -1.0, -3.0, 1.0, 1.0, -2.0, -1.0, -3.0, -2.0, 5.0, -1.0, -3.0, -1.0, 0.0,-1.0, -3.0, -2.0, -2.0, 0.0, 1.0, -1.0, -4.0],
+                       ['M', -1.0, -1.0, -2.0, -3.0, -1.0, 0.0, -2.0, -3.0, -2.0, 1.0, 2.0, -1.0, 5.0, 0.0, -2.0, -1.0,-1.0, -1.0, -1.0, 1.0, -3.0, -1.0, -1.0, -4.0],
+                       ['F', -2.0, -3.0, -3.0, -3.0, -2.0, -3.0, -3.0, -3.0, -1.0, 0.0, 0.0, -3.0, 0.0, 6.0, -4.0, -2.0,-2.0, 1.0, 3.0, -1.0, -3.0, -3.0, -1.0, -4.0],
+                       ['P', -1.0, -2.0, -2.0, -1.0, -3.0, -1.0, -1.0, -2.0, -2.0, -3.0, -3.0, -1.0, -2.0, -4.0, 7.0,-1.0, -1.0, -4.0, -3.0, -2.0, -2.0, -1.0, -2.0, -4.0],
+                       ['S', 1.0, -1.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, -2.0, -2.0, 0.0, -1.0, -2.0, -1.0, 4.0,1.0, -3.0, -2.0, -2.0, 0.0, 0.0, 0.0, -4.0],
+                       ['T', 0.0, -1.0, 0.0, -1.0, -1.0, -1.0, -1.0, -2.0, -2.0, -1.0, -1.0, -1.0, -1.0, -2.0, -1.0,1.0, 5.0, -2.0, -2.0, 0.0, -1.0, -1.0, 0.0, -4.0],
+                       ['W', -3.0, -3.0, -4.0, -4.0, -2.0, -2.0, -3.0, -2.0, -2.0, -3.0, -2.0, -3.0, -1.0, 1.0, -4.0,-3.0, -2.0, 11.0, 2.0, -3.0, -4.0, -3.0, -2.0, -4.0],
+                       ['Y', -2.0, -2.0, -2.0, -3.0, -2.0, -1.0, -2.0, -3.0, 2.0, -1.0, -1.0, -2.0, -1.0, 3.0, -3.0,-2.0, -2.0, 2.0, 7.0, -1.0, -3.0, -2.0, -1.0, -4.0],
+                       ['V', 0.0, -3.0, -3.0, -3.0, -1.0, -2.0, -2.0, -3.0, -3.0, 3.0, 1.0, -2.0, 1.0, -1.0, -2.0, -2.0,0.0, -3.0, -1.0, 4.0, -3.0, -2.0, -1.0, -4.0],
+                       ['B', -2.0, -1.0, 3.0, 4.0, -3.0, 0.0, 1.0, -1.0, 0.0, -3.0, -4.0, 0.0, -3.0, -3.0, -2.0, 0.0,-1.0, -4.0, -3.0, -3.0, 4.0, 1.0, -1.0, -4.0],
+                       ['Z', -1.0, 0.0, 0.0, 1.0, -3.0, 3.0, 4.0, -2.0, 0.0, -3.0, -3.0, 1.0, -1.0, -3.0, -1.0, 0.0,-1.0, -3.0, -2.0, -2.0, 1.0, 4.0, -1.0, -4.0],
+                       ['X', 0.0, -1.0, -1.0, -1.0, -2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -2.0,0.0, 0.0, -2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -4.0],
+                       ['-', -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0,-4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, 1.0],
+                       ])
+# Alignment in FASTA format
+Sequences =open('SARS2stable.aln', "r").readlines()
+SequenceCount=''.join(Sequences)
+NumberofSequences = SequenceCount.count('>')
+IDK = ''.join([x for x in Sequences if x[0] != '>']).rstrip().strip().replace('\n', '').replace(' ', '')
+DictionaryofSequences = {}
+SequenceLength = int(len(IDK) / NumberofSequences)
+i = 1
+j = 0
+while i <= NumberofSequences:
+    DictionaryofSequences[i] = IDK[j:SequenceLength + j]
+    j += SequenceLength
+    i += 1
+Residueindex = 0
+Sequenceindex = 2
+ConservationScore = np.zeros((2,SequenceLength), dtype=object)
+while Residueindex<SequenceLength:
+    SARS2Residue=np.where(Blosum62Matrix[:,0]==DictionaryofSequences[NumberofSequences][Residueindex])[0]
+    ConservationScore[0,Residueindex]=DictionaryofSequences[1][Residueindex]
+    while Sequenceindex<=NumberofSequences:
+        ComparisonResidue=np.where(Blosum62Matrix[0,:]==DictionaryofSequences[Sequenceindex][Residueindex])[0]
+        ConservationScore[1,Residueindex]+=int(float(Blosum62Matrix[SARS2Residue,ComparisonResidue]))
+        Sequenceindex+=1
+    Residueindex+=1
+    Sequenceindex=2
+TruncatedConservationScore=np.delete(ConservationScore,np.where(ConservationScore[0]=='-'),axis=1)
+print(TruncatedConservationScore)
+print(max(TruncatedConservationScore[1]),min(TruncatedConservationScore[1]),len(TruncatedConservationScore[0]))
 
-print(Blosum62Matrix)
+cmd.set_color('ConservationScale', [0,0,PercentConserved])
