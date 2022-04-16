@@ -1,6 +1,6 @@
-# def BlosumColorCoding
+# def BlosumColorCoding():
 import numpy as np
-# from pymol import cmd
+from pymol import cmd
 Blosum62Matrix = np.array([['','A','R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W','Y', 'V', 'B', 'Z', 'X', '-'],
                        ['A', 4.0, -1.0, -2.0, -2.0, 0.0, -1.0, -1.0, 0.0, -2.0, -1.0, -1.0, -1.0, -1.0, -2.0, -1.0, 1.0,0.0, -3.0, -2.0, 0.0, -2.0, -1.0, 0.0, -4.0],
                        ['R', -1.0, 5.0, 0.0, -2.0, -3.0, 1.0, 0.0, -2.0, 0.0, -3.0, -2.0, 2.0, -1.0, -3.0, -2.0, -1.0,-1.0, -3.0, -2.0, -3.0, -1.0, 0.0, -1.0, -4.0],
@@ -26,34 +26,49 @@ Blosum62Matrix = np.array([['','A','R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 
                        ['Z', -1.0, 0.0, 0.0, 1.0, -3.0, 3.0, 4.0, -2.0, 0.0, -3.0, -3.0, 1.0, -1.0, -3.0, -1.0, 0.0,-1.0, -3.0, -2.0, -2.0, 1.0, 4.0, -1.0, -4.0],
                        ['X', 0.0, -1.0, -1.0, -1.0, -2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -2.0,0.0, 0.0, -2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -4.0],
                        ['-', -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0,-4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, 1.0],
-                       ])
-# Alignment in FASTA format
+                       ], dtype=object)
+# Alignment in FASTA format. Make sure your benchmark sequence is first
 Sequences =open('SARS2stable.aln', "r").readlines()
 SequenceCount=''.join(Sequences)
 NumberofSequences = SequenceCount.count('>')
-IDK = ''.join([x for x in Sequences if x[0] != '>']).rstrip().strip().replace('\n', '').replace(' ', '')
+
+#This is taking all the sequences of the fasta file and assigning them to a dictionary
+EntireFasta= ''.join([x for x in Sequences if x[0] != '>']).rstrip().strip().replace('\n', '').replace(' ', '')
 DictionaryofSequences = {}
-SequenceLength = int(len(IDK) / NumberofSequences)
+SequenceLength = int(len(EntireFasta) / NumberofSequences)
 i = 1
 j = 0
 while i <= NumberofSequences:
-    DictionaryofSequences[i] = IDK[j:SequenceLength + j]
+    DictionaryofSequences[i] = EntireFasta[j:SequenceLength + j]
     j += SequenceLength
     i += 1
+
+#This is comparing the each residue of SARS2 and comparing it to the aligned sequence residues. Using BLOSUM matrix its averaging the substition cost for each residue
 Residueindex = 0
 Sequenceindex = 2
-ConservationScore = np.zeros((2,SequenceLength), dtype=object)
+ConservationScore = np.zeros((3,SequenceLength), dtype=object)
+
 while Residueindex<SequenceLength:
-    SARS2Residue=np.where(Blosum62Matrix[:,0]==DictionaryofSequences[NumberofSequences][Residueindex])[0]
+    SARS2Residue=np.where(Blosum62Matrix[:,0]==DictionaryofSequences[1][Residueindex])[0]
     ConservationScore[0,Residueindex]=DictionaryofSequences[1][Residueindex]
     while Sequenceindex<=NumberofSequences:
         ComparisonResidue=np.where(Blosum62Matrix[0,:]==DictionaryofSequences[Sequenceindex][Residueindex])[0]
-        ConservationScore[1,Residueindex]+=int(float(Blosum62Matrix[SARS2Residue,ComparisonResidue]))
+        ConservationScore[1,Residueindex]+=int(Blosum62Matrix[SARS2Residue,ComparisonResidue])
         Sequenceindex+=1
+    ConservationScore[1,Residueindex]=ConservationScore[1,Residueindex]/NumberofSequences
     Residueindex+=1
     Sequenceindex=2
-TruncatedConservationScore=np.delete(ConservationScore,np.where(ConservationScore[0]=='-'),axis=1)
-print(TruncatedConservationScore)
-print(max(TruncatedConservationScore[1]),min(TruncatedConservationScore[1]),len(TruncatedConservationScore[0]))
 
-cmd.set_color('ConservationScale', [0,0,PercentConserved])
+#This is removing all the colums with dashes that were added in the alignment
+TruncatedConservationScore=np.delete(ConservationScore,np.where(ConservationScore[0]=='-'),axis=1)
+# def ColorCoding():
+
+#This is calculating how well conserved each SARS residue is based on how far it is away from the optimal substitution which is substitution of the same residue. The fraction is assigned to the residue and assigned a color based on the spectrum provided.
+Residueindex=0
+for x in TruncatedConservationScore[1]:
+    MatrixRow=Blosum62Matrix[np.where(Blosum62Matrix[:, 0] == TruncatedConservationScore[0,Residueindex])[0][0], 1:]
+    TruncatedConservationScore[2,Residueindex]=1-((int(max(MatrixRow)))-x)/np.ptp(MatrixRow)
+    cmd.alter('resi '+str(Residueindex+1),'b='+str(TruncatedConservationScore[2,Residueindex]))
+    Residueindex+=1
+#Lower values are assigned the first color listed, higher values latter color
+cmd.spectrum('b','blue_white_green','6VSB_B')

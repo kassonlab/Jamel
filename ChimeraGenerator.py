@@ -1,6 +1,6 @@
 import numpy as np
 
-def DomainExchange(Fastafile1,Fastafile2,Boundary3,Boundary4,Boundary1=224,Boundary2=424,Domain='RBD'):
+def DomainExchange(Fastafile1,Fastafile2,Boundary3,Boundary4,Boundary1=224,Boundary2=425,Domain='RBD'):
     Fasta1=open(Fastafile1,"r")
     Fasta2=open(Fastafile2,"r")
     Protein1=Fasta1.name.replace('.fasta','')
@@ -14,13 +14,13 @@ def DomainExchange(Fastafile1,Fastafile2,Boundary3,Boundary4,Boundary1=224,Bound
 
     Sections=np.empty((3,2), dtype=object)
 
-    Sections[0,0]=''.join(Sequence1[0:Boundary1-1])
-    Sections[1,0]=''.join(Sequence1[Boundary1-1:Boundary2-1])
-    Sections[2,0]=''.join(Sequence1[Boundary2-1:])
+    Sections[0,0]=''.join(Sequence1[0:Boundary1])
+    Sections[1,0]=''.join(Sequence1[Boundary1:Boundary2])
+    Sections[2,0]=''.join(Sequence1[Boundary2:])
 
-    Sections[0, 1] = ''.join(Sequence2[0:Boundary3 - 1])
-    Sections[1, 1] = ''.join(Sequence2[Boundary3-1:Boundary4 - 1])
-    Sections[2, 1] = ''.join(Sequence2[Boundary4-1:])
+    Sections[0, 1] = ''.join(Sequence2[0:Boundary3])
+    Sections[1, 1] = ''.join(Sequence2[Boundary3:Boundary4])
+    Sections[2, 1] = ''.join(Sequence2[Boundary4:])
 
     NewSequence=np.empty((2,1), dtype=object)
     NewSequence[0,0]='>Chimera'
