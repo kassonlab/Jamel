@@ -3,7 +3,7 @@ def BlosumColorCoding(Alignmentfile):
     from collections import Counter
     import math
     import sys
-    # from pymol import cmd
+    from pymol import cmd
     Blosum62Matrix = np.array([['','A','R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W','Y', 'V', 'B', 'Z', 'X', '-'],
                            ['A', 4.0, -1.0, -2.0, -2.0, 0.0, -1.0, -1.0, 0.0, -2.0, -1.0, -1.0, -1.0, -1.0, -2.0, -1.0, 1.0,0.0, -3.0, -2.0, 0.0, -2.0, -1.0, 0.0, -4.0],
                            ['R', -1.0, 5.0, 0.0, -2.0, -3.0, 1.0, 0.0, -2.0, 0.0, -3.0, -2.0, 2.0, -1.0, -3.0, -2.0, -1.0,-1.0, -3.0, -2.0, -3.0, -1.0, 0.0, -1.0, -4.0],
@@ -51,35 +51,42 @@ def BlosumColorCoding(Alignmentfile):
     Sequenceindex = 2
     SubstitutionScoresperResidue = list(np.ones((NumberofSequences-1), dtype=int))
     ShannonsEntropy=np.zeros((2,SequenceLength), dtype=object)
+    #The while loop is iterating over each residue in the sequence, collecting the scores for each substitution, then calculating Shannons entropy with each discrete probability
     while Residueindex<SequenceLength:
         if SARS2Sequence[Residueindex]=='-':
+            #This checks for parts of the alignment where there is no reference residue
             ShannonsEntropy[0, Residueindex] = SARS2Sequence[Residueindex]
             Residueindex += 1
         else:
+            #The residue letter code is stored in an array, and the corresponding row in the matrix is stored
             SARS2Residueindex=np.where(Blosum62Matrix[:,0]==SARS2Sequence[Residueindex])[0]
             ShannonsEntropy[0,Residueindex]=SARS2Sequence[Residueindex]
             while Sequenceindex<=NumberofSequences:
+                #The comparison matrix column is stored, and used the row reference to find the substitution score, this iterates for all comparison sequence
                 ComparisonResidueindex=np.where(Blosum62Matrix[0,:]==DictionaryofSequences[Sequenceindex][Residueindex])[0]
                 SubstitutionScoresperResidue[Sequenceindex-2]=int(Blosum62Matrix[SARS2Residueindex,ComparisonResidueindex])
                 Sequenceindex+=1
+            #The substitution scores for the reference amino acid are counted, as well as all possible matrix values for the reference residue
             MatrixValuesHistogram=Counter(SubstitutionScoresperResidue)
-            NumberofBins=len(MatrixValuesHistogram)
-
+            NumberofPossibleBins=len(Counter(list(Blosum62Matrix[SARS2Residueindex,1:][0])))
             for key, value in MatrixValuesHistogram.items():
-                if NumberofBins==1:
-                    ShannonsEntropy[1, Residueindex]=0
-                else:
-                    probability=value/(NumberofSequences-1)
-                    ShannonsEntropy[1,Residueindex]+=probability*math.log(probability,NumberofBins)
-            ShannonsEntropy[1, Residueindex]=(ShannonsEntropy[1,Residueindex])/-1
+            #The entropy for the residue is calculated and stored in a matrix, then the code proceeds to the next residue
+                probability=value/(NumberofSequences-1)
+                ShannonsEntropy[1,Residueindex]+=probability*math.log(probability,NumberofPossibleBins)
+            if ShannonsEntropy[1,Residueindex]!=0:
+                ShannonsEntropy[1, Residueindex]=(ShannonsEntropy[1,Residueindex])/-1
             Residueindex+=1
             Sequenceindex=2
     np.set_printoptions(threshold=sys.maxsize)
+    #All non-amino acid parts of the alignment are removed
     ShannonsEntropy=np.delete(ShannonsEntropy,np.where(ShannonsEntropy[0]=='-'),axis=1)
     print(ShannonsEntropy)
-    # for x in TruncatedConservationScore[1]:
-    #     cmd.alter('resi '+str(Residueindex+1),'b='+str(TruncatedConservationScore[2,Residueindex]))
-    #     Residueindex+=1
-    # #Lower values are assigned the first color listed, higher values latter color
-    # cmd.spectrum('b','blue_green','6VSB_B')
-BlosumColorCoding('Random Sequence')
+    Residueindex=0
+    for x in ShannonsEntropy[1]:
+        cmd.alter('resi '+str(Residueindex+1),'b='+str(ShannonsEntropy[1,Residueindex]))
+        Residueindex+=1
+    #Lower values are assigned the first color listed, higher values latter color
+    cmd.spectrum('b','blue_green','6VSB_B')
+    # spectrumbar black, blue, name = bar, head = (277.514, 232.761, 204.882), tail = (277.514, 252.761, 204.882), radius = 5
+
+BlosumColorCoding('SARS2stable.aln')

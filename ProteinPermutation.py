@@ -4,7 +4,7 @@ def Permutation(Protein):
 
     Fasta=open(Protein+'.fasta',"r").readlines()
     Sequence=list(''.join([x for x in Fasta if  x[0]!='>'  if x!='']).rstrip().strip().replace('\n','').replace(' ',''))
-    RandomizedSequence=''.join(numpy.random.mtrand.permutation(Sequence))
+    RandomizedSequence=''.join(numpy.random.mtrand.per)
     NewSequence=np.empty((2), dtype=object)
     NewSequence[0]='>Chimera'
     NewSequence[1]=RandomizedSequence
