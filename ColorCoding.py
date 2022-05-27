@@ -80,13 +80,12 @@ def BlosumColorCoding(Alignmentfile):
     np.set_printoptions(threshold=sys.maxsize)
     #All non-amino acid parts of the alignment are removed
     ShannonsEntropy=np.delete(ShannonsEntropy,np.where(ShannonsEntropy[0]=='-'),axis=1)
-    print(ShannonsEntropy)
     Residueindex=0
     for x in ShannonsEntropy[1]:
         cmd.alter('resi '+str(Residueindex+1),'b='+str(ShannonsEntropy[1,Residueindex]))
         Residueindex+=1
     #Lower values are assigned the first color listed, higher values latter color
-    cmd.spectrum('b','blue_green','6VSB_B')
-    # spectrumbar black, blue, name = bar, head = (277.514, 232.761, 204.882), tail = (277.514, 252.761, 204.882), radius = 5
+    cmd.spectrum('b','green_blue','6VSB_B')
+    # spectrumbar green, blue, name = bar, head = (277.514, 232.761, 204.882), tail = (277.514, 252.761, 204.882), radius = 5
 
 BlosumColorCoding('SARS2stable.aln')

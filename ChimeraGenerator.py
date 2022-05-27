@@ -23,12 +23,12 @@ def DomainExchange(Fastafile1,Fastafile2,Boundary3,Boundary4,Boundary1=224,Bound
     Sections[2, 1] = ''.join(Sequence2[Boundary4:])
 
     NewSequence=np.empty((2,1), dtype=object)
-    NewSequence[0,0]='>Chimera'
+    NewSequence[0,0]='>'+Protein1+'w'+Protein2+Domain
     NewSequence[1,0]=Sections[0,0]+Sections[1,1]+Sections[2,0]
     np.savetxt(Title,NewSequence,fmt="%s",delimiter=" ")
 
     NewSequence2=np.empty((2,1), dtype=object)
-    NewSequence2[0,0]='>Chimera'
+    NewSequence2[0,0]='>'+Protein1+'w'+Protein2+Domain
     NewSequence2[1,0]=Sections[0,1]+Sections[1,0]+Sections[2,1]
     #np.savetxt(Title2,NewSequence2,fmt="%s",delimiter=" ")
     AlphaFoldEntry= "/scratch/jws6pq/Notebook/Finished/Fastas/" + Fasta2.name + ','
