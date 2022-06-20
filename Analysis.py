@@ -1,3 +1,6 @@
+import numpy as np
+
+
 def FoldXStability(Protein,Domain,ComparisonScore=827.13):
     import os
     os.system('/sfs/lustre/bahamut/scratch/jws6pq/FoldX/foldx_20221231 --command=Stability --clean-mode=1 --pdb=SARS2w'+Protein+Domain+'.pdb --pdb-dir=/sfs/lustre/bahamut/scratch/jws6pq/Notebook/PDB --output-dir=/sfs/lustre/bahamut/scratch/jws6pq/Notebook/FoldXResults/')
@@ -27,6 +30,7 @@ def PieceWiseRMSD(Protein,CPSplice1,CPSplice2,SpliceBoundary1,SpliceBoundary2,Co
 def SequenceSimilarity(Protein,Domain):
     EmbossScore=open(Protein+Domain+'.emboss','r').readlines()[25].split()[-1]
     return EmbossScore.replace('(','').replace(')','').replace('%','')
+
 def SpliceConfidenceComparison(Protein,ChimeraSplice1,ChimeraSplice2,SARS2Splice1,SARS2Splice2,Domain):
     SARS2Score = list(map(float, open('SARS2.plddt', 'r').readlines()))
     ChimeraScore=list(map(float,open('SARS2w'+Protein+Domain+'.plddt', 'r').readlines()))
@@ -45,3 +49,12 @@ def OverallConfidenceComparison(Protein,Domain):
     #Percent difference is negative so that decreases in stability are negative on the plot
     ScorePercentDifference = -(SARS2AverageScore - ChimeraAverageScore) / SARS2AverageScore
     return ScorePercentDifference*100, ChimeraAverageScore
+
+def OriginialOverallConfidence(Protein):
+    OriginalScore = list(map(float, open(Protein +'.plddt', 'r').readlines()))
+    OriginalAverageScore = sum(OriginalScore) / len(OriginalScore)
+    return OriginalAverageScore
+ProteinList=[line.split()[-1] for line in open('List','r').readlines()]
+OriginalList=np.empty(len(ProteinList))
+OriginalList[:]=list(map(OriginialOverallConfidence,ProteinList))
+print(OriginalList)

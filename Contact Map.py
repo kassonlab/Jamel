@@ -1,9 +1,9 @@
-
+def GetResidueContactPairs(PDBnickname,PDBFilename,DistanceCutoff):
     import Bio.PDB
     import numpy as np
 
-    pdb_code = "6VSB"
-    pdb_filename = "6VSB_B.pdb"
+    pdb_code = PDBnickname
+    pdb_filename = PDBFilename
 
     def calc_residue_dist(residue_one, residue_two) :
         """Returns the C-alpha distance between two residues"""
@@ -23,20 +23,15 @@
     model = structure[0]
 
     dist_matrix = calc_dist_matrix(model["B"], model["B"])
-    # file = open('ContactMap', 'w')
-    # file.write(dist_matrix)
-    # file.close()
-    X_axis=list(np.where(dist_matrix<=7)[0])
-    Y_axis=list(np.where(dist_matrix<=7)[1])
-    print(dist_matrix[7,149])
-    print(X_axis)
-    print(Y_axis)
+    X_axis=list(np.where(dist_matrix<=DistanceCutoff)[0])
+    Y_axis=list(np.where(dist_matrix<=DistanceCutoff)[1])
     ListofContactPairs=[]
     i=0
+    print(zip(X_axis,Y_axis),1)
     for x,y in zip(X_axis,Y_axis):
         if y-x>5:
             ListofContactPairs.append('('+str(x+1)+','+str(y+1)+')')
+            print(ListofContactPairs,x)
             i+=1
-
-print(ListofContactPairs[1296],ListofContactPairs)
-# np.savetxt('Contct',dist_matrix,fmt="%s",delimiter=" ")
+    print(ListofContactPairs)
+GetResidueContactPairs('6vsb', '6VSB_B.pdb',7)
