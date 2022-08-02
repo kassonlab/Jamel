@@ -3,7 +3,7 @@
 #SBATCH --gres=gpu:v100:1    # number of GPUs
 #SBATCH -N 1            # number of nodes
 #SBATCH -c 8            # number of cores
-#SBATCH -t 50:00:00     # time
+#SBATCH -t 72:00:00     # time
 
 import argparse
 import os
@@ -13,7 +13,7 @@ def run_alpha(seqfile, outputdir):
   Args:
     seqfile: full path to FASTA file
     outputdir:  full path for output directory."""
-  os.system('/sfs/lustre/bahamut/scratch/jws6pq/CMfiles/alpha_run.sh %s %s' % (seqfile, outputdir))
+  os.system('/scratch/jws6pq/CMfiles/alpha_run.sh %s %s' % (seqfile, outputdir))
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
