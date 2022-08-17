@@ -1,6 +1,6 @@
 import numpy as np
 
-def DomainExchange(Fastafile1,Fastafile2,Boundary3,Boundary4,Boundary1=224,Boundary2=425,Domain='RBD'):
+def DomainExchange(Fastafile1,Fastafile2,Boundary3,Boundary4,Boundary1=224,Boundary2=425,Domain='RBD',Subunits=3):
     Fasta1=open(Fastafile1,"r")
     Fasta2=open(Fastafile2,"r")
     Protein1=Fasta1.name.replace('.fasta','')
@@ -21,16 +21,19 @@ def DomainExchange(Fastafile1,Fastafile2,Boundary3,Boundary4,Boundary1=224,Bound
     Sections[0, 1] = ''.join(Sequence2[0:Boundary3])
     Sections[1, 1] = ''.join(Sequence2[Boundary3:Boundary4])
     Sections[2, 1] = ''.join(Sequence2[Boundary4:])
-
-    NewSequence=np.empty((2,1), dtype=object)
-    NewSequence[0,0]='>'+Protein1+'w'+Protein2+Domain
-    NewSequence[1,0]=Sections[0,0]+Sections[1,1]+Sections[2,0]
-    np.savetxt(Title,NewSequence,fmt="%s",delimiter=" ")
-
-    NewSequence2=np.empty((2,1), dtype=object)
-    NewSequence2[0,0]='>'+Protein1+'w'+Protein2+Domain
-    NewSequence2[1,0]=Sections[0,1]+Sections[1,0]+Sections[2,1]
-    #np.savetxt(Title2,NewSequence2,fmt="%s",delimiter=" ")
-    AlphaFoldEntry= "/scratch/jws6pq/Notebook/Finished/Fastas/" + Fasta2.name + ','
-    AlphaFoldEntry2="/scratch/jws6pq/Notebook/Finished/Fastas/"+Title+','
+    file = open("/scratch/jws6pq/Notebook/Finished/Fastas/"+str(Subunits)+'mer' +Title, 'w')
+    file.write('>'+Protein1 + 'w' + Protein2 + Domain + '\n' + Sections[0, 0] + Sections[1, 1] + Sections[2, 0]+'\n')
+    #file2 = open("/scratch/jws6pq/Notebook/Finished/Fastas/" +Title2, 'w')
+    #file2.write('>' +Protein2 + 'w' + Protein1 + Domain + '\n' + Sections[0, 1] + Sections[1, 0] + Sections[2, 1]+'\n')
+    file.close()
+    #file2.close()
+    for x in range(Subunits-1):
+        file=open(str(Subunits)+'mer' +Title,'a')
+        file.write('>'+Protein1+'w'+Protein2+Domain+'\n' +Sections[0,0]+Sections[1,1]+Sections[2,0]+'\n')
+        #file2 = open(str(Subunits)+'mer' +Title, 'a')
+        #file2.write('>'+Protein2+'w'+Protein1+Domain+ '\n' + Sections[0,1]+Sections[1,0]+Sections[2,1]+'\n')
+        file.close()
+        #file2.close()
+    AlphaFoldEntry= "/scratch/jws6pq/Notebook/Finished/Fastas/" +str(Subunits)+'mer'+ Fasta2.name + ','
+    AlphaFoldEntry2="/scratch/jws6pq/Notebook/Finished/Fastas/"+str(Subunits)+'mer'+Title+','
     return AlphaFoldEntry,AlphaFoldEntry2
