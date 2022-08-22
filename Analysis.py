@@ -50,4 +50,10 @@ def ConfidenceComparison(Protein,ChimeraSplice1,ChimeraSplice2,SARS2Splice1,SARS
     AverageScoreDifference=ScoreDifference/ChimeraLength
 
     return AverageScoreDifference
+#make sure the number of multimers is indicated at the front of the filename
+def AveragingMultimerPLDDT(Plddtfilename,Protein):
+    Plddt=list(map(float, open(Plddtfilename, 'r').readlines()))
+    Subunits=Plddtfilename[0]
+    Monomerlength=len(Plddt)/Subunits
+    file = open(str(Subunits)+'mer'+Protein+'.plddt', 'w')
 

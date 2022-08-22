@@ -21,6 +21,7 @@ def DomainExchange(Fastafile1,Fastafile2,Boundary3,Boundary4,Boundary1=224,Bound
     Sections[0, 1] = ''.join(Sequence2[0:Boundary3])
     Sections[1, 1] = ''.join(Sequence2[Boundary3:Boundary4])
     Sections[2, 1] = ''.join(Sequence2[Boundary4:])
+    
     file = open("/scratch/jws6pq/Notebook/Finished/Fastas/"+str(Subunits)+'mer' +Title, 'w')
     file.write('>'+Protein1 + 'w' + Protein2 + Domain + '\n' + Sections[0, 0] + Sections[1, 1] + Sections[2, 0]+'\n')
     #file2 = open("/scratch/jws6pq/Notebook/Finished/Fastas/" +Title2, 'w')
