@@ -1,3 +1,6 @@
+import Analysis
+
+
 def BlosumColorCoding(Alignmentfile):
     import numpy as np
     from collections import Counter
@@ -72,10 +75,10 @@ def BlosumColorCoding(Alignmentfile):
             for key, value in MatrixValuesHistogram.items():
             #The entropy for the residue is calculated and stored in a matrix, then the code proceeds to the next residue
                 probability=value/(NumberofSequences-1)
-                ShannonsEntropy[1,Residueindex]+=probability*math.log(probability,NumberofPossibleBins)
-            if ShannonsEntropy[1,Residueindex]!=0:
-                ShannonsEntropy[1, Residueindex]=(ShannonsEntropy[1,Residueindex])/-1
-            Residueindex+=1
+                ShannonsEntropy[1,Residueindex]+=-probability*math.log(probability,NumberofPossibleBins)
+            # if ShannonsEntropy[1,Residueindex]!=0:
+            #     ShannonsEntropy[1, Residueindex]=(ShannonsEntropy[1,Residueindex])/-1
+            # Residueindex+=1
             Sequenceindex=2
     np.set_printoptions(threshold=sys.maxsize)
     #All non-amino acid parts of the alignment are removed

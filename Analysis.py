@@ -29,6 +29,7 @@ def SequenceSimilarity(Protein,Domain):
     EmbossScore=open(Protein+Domain+'.emboss','r').readlines()[25].split()[-1]
     return EmbossScore.replace('(','').replace(')','').replace('%','')
 def ConfidenceComparison(Protein,ChimeraSplice1,ChimeraSplice2,SARS2Splice1,SARS2Splice2,Domain):
+
     SARS2Score = list(map(float, open('SARS2.plddt', 'r').readlines()))
     ProteinScore=list(map(float, open(Protein+'.plddt', 'r').readlines()))
     ChimeraScore=list(map(float,open('SARS2w'+Protein+Domain+'.plddt', 'r').readlines()))
@@ -40,20 +41,57 @@ def ConfidenceComparison(Protein,ChimeraSplice1,ChimeraSplice2,SARS2Splice1,SARS
     ChimeraLength=len(ChimeraScore)
     for ChimeraResidue in range(ChimeraLength):
         if SARS2Splice1<=ChimeraResidue<=(SARS2Splice1+SpliceLength):
-            ScoreDifference+=ChimeraScore[ChimeraResidue]-ProteinScore[ChimeraSplice1+j]
+            ScoreDifference+=(ChimeraScore[ChimeraResidue]-ProteinScore[ChimeraSplice1+j])/ProteinScore[ChimeraSplice1+j]
             j+=1
         elif 0<=ChimeraResidue<SARS2Splice1:
-            ScoreDifference+=ChimeraScore[ChimeraResidue]-SARS2Score[ChimeraResidue]
+            #This statement is calculating the difference for the first part of SARS where there was no cleaving
+            ScoreDifference+=(ChimeraScore[ChimeraResidue]-SARS2Score[ChimeraResidue])/SARS2Score[ChimeraResidue]
         else:
-            ScoreDifference+=ChimeraScore[ChimeraResidue]-SARS2Score[SARS2Splice2+1+k]
+            ScoreDifference+=(ChimeraScore[ChimeraResidue]-SARS2Score[SARS2Splice2+1+k])/SARS2Score[SARS2Splice2+1+k]
             k+=1
-    AverageScoreDifference=ScoreDifference/ChimeraLength
+    AveragePercentScoreDifference=ScoreDifference/ChimeraLength*100
 
-    return AverageScoreDifference
+    return AveragePercentScoreDifference
+def MultimerConfidenceComparison(Protein,ChimeraSplice1,ChimeraSplice2,ComparisonProteinSplice1,ComparisonProteinSplice2,Domain,ComparisonProtein):
+    ComparisonProteinScore = list(map(float, open('Avg'+ComparisonProtein+'.plddt', 'r').readlines()))
+    ProteinScore=list(map(float, open('Avg'+Protein+'.plddt', 'r').readlines()))
+    Protein=Protein[4:]
+    ChimeraScore=list(map(float,open('Avg'+ComparisonProtein+'w'+Protein+Domain+'.plddt', 'r').readlines()))
+    ChimeraResidue=0
+    j=0
+    k=0
+    SpliceLength=ChimeraSplice2-ChimeraSplice1
+    ScoreDifference=0
+    ChimeraLength=len(ChimeraScore)
+    for ChimeraResidue in range(ChimeraLength):
+        if ComparisonProteinSplice1<=ChimeraResidue<=(ComparisonProteinSplice1+SpliceLength):
+            ScoreDifference+=(ChimeraScore[ChimeraResidue]-ProteinScore[ChimeraSplice1+j])/ProteinScore[ChimeraSplice1+j]
+            j+=1
+        elif 0<=ChimeraResidue<ComparisonProteinSplice1:
+            #This statement is calculating the difference for the first part of SARS where there was no cleaving
+            ScoreDifference+=(ChimeraScore[ChimeraResidue]-ComparisonProteinScore[ChimeraResidue])/ComparisonProteinScore[ChimeraResidue]
+        else:
+            ScoreDifference+=(ChimeraScore[ChimeraResidue]-ComparisonProteinScore[ComparisonProteinSplice2+1+k])/ComparisonProteinScore[ComparisonProteinSplice2+1+k]
+
+            k+=1
+
+    AveragePercentScoreDifference=ScoreDifference/ChimeraLength*100
+    return AveragePercentScoreDifference
 #make sure the number of multimers is indicated at the front of the filename
-def AveragingMultimerPLDDT(Plddtfilename,Protein):
-    Plddt=list(map(float, open(Plddtfilename, 'r').readlines()))
-    Subunits=Plddtfilename[0]
-    Monomerlength=len(Plddt)/Subunits
-    file = open(str(Subunits)+'mer'+Protein+'.plddt', 'w')
-
+def AveragingMultimerPLDDT(Plddtfilename):
+    MultimerPlddt=list(map(float, open(Plddtfilename, 'r').readlines()))
+    Subunits=int(Plddtfilename[0])
+    Monomerlength=int(len(MultimerPlddt)/int(Subunits))
+    Newplddtfile = open('Avg'+Plddtfilename, 'w')
+    ResidueIndex=0
+    while ResidueIndex in range(Monomerlength):
+        SubunitIndex = 0
+        AveragedPlddt=0
+        while SubunitIndex in range(Subunits-1):
+            AveragedPlddt+=MultimerPlddt[ResidueIndex+(Monomerlength*SubunitIndex)]
+            AveragedPlddt=AveragedPlddt/Subunits
+            SubunitIndex+=1
+        Newplddtfile.write(str(AveragedPlddt) + '\n')
+        ResidueIndex+=1
+    Newplddtfile.close()
+    return Newplddtfile.name
