@@ -1,10 +1,12 @@
-import numpy as np
+
 
 def DomainExchange(Fastafile1,Fastafile2,Boundary3,Boundary4,Boundary1=224,Boundary2=425,Domain='RBD',Subunits=3):
+    import numpy as np
+    import os
     Fasta1=open(Fastafile1,"r")
     Fasta2=open(Fastafile2,"r")
-    Protein1=Fasta1.name.replace('.fasta','')
-    Protein2=Fasta2.name.replace('.fasta','')
+    Protein1=os.path.basename(Fasta1).replace('.fasta','')
+    Protein2=os.path.basename(Fasta2).replace('.fasta','')
 
     Title=Protein1+'w'+Protein2+Domain+'.fasta'
     Title2=Protein2+'w'+Protein1+Domain+'.fasta'
@@ -26,11 +28,7 @@ def DomainExchange(Fastafile1,Fastafile2,Boundary3,Boundary4,Boundary1=224,Bound
     file.write('>'+Protein1 + 'w' + Protein2 + Domain + '\n' + Sections[0, 0] + Sections[1, 1] + Sections[2, 0]+'\n')
     #file2 = open("/scratch/jws6pq/Notebook/Finished/Fastas/" +Title2, 'w')
     #file2.write('>' +Protein2 + 'w' + Protein1 + Domain + '\n' + Sections[0, 1] + Sections[1, 0] + Sections[2, 1]+'\n')
-    file.close()
-    #file2.close()
-    for x in range(Subunits-1):
-        file=open(str(Subunits)+'mer' +Title,'a')
-        file.write('>'+Protein1+'w'+Protein2+Domain+'\n' +Sections[0,0]+Sections[1,1]+Sections[2,0]+'\n')
+    for x in range(Subunits):
         #file2 = open(str(Subunits)+'mer' +Title, 'a')
         #file2.write('>'+Protein2+'w'+Protein1+Domain+ '\n' + Sections[0,1]+Sections[1,0]+Sections[2,1]+'\n')
         file.close()

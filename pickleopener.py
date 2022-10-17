@@ -1,4 +1,4 @@
-def GeneratePDBandPlddtfromAlphafold(FolderDir,AlphafoldFolder,PDBDest_Name='NA',PlddtDest_Name='NA'):
+def GeneratePDBorPlddtfromAlphafold(FolderDir,AlphafoldFolder,PDBDest_Name='NA',PlddtDest_Name='NA'):
     import pickle
     import json
     import os

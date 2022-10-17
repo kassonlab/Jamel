@@ -9,11 +9,11 @@
 #Run program
 import os
 import sys
-sys.path.append('/sfs/lustre/bahamut/scratch/jws6pq/CMfiles')
+sys.path.append('/scratch/jws6pq/CMfiles')
 import pickleopener
-FolderDir='/sfs/lustre/bahamut/scratch/jws6pq/Notebook/Finished/'
+FolderDir='/scratch/jws6pq/Notebook/Finished/'
 for file in os.listdir(FolderDir):
     if file[0]=='3':
-        pickleopener.GeneratePDBandPlddtfromAlphafold(FolderDir,file,'/sfs/lustre/bahamut/scratch/jws6pq/Notebook/Overall/'+file+'.pdb','/sfs/lustre/bahamut/scratch/jws6pq/Notebook/Overall/'+file+'.plddt')
-        pickleopener.GeneratePDBandPlddtfromAlphafold(FolderDir,file,'/sfs/lustre/bahamut/scratch/jws6pq/Notebook/PDB/'+file+'.pdb','/sfs/lustre/bahamut/scratch/jws6pq/Notebook/Plddt/'+file+'.plddt')
+        pickleopener.GeneratePDBorPlddtfromAlphafold(FolderDir,file,'/scratch/jws6pq/Notebook/Overall/'+file+'.pdb','/scratch/jws6pq/Notebook/Overall/'+file+'.plddt')
+        pickleopener.GeneratePDBorPlddtfromAlphafold(FolderDir,file,'/scratch/jws6pq/Notebook/PDB/'+file+'.pdb','/scratch/jws6pq/Notebook/Plddt/'+file+'.plddt')
 

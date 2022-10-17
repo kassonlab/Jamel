@@ -8,8 +8,7 @@ if PresetList=='Yes':
     ProteinList=[line.split()[-1] for line in open('List1','r').readlines()]
 
 elif PresetList=='No':
-    Plddtfiles=os.listdir('/sfs/lustre/bahamut/scratch/jws6pq/Notebook/Plddt/')
-    Plddtfiles=[x for x in Plddtfiles if x[0]=='3']
+    Plddtfiles=[x for x in os.listdir('/sfs/lustre/bahamut/scratch/jws6pq/Notebook/Plddt/') if x[0]=='3']
     ProteinList=[x.replace('.plddt','') for x in Plddtfiles if x.find('3merSARS')==-1]
     Plddtfiles=list(map(Analysis.AveragingMultimerPLDDT,Plddtfiles))
     Plddtfiles=[x for x in Plddtfiles if x.find('3merSARS')==-1]

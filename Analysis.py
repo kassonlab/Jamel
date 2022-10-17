@@ -1,8 +1,11 @@
+import os
+
+
 def RunFoldX(Protein,Domain,ComparisonScore=827.13):
     import os
-    os.system('/sfs/lustre/bahamut/scratch/jws6pq/FoldX/foldx_20221231 --command=Stability --clean-mode=1 --pdb=SARS2w'+Protein+Domain+'.pdb --pdb-dir=/sfs/lustre/bahamut/scratch/jws6pq/Notebook/PDB --output-dir=/sfs/lustre/bahamut/scratch/jws6pq/Notebook/FoldXResults/')
+    os.system('/scratch/jws6pq/FoldX/foldx_20221231 --command=Stability --clean-mode=1 --pdb=SARS2w'+Protein+Domain+'.pdb --pdb-dir=/scratch/jws6pq/Notebook/PDB --output-dir=/scratch/jws6pq/Notebook/FoldXResults/')
 def FoldXStability(Protein,Domain,ComparisonScore=827.13):
-    FoldxScore=float(open('/sfs/lustre/bahamut/scratch/jws6pq/Notebook/FoldXResults/SARS2w'+Protein+Domain+'_0_ST.fxout','r').readlines()[0].split()[1])
+    FoldxScore=float(open('/scratch/jws6pq/Notebook/FoldXResults/SARS2w'+Protein+Domain+'_0_ST.fxout','r').readlines()[0].split()[1])
     FoldXDifference=-((ComparisonScore-FoldxScore)/ComparisonScore)*100
     return FoldXDifference
 def PieceWiseRMSD(Protein,CPSplice1,CPSplice2,SpliceBoundary1,SpliceBoundary2,ComparisonProtein='6VSB_B.pdb'):
@@ -20,11 +23,19 @@ def PieceWiseRMSD(Protein,CPSplice1,CPSplice2,SpliceBoundary1,SpliceBoundary2,Co
     NonDomainName = Protein +'NonDomain'
     cmd.select(DomainName, selection=Domainindex)
     cmd.select(NonDomainName, selection=NonDomainindex)
-    DomainRMSD=cmd.super('CPDomain', DomainName)[0]
-    NonDomainRMSD = cmd.super('CPNonDomain', NonDomainName)[0]
-    OverallRMSD = cmd.super('CP', Protein)[0]
+    DomainRMSD=cmd.align('CPDomain', DomainName)[0]
     cmd.delete('all')
-    return DomainRMSD, OverallRMSD
+    return DomainRMSD
+def OverallRMSD(Protein,Comparison='3merSARS2.pdb'):
+    from pymol import cmd
+    proteinpdb = Protein
+    cmd.load(Comparison, object='CP')
+    cmd.load(proteinpdb,object='Protein')
+    cmd.remove('organic')
+    cmd.load(proteinpdb)
+    RMSD = cmd.align('CP', 'Protein')[0]
+    return RMSD
+
 def SequenceSimilarity(Protein,Domain):
     EmbossScore=open(Protein+Domain+'.emboss','r').readlines()[25].split()[-1]
     return EmbossScore.replace('(','').replace(')','').replace('%','')
@@ -95,3 +106,14 @@ def AveragingMultimerPLDDT(Plddtfilename):
         ResidueIndex+=1
     Newplddtfile.close()
     return Newplddtfile.name
+import os
+import numpy as np
+i=0
+Submitlist=[x for x in os.listdir('/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB') if x[0]=='3']
+FaultScan = np.empty((len(Submitlist), 2), dtype=object)
+
+for file in Submitlist:
+    FaultScan[i,0]=file
+    FaultScan[i, 1] = OverallRMSD(file)
+    i+=1
+np.savetxt('FaultScanRMSD.tsv', FaultScan, fmt="%s,%s", delimiter="")
