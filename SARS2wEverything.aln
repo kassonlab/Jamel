@@ -1,4 +1,4 @@
->YP_009824974.1 spike glycoprotein [Wencheng Sm shrew coronavirus]
+>Wencheng
 ----------MKLIILFLVLPCVEC--------------------------VE-----YI
 KC---------S---TTQLGFLDLEKITYSLFDL--------------------------
 --GDVGV-----------------------------------------------------
@@ -36,7 +36,7 @@ YVPKNITNSDIIFTTYSE-NFTVINNTIQFPGI--EF--PQDGDFDGQIKNV---TLELQ
 SLK---DVVANMSYLDLSNHTA--------------LLKNISEEVKKMNITVSQFKQYVK
 YVKWPWYVWLLIVMALIAFGLVCFWIFMCTGCC-GLCDC--IRRSCRDSNTYEP------
 --------------IEKIHIQ----
->ATP66784.1 spike glycoprotein [Common shrew coronavirus Tibet-2014]
+>SorexT14
 ----------MLILVFLSLVTVSLQ-----------------------------------
 ------------------------------------------------------------
 --NVVVPFDN----YCNLD-------------------------ARYH------------
@@ -74,7 +74,7 @@ YNPRNVSNSDIVHYISCEANYTLVNNTIGSVVL-PQL-PNIGDDFNNLYENT---SKALE
 EIK---NIYFNFTNLNLTTEIE--------------RLNSIAEEVKKLNITLSELGRYER
 YVKWPWYVWLAIAVVMIVLVFILGCLLFMTGCC-GCCGC--CGGCCGKACSKPP------
 -DY---------EELEKLHVA----
->YP_009200735.1 spike glycoprotein [BtRf-AlphaCoV/YN2012]
+>AlphaCorona2012
 ----------MKLLTVLTLLACIRL---------------------------------VC
 GCTDVNFDLFKT---ILS------------------------------------------
 --TNRGS-----------------------------------------------------
@@ -112,7 +112,7 @@ YKPENLTFTNVIAVSR-GANYTTLNRTFDIPELNQSF--PIDEEFREYFQNM---SSELQ
 ALK---NLTADMSKLNISEEIK--------------LINEIAHNVSMMHVEVEKFQKYVN
 YVKWAWWQWLLIFIALTLLAGLMVWCCLATGCC-GMCGC--LAATCASCCDCKG---TKL
 QSY----------EIEKIHIQ----
->YP_001552236.1 spike glycoprotein [Rhinolophus bat coronavirus HKU2]
+>RhinoHKU2
 ----------MKLFIVFVLLFRVCY-----------------------------------
 CCDYVDFRLFNG---IFS------------------------------------------
 --TSRGL-----------------------------------------------------
@@ -150,7 +150,7 @@ YKPENLTFANVIAVSR-GANYTTLNRTFDIPELNSTF--PIDEEFREYFQNM---SSELQ
 ALK---NLTADMSKLNISAEIQ--------------LINEIAHNVSNMRVEVEKFQRYVN
 YVKWAWWQWLIIFIALTLLAGLMLWCCLATGCC-GMCGC--LAATCASCCDCRG---TKL
 QSY----------EIEKIHIQ----
->QEH62669.1 spike protein [Swine enteric alphacoronavirus]
+>Swine
 ----------MKLFTVFTLLASIRV---------------------------------LY
 GCESVDFNLFNT---IFS------------------------------------------
 --THRGL-----------------------------------------------------
@@ -188,7 +188,7 @@ YKPENLTFANVIAVSR-GANYTTLNKTFDIPELNSTF--PIEEEFREYFQNM---SSELQ
 VLK---NLTADMSKLNISAEIQ--------------LINEIAHNVSNMRVEVEKFQRYVN
 YVKWAWWQWLLIFIALTLLAGLMLWCCLATGCC-GMCGC--LAATCASCCDCRG---TKL
 QSY----------EIEKVHVQ----
->UAL80443.1 spike protein [Swine acute diarrhea syndrome coronavirus]
+>SADS
 ----------MKLFTVFTLLASIRV---------------------------------LY
 GCESVDFNLFNT---IFS------------------------------------------
 --THRGL-----------------------------------------------------
@@ -226,7 +226,7 @@ YKPENLTFANVIAVSR-GANYTTLNKTFDIPELNSTF--PIEEGFREYFQNM---SSELQ
 VLK---NLTADMSKLNISAEIQ--------------LINEIAHNVSNMRVEVEKVQRYVN
 YVKWAWWQWLLIFIALTLLAGLMLWCCLATGCC-GMCGC--LAATCASCCDCRG---TKL
 QSY----------EIEKVHVQ----
->UBB42470.1 surface glycoprotein [Jingmen Apodemus agrarius alphacoronavirus 1]
+>ApodemusAlpha
 ----------MALIFVLMLITLYRC---------------------------P-----FA
 LCNFQVCTDQLR---QQEVYLPNAIS----------------------------------
 ------------------------------------------------------------
@@ -264,7 +264,7 @@ YNPQAITVNNSVVVNG-GVNFTSLNQTIEGIEP-PTI-PSFDEEFEDLYKNI---TLELE
 QLK---NITFDPELLNLTYYID--------------RLDELSTNVSQLHVDISEFNKYVQ
 YIKWPWYVWLAIFLVLVLFCFMLLWCCCATGCC-GCCGM--LGSACNGCCTKPQ------
 -TV----------EFEKVHVQ----
->YP_009380521.1 spike protein [Coronavirus AcCoV-JC34]
+>CoronaJC34
 ----------MALIFVLMLITLYRC---------------------------P-----FV
 LCNFQVCTDQLR---QQEVYLPNAVS----------------------------------
 ------------------------------------------------------------
@@ -302,7 +302,7 @@ YNPQAITVNNSVIVNG-GVNFTSLNQTIEGIEP-PTI-PSFDEEFEDLYKNI---TLELE
 QLK---NITFDPELLNLTYYID--------------RLDELSTNVSQLHVDISEFNKYVQ
 YIKWPWYVWLAIFLVLVLFSFMLLWCCCATGCC-GCCGM--LGSACNGCCTKPQ------
 -TV----------EFEKVHVQ----
->QBG64657.1 spike [Alphacoronavirus UKRn3]
+>UKRn3
 ------MIPMIKLNMYFLLFLLFVS-----------------------------------
 ----------AD---AVIQTCPAPGNVNLDISKL--------------------------
 --------------YYGTH-----------------------------------------
@@ -340,7 +340,7 @@ YSPEPITVNNTLTISG-GVNFTAVNSTIDGIEP-PAN-PSFDEEFAELYNNI---TLELE
 QLK---NISFDPAKLNLTYYID--------------RLDELATNVSQLHVDVSEFNKFVQ
 YIKWPWYVWLAIFLVLVLFSFLMLWCCCATGCC-GCCGL--CGAACNGCCTKPQ------
 -PI----------EFEKVHIQ----
->YP_009336484.1 spike glycoprotein [Lucheng Rn rat coronavirus]
+>LuchengRat
 ----------MYFFLLLLFVSADAA---------------------------------IQ
 TCPAPG---------NVNLDISKL------------------------------------
 --------------YY--------------------------------------------
@@ -378,7 +378,7 @@ YSPEPITVNNTLTISG-GVNFTVVNSTIDGIEP-PAN-PSFDEEFAELYKNV---TLELE
 QLK---NISFDPEMLNLTYYID--------------RLDELATNVSQLHVDVSEFNKFVQ
 YIKWPWYVWLAIFLVLVLFSFLMLWCCCATGCC-GCCGL--CGAACNGCCTKPQ------
 -PI----------EFEKVHVQ----
->UBB42462.1 surface glycoprotein [Longquan Berylmys bowersi alphacoronavirus 1]
+>LongquanAlpha
 ------MIPMTKLNMYFLLLLLFVS-----------------------------------
 ----------AD---AVIQTCPAPGNVNLDISKL--------------------------
 --------------YYGTQ-----------------------------------------
@@ -416,7 +416,7 @@ YSPEPITVNNTL-ITSGGVNFTAVNSTIDGIEP-PAN-PSFAEEFAELYKNV---TLELE
 QLK---NISFDPEMLNLTYYID--------------RLDELATNVSQLHVDVSEFNKFVQ
 YIKWPWYVWLAIFLVLVLFSFLMLWCCCATGCC-GCCGL--CGAACNGCCTKPQ------
 -PI----------EFEKVHVQ----
->ADX59466.1 spike protein [Eidolon bat coronavirus/Kenya/KY24/2006]
+>EidolonBat
 ----------MVVLLFAIFSVASAL-------------------------DPN-----RT
 ACVANYGSSYLP---SSITSVALSDVNFLSRVVP--------------------------
 --------------EFDIA-----------------------------------------
@@ -454,7 +454,7 @@ YSPSNLSYDNTRQLDSCGVNYTVVNNTVLTPFEPPNF--NFDEEFDKYFKNQ--SSQLNI
 TFD---SSQFNATLLDLSGQMK--------------TLDQVVKELNESFINLKELGVYTQ
 TIKWPWYAWLGMIAGLVGLAMAVFMLCCMTNCCSGLKGICSCKQC--QYDDYAD------
 -VY----------PAVRVSGKRTV-
->YP_009273005.1 spike protein [Rousettus bat coronavirus]
+>BATGCCDC1
 ---------MFRTLLLAALFNACWC---------------------------A-----RP
 TCIKP----------TETWGTP--------------------------------------
 --SFTGVEYVPHNTTYVSV--------------------------PLN------------
@@ -492,7 +492,7 @@ YDPVNISVSNTQVLAACGLNYSSVNYTVLEPAVDTSS-FNFTEEFEKWYVNQ--SHIFNN
 TFN---ASAFNFSLVDVNEQLA--------------ILTDVVNQLNQSYIDLKQLGTYEY
 TVKWPWYVWLGMIAGLVGLVLAVVLLLCMTNCCSCARGVCSCKSCA--YEEHED------
 -VY----------PAVRVHGKRTA-
->ADX59474.1 spike protein [Rousettus bat coronavirus/Kenya/KY06/2006]
+>BAT2006
 ----------MRLIVVLSLALIACD---------------------------A-----SA
 TRPECFDNSNFQ---LHPLNHTVNTTSLVV------------------------------
 --NVVNLLLPDPYIAYSGQ--------------------------TLR------------
@@ -530,7 +530,7 @@ YNPVNISYSNTQILTSCSVNYTSVNYSVLQPSAPSDY--DFQKEFDKFYKNL--STSFNN
 TFN---PNDFNFSMVDVTAQIT--------------SLHQVVNQLNQSFIDLKKLNVYEK
 TIKWPWYIWLAMIAGIVGLVLAVIMLMCMTNCCSCFKGMCDCRRCCGSYDSYDD------
 -VY----------PAVRVNKKRTV-
->YP_001039971.1 spike glycoprotein [Rousettus bat coronavirus HKU9]
+>BATHKU9
 ----------MLLILVLGVSLAAAS---------------------------------RP
 ECFNPRFTLTPL---NHTLNYTSIKAKV--------------------------------
 ------------------------------------------------------------
@@ -568,7 +568,7 @@ YNPVNISASNTQVLTSCSVNYTSVNYTVLEPSV-PGD-YDFQKEFDKFYKNL--STIFNN
 TFN---PNDFNFSTVDVTAQIK--------------SLHDVVNQLNQSFIDLKKLNVYEK
 TIKWPWYVWLAMIAGIVGLVLAVIMLMCMTNCCSCFKGMCDCRRCCGSYDSYDD-----V
 YPA---------VRVNKKRTV----
->YP_009072440.1 spike protein [Bat Hp-betacoronavirus/Zhejiang2013]
+>Zhejiang2013
 --------MVARYRLCILQLILSAC----------------------------------H
 LSITRDVQPYVH---EANCTKQVATEGPFMAAYPL-------------------------
 --GKYGFINT----YYPDR--------------------------IFR------------
@@ -606,7 +606,7 @@ FEPEIITIDNIRSAGSCNVDVTYVNHTIYNPEM-PEL-EDFKQELEEIRKNFSTGLPNRP
 NFTLPGLEGINASMVDLSEEVK--------------ILNDVVKELNASLINLQELGVNSQ
 YIKWPWYIWLGFIAGLIAIVMATIMLCCMTSCCSCFKGLCACKRCCDSFDEPDE------
 --------------PIKYHYP----
->QWN56242.1 surface glycoprotein [Betacoronavirus sp. RsYN04]
+>Beta04
 ----------MFILLLLPIVLAQQD-----------------------------------
 SC-------------NHIVQLPNS------------------------------------
 --MVRGVYNSGSKVYYPDDINRV-------------------------------------
@@ -644,7 +644,7 @@ YAPSPITTENTFMSGSCDVVIGIINNTVYDPLQ-PEL-DSFKEELDKFFKNH---TSPDL
 DLE--DVSKLNASVVDINKEIE--------------KLNNIAQQLNSSLIDLQELGKYEQ
 YLKWPWYIWLGFIAGLIAIIMASIMLCCMTSCCSCFKGLCSCGLCCKFDDDSEP------
 -VL----------QGVKLHYT----
->QWN56222.1 surface glycoprotein [Betacoronavirus sp. RmYN08]
+>Beta08
 ----------MFILLLLPIVLAQQD-----------------------------------
 SCNHIVQLPNSM------------------------------------------------
 ---VRGVYNSGSKVYYPDDINRV-------------------------------------
@@ -682,7 +682,7 @@ YAPSPITTENTFMSGSCDVVIGIINNTVYDPLQ-PEL-DSFKEELDKFFKNH---TSPDL
 DLE--DVSKLNASVVDINKEIE--------------KLNNIAQQLNSSLIDLQELGKYEQ
 YLKWPWYIWLGFIAGLIAIIMASIMLCCMTSCCSCFKGLCSCGSCCKFDDDSEP------
 -VL----------QGVKLHYT----
->QWN56202.1 surface glycoprotein [Betacoronavirus sp. RmYN05]
+>Beta05
 ----------MFILLLLPIVLAQQD-----------------------------------
 SCNHIVQLPNSM------------------------------------------------
 ---VRGVYNSGSKVYYPDDINRV-------------------------------------
@@ -720,7 +720,7 @@ YAPSPITTENTFMSGSCDVVIGIINNTVYDPLQ-PEL-DSFKEELDKFFKNH-----TSP
 DLDLEDVSKLNASVVDINKEIE--------------KLNNIAQQLNSSLIDLQELGKYEQ
 YLKWPWYIWLGFIAGLIAIIMASIMLCCMTSCCSCFKGLCSCGSCCKFDDDSEP------
 -----------VLQGVKLHYT----
->QWN56252.1 surface glycoprotein [Betacoronavirus sp. RpYN06]
+>Beta06
 -----------MLFFLFLQFTLVNS-----------------------------------
 QCVNLTGRTPLN---PNYTNS---------------------------------------
 --SQRGV-------YYPDT--------------------------IYR------------
@@ -796,7 +796,7 @@ YEPQIITTDNTFVSGNCDVVIGIVNNTVYDPLQ--------------------------P
 ELD---------------------------------------------------------
 ------------------------------------------------------------
 -------------------------
->QLR06864.1 surface glycoprotein [Pangolin coronavirus]
+>Pangolin
 -----------MLFFFFLHFALVNS-----------------------------------
 QCVNLTGRAAIQ---PSFTNS---------------------------------------
 --SQRGV-------YYPDT--------------------------IFR------------
@@ -834,7 +834,7 @@ YEPQIITTDNTFVSGSCDVVIGIVNNTVYDPLQ-PEL-DSFKEELDKYFKNH---TSPDV
 DLG--DISGINASVVNIQKEID--------------RLNEVAKNLNESLIDLQELGKYEQ
 YIKWPWYIWLGFIAGLIAIIMVTIMLCCMTSCCSCLKGCCSCGSCCKFDEDDSE------
 -PV-L--------KGVKLHYT----
->ALK02457.1 spike protein [SARS-like coronavirus WIV16]
+>WIV16
 ----------MFIFLFFLTLTSGSD---------------------------------LE
 SCTTFDDVQAPN---YPQHSS---------------------------------------
 --SRRGV-------YYPDE--------------------------IFR------------
@@ -872,7 +872,7 @@ FSPQIITTDNTFVSGSCDVVIGIINNTVYDPLQ-PEL-DSFKEELDKYFKNH---TSPDV
 DLG--DISGINASVVNIQKEID--------------RLNEVAKNLNESLIDLQELGKYEQ
 YIKWPWYVWLGFIAGLIAIVMVTILLCCMTSCCSCLKGACSCGSCCKFDEDDSE------
 -PV---------LKGVKLHYT----
->QWN56263.1 surface glycoprotein [Betacoronavirus sp. RsYN09]
+>Beta09
 ----------MFIFIITSLSIVLGR---------------------------E-----LD
 NCTTFDDVHSPE---YLQYSS---------------------------------------
 --SRRGV-------YYPDD--------------------------IFR------------
@@ -910,7 +910,7 @@ YSPQIITTDNTFVAGNCDVVIGIINNTVYDPLQ-PEL-DSFKEELDKYFKNH---TSPDV
 DFG--DISGINASVVNIQKEID--------------RLNEVAKNLNESLIDLQELGKYEQ
 YIKWPWYVWLGFIAGLIAIVMATILLCCMTSCCSCLKGACSCGSCCKFDEDDSE------
 -PV---------LKGVKLHYT----
->QDF43815.1 spike glycoprotein [Coronavirus BtRl-BetaCoV/SC2018]
+>BetaCoronaSC2018
 ----------MIILLLFLSSATAQE-----------------------------------
 GCGVISNKPQRT---FDQYSS---------------------------------------
 --TRRGV-------YYNDD--------------------------IFR------------
@@ -948,7 +948,7 @@ YSPQIITTDNTFVAGNCDVVIGIINNTVYDPLQ-PEL-DSFKEELDKYFKNH---TSPDV
 DLG--DISGINASVVNIQKEID--------------RLNEVAKNLNESLIDLQELGKYEQ
 YIKWPWYVWLGFIAGLIAIVMATILLCCMTSCCSCLKGACSCGSCCKFDEDDSE------
 -PV---------LKGVKLHYT----
->QWN56232.1 surface glycoprotein [Betacoronavirus sp. RsYN03]
+>Beta03
 ----------MKIFLFSLLFSAALA---------------------------------QE
 GCGSLSFKPQPK---LAQFSS---------------------------------------
 --SKRGV-------YYNDD--------------------------IFR------------
@@ -986,7 +986,7 @@ FSPQIITTDNTFVSGNCDVVIGIINNTVYDPLQ-PEL-DSFKEELDKYFKNH---TSPDV
 DLG--DISGINASVVNIQKEID--------------RLNEVAKNLNESLIDLQELGKYEQ
 YIKWPWYVWLGFIAGLIAIVMATILLCCMTSCCSCLKGACSCGSCCKFDEDDSE------
 -PV---------LKGVKLHYT----
->QWN56212.1 surface glycoprotein [Betacoronavirus sp. RmYN07]
+>Beta07
 ----------MKIFLFSLLFSAALA---------------------------------QE
 GCGSLSYKPQPK---LAQFSS---------------------------------------
 --SKRGV-------YYNDD--------------------------IFRS-----------
@@ -1024,7 +1024,7 @@ FSPQIITTDNTFVSGNCDVVIGIINNTVYDPLQ-PEL-DSFKEELDKYFKNH---TSPDV
 DLG--DISGINASVVNIQKEID--------------RLNEVAKNLNESLIDLKQLGKYEQ
 YIKWPWYVWLGFIAGLIAIVMATILLCCMTSCCSCLKGACSCGSCCKFDEDDSE------
 -PV---------LKGVKLHYT----
->ACU31051.1 spike protein [Bat SARS Cov Rs806/2006]
+>Bat806
 ----------MKILILAFLANLAKA---------------------------------QE
 GCGIISRKPQPK---MAQVSS---------------------------------------
 --SRRGV-------YYNDD--------------------------IFR------------
@@ -1062,7 +1062,7 @@ YSPQLITTDNTFVSGNCDVVIGIINNTVYDPLQ-PEL-DSFKEELDKYFKNH---TSPDV
 DLG--DISGINASVVNIQKEID--------------RLNEVAKNLNESLIDLQELGKYEQ
 YIKWPWYVWLGFIAGLIAIVMVTILLCCMTSCCSCLKGACSCGSCCKFDEDDSE------
 -PV---------LKGVKLHYT----
->QZX47235.1 spike protein [Sarbecovirus sp.]
+>Sarbecovirus
 ----------MKILILAFLASLAKA---------------------------------QD
 GCGIISRKPQPK---MAQVSS---------------------------------------
 --SRRGV-------YYNDD--------------------------IFR------------
@@ -1100,7 +1100,7 @@ YLPQIITTDNTFVAGNCDVVIGIINNTVYDPLQ-PEL-DSFKEELDKYFKNH---TSPDV
 DLG--DISGINASVVNIQKEID--------------RLNEVAKNLNESLIDLQELGKYEQ
 YIKWPWYVWLGFIAGLIAIVMATILLCCMTSCCSCLKGACSCGSCCKFDEDDSE------
 -PV---------LKGVKLHYT----
->UBB42405.1 surface glycoprotein [Jingmen Rhinolophus sinicus betacoronavirus 1]
+>RhinoBeta
 ----------MKVLIFALLFNLAKA---------------------------------QE
 GCGIISRKPQPK---MAQVSS---------------------------------------
 --SQRGV-------YYNDD--------------------------IFR------------
@@ -1138,7 +1138,7 @@ YSPQIITTDNTFVAGNCDVVIGIINNTVYDPLQ-PEL-DSFKEELDKYFKNH---TSPDV
 DLG--DISGINASVVNIQKEID--------------RLNEVAKNLNESLIDLQELGKYEQ
 YIKWPWYVWLGFIAGLIAIVMVTILLCCMTSCCSCLKGACSCGSCCKFDEDDSE------
 -PV---------LKGVKLHYT----
->QVN46559.1 spike glycoprotein [Bat SARS-like coronavirus Khosta-1]
+>Khosta1
 ----------MKFFIFLSFLPLITA---------------------------------QE
 GCGVLSNKSTPN---LDQFLS---------------------------------------
 --SRRGF-------YYFDD--------------------------TFR------------
@@ -1176,7 +1176,7 @@ YSPQVITTDNTFESGTCDVVIGIVNNTVYDPLQ-PEL-ESFKQELDKYFKNH---TSPDV
 GLG--DISGINASVVDIKKEIE--------------HLNEIAKNLNESLIDLQELGKYEQ
 YIKWPWYVWLGFIAGIIAIVMATIMLCCMTSCCSCFKGLCSCGSCCKFDEDTSE------
 -PV-L--------KGVKLHYT----
->ALJ94036.1 spike glycoprotein [SARS-like coronavirus BatCoV/BB9904/BGR/2008]
+>BAT2008
 ----------MKVLIFLSLLSLVSA---------------------------------QD
 GCDRFSSKKTPL---LTQFPS---------------------------------------
 --SKRGL-------YYFDD--------------------------IFR------------
@@ -1214,7 +1214,7 @@ YSPQPITTDNTFVSGNCDVVIGIVNNTVYDPLQ-PEL-ESFKEELDKYFKNH---TSQNV
 SLD--GLNNINASVVDIKKEIE--------------HLNEIAKSLNESLIDLQELGKYEQ
 YIKWPWYVWLGFIAGLIAIVMATIMLCCMTSCCSCLKGVCSCASCCKFDEDHSE------
 -PV---------LTGVKLHYT----
->YP_003858584.1 spike protein [Bat coronavirus BM48-31/BGR/2008]
+>BatBGR
 ----------MKFLAFLCLLGFANA---------------------------Q-----DG
 KCGTLSNKSPSK---LTQTPS---------------------------------------
 --SRRGF-------YYFDD--------------------------IFR------------
@@ -1252,7 +1252,7 @@ YSPQPITTDNTFVSGNCDVVIGIVNNTVYDPLQ-PEL-DSFKEELDKYFKNH---TSQNV
 SLD--GLNNINASVVDIKKEIE--------------HLNEIAKSLNESLIDLQELGKYEQ
 YIKWPWYVWLGFIAGLIAIVMATIMLCCMTSCCSCLKGVCSCASCCKFDEDHSE------
 -PV-L--------TGVKLHYT----
->QYC92806.1 surface glycoprotein [Sarbecovirus RhGB01]
+>SarbecovirusRhG
 ----------MRLLLLFSLFNPLFT---------------------------------QD
 GCGRLSKKTQPQ---LEQFNS---------------------------------------
 --SRRGL-------YYFDD--------------------------IFRS-----------
@@ -1290,7 +1290,7 @@ YQPEVITTENTFESGNCDVVIGIVNNTVYDPLQ-PEL-ESFKEELDKYFKNH---TSPEV
 GFD--DISGINASVVDIKKEIA--------------HLNEIASKLNESLIDLQELGKYEQ
 YIKWPWYVWLGFIAGLIAIAMATIMLCCMTSCCSCLKGLCSCGACCKFDEDHSE------
 -PV---------LTGVKLHYT----
->QVN46569.1 spike glycoprotein [Bat SARS-like coronavirus Khosta-2]
+>Khosta2
 ----------MKLFLFLFLLPLVGA---------------------------------QD
 GCATLSTKLTPT---QLQVNS---------------------------------------
 --TRRGF-------YYFDD--------------------------IYR------------
@@ -1328,7 +1328,7 @@ YQPEVITTENTFESGNCDVVIGIVNNTVYDPLQ-PEL-ESFKEELDKYFKNH---TSPDV
 DFD--DISGINASVVDIKKEIE--------------HLNEIAKSLNESLIDLQELGKYEQ
 YIKWPWYVWLGFIAGLIAIIMATIMLCCMTSCCSCLKGLCSCGSCCKFDDDHSE------
 -PV-L--------KGVKLHYT----
->YP_009113025.1 spike glycoprotein [Betacoronavirus HKU24]
+>RattusHKU24
 --------MVIIFLLLFAEPVFGII---------------------------G-----DF
 KC----TQSWIN---SAASPQPPISTEVVDVS----------------------------
 --NGVGT-------YYVLN--------------------------RVY------------
@@ -1366,7 +1366,7 @@ YHPEPITNDNVIMMNNCAVNFTKAPDVVLNTSI-PNL-PDFKEELDKWFKNQ---SSVAP
 DLS-LDLERINVTFLDLQEEMD--------------RIQDAIKKLNDSYINLKEIGTYEM
 YVKWPWYVWLLIGLAGVAVLVLLFFVCCCTGCGSSCFKK--CGSCCDDYGGHQD------
 ------------IVVKTSHDD----
->QPN00063.1 spike glycoprotein [Apodemus peninsulae coronavirus]
+>Peninsuale
 MALGSMMRRPSNLNMVIIILLLLTK---------------------------------PV
 TGIIGDFKCTQSWINSAASPQPTISTDVVDVS----------------------------
 --KGVGT-------YYVLN--------------------------RVYL-----------
@@ -1404,7 +1404,7 @@ YHPEPITNDNVIMMSNCAVNFTKAPDVVLNTSI-PNL-PDFKEELDKWFKNQ---SSVAP
 DLS-LDLERINVTFLDLQQEMD--------------RIQEAIKKLNDSYINLKEIGTYEM
 YVKWPWYVWLLIGLAGVAVLVLLFFVCCCTGCGASCFKK--CGSCCDDYGGHQD------
 ------------IVVKTSHDD----
->YP_173238.1 spike glycoprotein [Human coronavirus HKU1]
+>HumanHKU1
 ----------MLLIIFILPTTLAVI---------------------------G-----DF
 NC----TNFAIN---DLNTTVPRISEYVVDVS----------------------------
 --YGLGT-------YYILD--------------------------RVY------------
@@ -1442,7 +1442,7 @@ YYPEPISDKNVVFMNTCSVNFTKAPLVYLNHSV-PKL-SDFESELSHWFKNQ---TSIAP
 NLT-LNLHTINATFLDLYYEMN--------------LIQESIKSLNNSYINLKDIGTYEM
 YVKWPWYVWLLISFSFIIFLVLLFFICCCTGCGSACFSK--CHNCCDEYGGHHD------
 ------------FVIKTSHDD----
->YP_009824982.1 spike glycoprotein [Murine hepatitis virus]
+>Murine
 ---------MLFVFILFLPSCLGYI---------------------------G-----DF
 RC---IQLVNSN---GANVSAPSISTETVEVS----------------------------
 --QGLGT-------YYVLD--------------------------RVY------------
@@ -1480,7 +1480,7 @@ YYPEPITDKNSVIMSSCAVNYTKAPEVFLNTSI-PNP-PDFKEELDKWFKNQ---TSIAP
 DLS-LDFEKLNVTLLDLTYEMN--------------RIQDAIKKLNESYINLKEVGTYEM
 YVKWPWYVWLLIGLAGVAVCVLLFFICCCTGCGSCCFKK--CGNCCDEYGGHQD------
 -------------SIVIHNISSHED
->UBB42416.1 surface glycoprotein [Longquan Niviventer niviventer betacoronavirus 1]
+>LongquanBeta
 --------MLFVFVFAFVVPCFGYI---------------------------G-----DF
 RC---IQLTNTD---TSNASAPSVSTEVVDVS----------------------------
 --KGVGT-------YYVLD--------------------------RVY------------
@@ -1518,7 +1518,7 @@ YYPEPINDKNSVVMSSCGVNYTKAPEVLLNSSI-STL-SDFKEELDKWFKNQ---TSTAP
 DLS-LDLEKINVTFLDLSEEMN--------------RIQDAIKKLNESYINLKEVGTYEM
 YVKWPGYVWLLIGLAGVAVCVLLFFICCCTGCGASCFKK--CGNCCDEYGGRQG------
 -------SIVIH--NISSHEA----
->YP_009555241.1 spike surface glycoprotein [Human coronavirus OC43]
+>Beta1
 ---------MFLILLISLPTAFAVI---------------------------G-----DL
 KC----TSDNIN---DKDTGPPPISTDTVDVT----------------------------
 --NGLGT-------YYVLD--------------------------RVY------------
@@ -1556,7 +1556,7 @@ YYPEPITENNVVVMSTCAVNYTKAPYVMLNTSI-PNL-PDFKEELDQWFKNQ---TSVAP
 DLS---LDYINVTFLDLQVEMN--------------RLQEAIKVLNQSYINLKDIGTYEY
 YVKWPWYVWLLICLAGVAMLVLLFFICCCTGCGTSCFKK--CGGCCDDYTGYQE------
 ------------LVIKTSHDD----
->QZQ78890.1 spike protein [Tapir coronavirus 1044512-1]
+>Tapir
 ---------MFLILLISLPTAFAVI---------------------------G-----DL
 KC----TTVSIN---DVDTGVPSISTDTVDVT----------------------------
 --NGLGT-------YYVLD--------------------------RVY------------
@@ -1594,7 +1594,7 @@ YYPEPITGNNVVVMSTCAVNYTKAPDVMLNIST-PNL-PDFKEELDQWFKNQ---TSVAP
 DLS---LDYINVTFLDLQDEMN--------------RLQEAIKVLNQSYINLKDIGTYEY
 YVKWPWYVWLLIGFAGVAMLVLLFFICCCTGCGTSCFKK--CGGCCDDYTGHQE------
 ------------LVIKTSHED----
->YP_005454245.1 spike protein [Rabbit coronavirus HKU14]
+>RabbitHKU14
 ---------MFLILLISLPTAFAVI---------------------------G-----DL
 KC----TTASIN---DVDTGTPSISTDTVDVT----------------------------
 --NGLGT-------YYVLD--------------------------RVY------------
@@ -1632,7 +1632,7 @@ YYPEPITENNVAVMSTCAVNYTKAPDVMLNIST-PNL-PDFKEELDQWFKNQ---TSVAP
 DLS---LDYINVTFLDLQDEMN--------------RLQEAIKVLNQSYINLKDIGTYEY
 YVKWPWYVWLLIGLAGVAVLVLLFFICCCTGCGTSCFKK--CGGCCDDYTGHQE------
 ------------LVIKTSHDD----
->QOE77336.1 surface glycoprotein [Longquan Rl rat coronavirus]
+>LongquanRat
 ----------MLFILFILPSAFAVI---------------------------G-----DL
 KC----TTLSIN---DANTGAPSISSEVVDVS----------------------------
 --SGLGT-------YYVLD--------------------------RVY------------
@@ -1670,7 +1670,7 @@ YYPEPITDKNSVVMSTCAVNYTKAPDVFLNNSI-PNL-PDFKEELDQWFKNQ---TSVAP
 DLS-LDLEKINVTFLDLHDEMN--------------RIQEAIKKLNESYINLKEIGTYEM
 YVKWPWYVWLLIGLAGVAVCVLLFFICCCTGCGASCFKK--CGNCCDEYGGHQD------
 ------------IVIKTSHED----
->AYR18599.1 spike glycoprotein [Betacoronavirus sp.]
+>Beta
 ----------MLFILFILPSAFAVI---------------------------G-----DF
 KC----TTLSIN---DVNTGVPSISSEVVDVS----------------------------
 --NGLGT-------YYVLD--------------------------RVY------------
@@ -1708,7 +1708,7 @@ YYPEPITDKNSVVMSSCAVNYTKAPDVFLNNSI-PNL-PDFKEELDQWFKNQ---TSVAP
 DLS-LDLEKINVTFLDLHDEMN--------------RIQEAIKQLNQSYINLKEIGTYEM
 YVKWPWYVWLLIGLAGVAVCVLLFFICCCTGCGASCFKK--CGNCCDEYGGHQD------
 ------------IVIKTSHED----
->QGA70692.1 spike glycoprotein [Erinaceus hedgehog coronavirus HKU31]
+>HedgehogHKU27
 --------MIRSVFLLMCLLTLIKS---------------------------G-----DA
 NCIVVDMQPSYF---QRDWPRPINMS----------------------------------
 --AADGI-------IYPVG--------------------------RTY------------
@@ -1746,7 +1746,7 @@ YQPEPITNFNSRSVEP-EVTFQNLTNNLPPPLS-NSTDVDFKDELEEFFKNI---TSEVP
 NFG--SITQINSTVLDLSEEMK--------------TLQSVVEALNQSYIELKELGNYTY
 YNKWPWYVWLGFIAGLVALALCLFFILCCTGCGTSCMGKLNCTRCCDKYDDYDL------
 -------------QPEKIHIH----
->YP_009513010.1 spike protein [Betacoronavirus Erinaceus/VMC/DEU/2012]
+>Hedgehog
 --------MIRSACLLMCLLMFIKA-------------------------TPS-----EG
 TCISVDMQPSYF---IKNWSMPINMS----------------------------------
 --KADGV-------LYPVE--------------------------RTY------------
@@ -1784,7 +1784,7 @@ YQPEPITSFNSRFVQP-EFTFQNLTNNLPPPLLSNNSDVTFEDELEEFYKNI---TSEIP
 NFG--SISQINTTMLNLSREMS--------------ILQQVVKDLNNSYIELKELGNYTY
 YQKSPWYVWLGFIAGLVALALCLFFILCCTGCGTSCLGKINCTRCCDKYDDFDM------
 --------------PEKIHIH----
->QRN68024.1 spike glycoprotein [Betacoronavirus Erinaceus]
+>BetaErin
 --------MKRSVCLLMCLLMFIKI-------------------------TPS-----EG
 TCIGVEMNATYF---IKDWPQPINMS----------------------------------
 --KADGL-------LYPTA--------------------------RTY------------
@@ -1822,7 +1822,7 @@ YQPEPITTFNSRTVER-EITFQNLTNNLPPPLLSNNSDITFEDELEDFFKNI---TSEIP
 NFG--SLSQINTTMLNLSAEMA--------------MLQQVVKDLNNSYIELKELGNHTY
 YQKWPWYVWLAFIAGLVALALCLFFILCCTGCGTSCLGKINCTRCCDKYDDFDM------
 --------------PEKIHIH----
->YP_009047204.1 spike protein [Middle East respiratory syndrome-related coronavirus]
+>MERS
 --------MIHSVFLLMFLLTPTES-------------------YVDVGPDSV-----KS
 ACIEVDIQQTFF---DKTWPRPIDVS----------------------------------
 --KADGI-------IYPQG--------------------------RTYS-----------
@@ -1860,7 +1860,7 @@ YAPEPITSLNTKYVAP-QVTYQNISTNLPPPLLGNSTGIDFQDELDEFFKNV---STSIP
 NFG--SLTQINTTLLDLTYEML--------------SLQQVVKALNESYIDLKELGNYTY
 YNKWPWYIWLGFIAGLVALALCVFFILCCTGCGTNCMGKLKCNRCCDRYEEYDL------
 -------------EPHKVHVH----
->YP_001039953.1 spike glycoprotein [Tylonycteris bat coronavirus HKU4]
+>BatHKU4
 ----------MTLLMCLLMSLLIFV----------------------------------R
 GCDSQFVDMSPASNTSECLESQVDAAAFSKLMWPYPIDPS--------------------
 --KVDGI-------IYPLG--------------------------RTYS-----------
@@ -1898,7 +1898,7 @@ YKPEPITQANSRYVSS-DVKFDKLENNLPPPLLENSTDVDFKDELEEFFKNV---TSHGP
 NFA--EISKINTTLLDLSDEMA--------------MLQEVVKQLNDSYIDLKELGNYTY
 YNKWPWYVWLGFIAGLVALLLCVFFLLCCTGCGTSCLGKMKCKNCCDSYEEY--------
 -------------DVEKIHVH----
->YP_001039962.1 spike glycoprotein [Pipistrellus bat coronavirus HKU5]
+>BATHKU5
 --------MIRSVLVLMCSLTFIGN---------------LTRGQSVDMGHNG-----TG
 SCLDSQVQPDYFESVHTTWPMPIDTS----------------------------------
 --KAEGV-------IYPNG--------------------------KSYS-----------
@@ -1936,7 +1936,7 @@ FHPEPITEANSKYV-SMDVKFENLTNRLPPPLLSNSTDLDFKEELEEFFKNV---SSQGP
 NFQ--EISKINTTLLNLNTELM--------------VLSEVVKQLNESYIDLKELGNYTF
 YQKWPWYIWLGFIAGLVALALCVFFILCCTGCGTSCLGKLKCNRCCDSYDEY--------
 -------------EVEKIHVH----
->ASL68941.1 spike glycoprotein [Hypsugo bat coronavirus HKU25]
+>BATHKU25
 ----------MTLSMFLLMFLLTHI-----------------KGDVDLGPDSV-----AQ
 SCQEVDIQPQYF---QKHWTKPIDPA----------------------------------
 --KADGI-------IYPTG--------------------------RSY------------
@@ -1974,7 +1974,7 @@ YNPEPISMANTRYVSQ-DTKFENLTSNIPPPLLNNRTDTDFKDELEDFFKNV---SSQGP
 NFA--EISKINTTLLDLSTEMN--------------ALNEVVKQLNQSYIDLKELGNYSY
 YQKWPWYIWLGFIAGLVALALCVFFLLCCTGCGTNCMGKLKCNRCCDKYEEYEI------
 -------------EPHKIHVH----
->YP_009824998.1 spike glycoprotein [Infectious bronchitis virus]
+>Avian
 ------MLVTPLLLVTLLCVLCSAA-----------------------------------
 ------------------------------------------------------------
 --------------LYDSS-----------------------------------------
@@ -2012,7 +2012,7 @@ YMPRAITAGDIVTLTSCQANYVSVNKTVITTFVDNDD-FDFNDELSKWWNAT---KHELP
 DFD---KFNYTVPILDIDSEID--------------RIQGVIQGLNDSSIDLEKLSILKT
 YIKWPWYVWLAIAFATIIFILILGWVFFMTGCCGCCCGCLGIMPLMRKCGKKSS------
 -YY---------TTFDNDVVT----
->YP_009755897.1 spike protein [Canada goose coronavirus]
+>Goose
 ------MKALFKTFTFFSLLVCLSC-----------------------------------
 ------------------------------------------------------------
 --QIYGDDWV----YYYPS-----------------------------------------
@@ -2050,7 +2050,7 @@ YMPRNITAGDVVTLTSCQANYVYVNRTVVTTFV-DDSDFDFDAEFDKWWNET---QHDFP
 QLD---EFNYTIPLLNITQQIQ--------------DIQDAIQGLNDSYVDLHELSKLTT
 YIKWPWYIWLAIAFLTIIFFLILGWIFFMTGCCGGCCGCCGLIPLAQRCSKKSSYYQTFD
 DDV----------VGERIRPKKNV-
->QXT50810.1 spike protein [Anser fabalis coronavirus NCN2]
+>Anser
 ----------MRALFSFFLTFFFFV-----------------------------------
 ------------------------------------------------------------
 --TTLALYS---------------------------------------------------
@@ -2088,7 +2088,7 @@ YMPRNITAGDVVTLTSCQANYVYVSRTVVTTFV-DDSDFDFDAEFDKWWNET---QHDFP
 QFD---EFNYTVPLLNITQQIQ--------------DIQDAIQGLNDSYVNLHELSKLTT
 YIKWPWYVWLAIAFLTIIFFLILGWIFFMTGCCGGCCGCCGLIPLAQRCSKRSSYYQTFD
 DDV----------VGERIRQRKNV-
->QII89019.1 spike protein [Bottlenose dolphin coronavirus]
+>Dolphin
 -----MVKLSYGIVLVCTTLTIPLL-----------------------YNAEE-----FL
 DFDLWPCDTCWN---SSLLEENNTYTAAAFHQYGIIPFYYSINWTVVMN-----------
 --YSDGVYD-----YKWDD--------------------------VAYNSSNYLAVNVSL
@@ -2126,7 +2126,7 @@ YNPRQITTGDIQMLTSCNSSYTHIEWSQLPLVA-PPY-KDFDQEFEELYEKW---NYTLE
 ELE---KLNVTFPYLNVSDQIDIING-------AMENIRNQIQNLNSSYIDLEWLNKYER
 YSKWPWWVWLIIALCFAAFCLLVFWIFICTGCCGGCCNC--CGIP-ALFGYCKR-----K
 AHY-ERLRMDEEGNLEEIKAD----
->YP_001876437.1 spike protein [Beluga whale coronavirus SW1]
+>Beluga
 ---------MVRLSFVIVFLCTMLM-----------------------NPLLI-----SA
 IDEGLWPAGMWY---SHLLQENNTYTVAAFQEHAILPSYVNNNWTVITNFT---------
 --AENATQLEWDDPYYNST-------------------------LFSY------------
@@ -2164,7 +2164,7 @@ YNPRQITTGDIQMLTSCNSGYTHIEWSQLPLVA-PPY-DDFDKEFDKLYEKW---NYTLE
 ELE---KLNVTFPYLNVSEQIDIINS-------AMENIKSQIQNLNSSYIDLEWLNKYER
 YSKWPWWVWLIIVLCFAAFCLLVFWIFICTGCCGGCCNC--CGIP-ALFGYCKR-----K
 AHY-ERLRMDEEGNLEEIKAD----
->AYF53093.1 spike protein [Feline alphacoronavirus 1]
+>FelineAlpha
 ----------MIVLILALLSAAEAE---------------DAPHGVTLPQFNT-----SY
 DNQRFELNFYNF---LQTWDIPPNTETILGGYLPYCGHGANCGWYNFVYSQSVGNNGKYE
 YINTQNLNIPNVHGVYFDV--REHDSDGVWATRDRVGLLISIHGKSYY--SLLMVLQDEA
@@ -2202,7 +2202,7 @@ FQPRKPQMSDFVQITSCEVTFLNTTYTTFQEIV-IDY-IDINKTIADMLEQY-NPNYTTP
 ELD-LQLEIFNQTKLNLTAEIDQLEQRADNLTNIAHELQQYIDNLNKTLVDLEWLNRIET
 YVKWPWYVWLLIGLVVVFCIPLLLFCCLSTGCC-GCFGC--LGSCCHSLCSRRQ-----F
 ESY-E--------PIEKVHIH----
->QLE11825.1 spike protein [Bat alphacoronavirus]
+>BatAlpha
 -------MWTTRLCVFMAFLLCAEAYWWEQRITNRHRRSAYRGDRAVVSKYAAAPVKLRE
 GSNHGASVCSTGNNYIFYPGLPPNDTAIISGYLP-----FDGSWVCSTGTFNYY------
 --NAHGIFIR----YYSNAERVVLSAGVQPFDPNI---------WQLY---------VSQ
@@ -2240,7 +2240,7 @@ FEPRKPTMADFVRITSCVPSYYNITSDQVGTFL-PDF-VDVNKTIEDILNKL--PNYTLP
 DLN---LDVYNQTLLNLTDEINRLNGQAGQLNATIDELREWINYINDTRVDLQWLSRIER
 YVKWPWYVWLAIGLAVIFACAILVFCCLSTGCC-GCCGC--FTSFCGSCCASKR-----L
 PYY-T--------EVEKVHLN----
->YP_005352871.1 spike glycoprotein [Wigeon coronavirus HKU20]
+>WigeonHKU20
 ---------MYRFAILMLVISPTLA-----------------------------------
 ------------------------------------------------------------
 ------------------------------------------------------------
@@ -2278,7 +2278,7 @@ YQPRPATTADFVQIQSCDVTLYNITYNNISLVI-PDF-VDTNKTIEDIISSI--PNNTAP
 SLE---IASLNLTVLNLTSELEQLKASTGNFTQISQEIQDYINKLNDTLVDLEWLNRVET
 YVKWPWWVWLLIFLAICTFIIIVVTIFLCTGCCGGCFGC--FGGCCGLFSRVKHHEFSHL
 PVE----EQDGSIPITYKKVN----
->AWR88316.1 spike glycoprotein, partial [Deltacoronavirus sp.]
+>Delta
 ----------MLVMCCFNYILLSFI-----------------------------------
 ------------------------------------------------------------
 ---------------FIGG-----------------------------------------
@@ -2316,7 +2316,7 @@ YEPRQLSLTDLVRITNCGIIHLNTTYNNLTTLI-PDY-VDVNKTVDDILSNL--SNNTLP
 PLD---IEVYNHTLLNLSTEIEILKNNSYLISEKTEEIDLYIQKLNETLVNLEWLNRVET
 YVKWPWWVWLLIFLAIITFIIIVVTIFLCTGCCGGCFGC--CGGCCGLFSKKRSYEFSKL
 PTE-E-----EH-DIPITYKKVR--
->YP_002308497.1 spike glycoprotein [Thrush coronavirus HKU12-600]
+>ThrushHKU12
 ----------MQRVILICFITLASA-----------------------------------
 ------------------------------------------------------------
 ------------------------------------------------------------
@@ -2354,7 +2354,7 @@ FQPRPATVADFVQIQSCEVTFYNTTYDELPQLI-PDY-VDVNQTVSDILANK-----TDP
 SLD-LKLDIYNQTVLNLSAEVDELFQRAQNLTLIFKQLEQYINNINNTLVDLEWLNRVET
 YIKWPWWVWLLIVLAIAAFACIVITIFLCTGCCGGCFGC--CGGCFGLFSKRKF------
 -----------DSDPTPVSFKLKEW
->AFD29244.1 spike glycoprotein [Common moorhen coronavirus HKU21]
+>MoorHKU21
 ---------MQRFVLTILFVNCVYA-----------------------------------
 ------------------------------------------------------------
 --------------SF--------------------------------------------
@@ -2392,7 +2392,7 @@ YEPRLPTMSDFIPIQSCIVQYINVTQEDLPSII-PDY-VDVNSTVDSIINSI--PNVTYP
 DLD---ISIYNQTILNLTQEITDLQGKANNLSEIAKELQQYIDNLNNTLVDLEWLNRVET
 YIKWPWYIWLLIFLSLATFVCIVVTIFLCTGCCGGCFGC--FGGCCGLFRKHKF-----Y
 EED-T--------KQTPVFFKVKEW
->YP_005352838.1 spike glycoprotein [White-eye coronavirus HKU16]
+>WhiteHKU16
 ---------MQRIILISTILYCARA-----------------------------------
 ------------------------------------------------------------
 ------------------------------------------------------------
@@ -2430,7 +2430,7 @@ FEPRTPTQSVFIPLTTCSVDFVNVTANNVSIII-PDY-VDVNKTVSDIINGL--PNYSYP
 ELS---LDRFNHTILNLSQEIEDLQIRSQNLSATAELLQQYIDNLNNTLVDLEWLNRVET
 YLKWPWYIWLLIFLAIAAFATILVTIFLCTGCCGGCFGC--CGGCFGLFSKKRR-----L
 SSE-----------PTPVSFKLKEW
->YP_002308479.1 spike glycoprotein [Bulbul coronavirus HKU11-934]
+>Bulbul
 ---------MQRVVLISLFIHLAAA-----------------------------------
 ------------------------------------------------------------
 ------------------------------------------------------------
@@ -2468,7 +2468,7 @@ YEPRVPRAADFIPLVDCSVTYYNVTAEDLPNII-PDY-VDVNQTVSDIINSL--PTHQTP
 TWS---LDQYNYTILNLSQEIKDLQLKSQNLTDIAEIMETYIQNLNKTIVDLQWLNKVET
 YLKWPWYIWLAIFLAIAAFACIIVTIFLCTGCCGSCFGC--CGGCFGFFSKKRH------
 HSD----------EPTPVSFKLKEW
->YP_002308506.1 spike glycoprotein [Munia coronavirus HKU13-3514]
+>Munia
 ---------MQSTLLMLMSATLAHA-----------------------------------
 ------------------------------------------------------------
 ------------------------------------------------------------
@@ -2506,7 +2506,7 @@ YEPRIPRSADFVPLTECSVTYYNTTASQLPTIV-PDF-VDVNQTVSDIIGSL--PNPTPP
 SLV---VDFYNHTILNLSAEILDLQQRADNLSQISEQLQHYIDNLNNTLVDLEWLNKVET
 YIKWPWWVWLLIVLAIAAFACILVTIFLCTGCCGGCFGC--CGGCFGLFSHKKR------
 DTE----------PTPITSFKLKEW
->YP_009513021.1 spike glycoprotein [Porcine coronavirus HKU15]
+>CoronaHKU15
 ---------MQRALLIMTLLCLVRA-----------------------------------
 ------------------------------------------------------------
 --------------KFADD-----------------------------------------
@@ -2544,7 +2544,7 @@ YEPRLPRQADFIQLTDCSVTFYNTTAANLPNII-PDV-IDVNQTVSDIIDNL--PTATPP
 QWD---VGIYNNTILNLTVEINDLQERSKNLSQIADRLQNYIDNLNNTLVDLEWLNRVET
 YLKWPWYIWLAIALALIAFVTILITIFLCTGCCGGCFGC--CGGCFGLFSKKKR------
 ----------STDDQPTPSFKFKEW
->AWV67107.1 spike glycoprotein [Sparrow deltacoronavirus]
+>SparrowDelta
 ---------MQRIVLILLLLGTTRA-----------------------------------
 ------------------------------------------------------------
 ------------------------------------------------------------
@@ -2582,7 +2582,7 @@ YEPRIPRAADFIPLVDCSVTFYNTTASDLPNII-PDI-VDVNQTVSEILGNI--TSPQPP
 SWS---VDYYNNTILNLTLEIDDLQERSKNLSLIADRLQIYIDNLNNTLVDLEWLNRVET
 YLKWPWYVWLAIFLAVAAFAAILITIFLCTGCCGGCFGC--CGGCFGLFSKKKR-----I
 RDD-----------QPTPSFKFKEW
->AXP20281.1 spike protein [Quail deltacoronavirus]
+>QuailDelta
 ---------MQRVVLICLLLSVVHA-----------------------------------
 ------------------------------------------------------------
 ------------------------------------------------------------
@@ -2620,7 +2620,7 @@ YEPRIPRAADFIPLVNCSVTFYNTTAGDLPNII-PDV-VDVNQTVSEILGNI--TTPKPP
 SLN---VDYYNHTILNLTQEIEDLQERSRNLSQVADRLQAYIDNLNNTLVDLEWLNRVET
 YIKWPWYVWLAIFLAIAAFVVILITIFLCTGCCGGCFGC--CGGCFGLFSKKKR-----I
 ATD-----------QPTPTFKFKEW
->BBC54852.1 spike protein [Quail coronavirus UAE-HKU30]
+>QuailHKU30
 ---------MQRIVLILLLFSVSHA-----------------------------------
 ------------------------------------------------------------
 ------------------------------------------------------------
@@ -2658,7 +2658,7 @@ YEPRIPRAADFIPLVDCSVTFYNTTASDLPNII-PDV-VDVNQTVSEILGNI--TSPKPP
 SLS---VDYYNHTILNLTQEIEDLQERSKNLSLVADRLQAYIDNLNNTLVDLEWLNRVET
 YIKWPWYVWLAIFLAIAAFVVILITIFLCTGCCGGCFGC--CGGCFGLFSTKKV------
 -RY----------DQPTPNFKFKEW
->YP_005352863.1 S gene product [Night heron coronavirus HKU19]
+>HeronHKU19
 ---------MQCVVLVLTLISIVTS-----------------------------------
 ------------------------------------------------------------
 ------------------------------------------------------------
@@ -2696,7 +2696,7 @@ YQPRTLAQADVVKISTCDVTYVNLTSIEFEQLI-PEY-VDINSTVEGILNST--LPGKIP
 DLN---IGHYNNTILNLTTEINDLQSKAENLSMIAYQLEEYIKNINNTLVDLEWLNRVET
 YLKWPWYVWLAIALAFTGFVTILITIFLCTGCCGGCFGC--CGGCFGLFSKKIDPMRQYM
 NRY-ETPTSKSDDAIPIIYKK--NW
->YP_005352846.1 spike glycoprotein [Sparrow coronavirus HKU17]
+>SparrowHKU17
 ----------MQGALLITFIAVVTS-----------------------------------
 ------------------------------------------------------------
 ------------------------------------------------------------
@@ -2734,7 +2734,7 @@ YQPRTATKADFVYIQSCDITFLNLTDTTIEAVI-PDY-VDVNKTIEEFLNNL--PNYTLP
 DLS---IDRYNNTILNLTTEIADLNGKAANLSQIVEELEQYIKNINSTLVDLEWLNRVET
 YIKWPWYIWLAIALAFTAFVAILITIFLCTGCCGGCFGC--CGGCFGLFSKKKR------
 --YTD--------DHPTPSFKFKEW
->YP_005352854.1 spike glycoprotein [Magpie-robin coronavirus HKU18]
+>Magpie
 ---------MRGAILTLILVTSVKA-----------------------------------
 ------------------------------------------------------------
 ------------------------------------------------------------
@@ -2772,7 +2772,7 @@ YQPRVPAQADFVYIETCTITYLNLTDLTIDVVI-PDY-VDVNQTVNDILSKL--PNSTGP
 SLT---IDQYNNTILNLTTEIADLNNRTQNLSDVVQNLEEYIHKLNATLVDLDWLNRVET
 YIKWPWWVWLLITLAIVAFVVILVTIFLCTGCCGGCFGC--CGGCFGLFSHNKR------
 NTE----------SIPITSFKLKEW
->QPB10668.1 spike protein [Shorebird deltacoronavirus]
+>ShorebirdDelta
 ----------MRSIVLISIFVCV-------------------------------------
 ------------------------------------------------------------
 ------------------------------------------------------------
@@ -2810,7 +2810,7 @@ YQPRKAVMSDFVYIESCTVTYLNLTDTTIEAVI-PDY-VDVNKTLEDILSKL--PNYTIP
 DLG---VGQYNNTILNLTSEIDDLNKRAENLTDIVKNLQHYIDNINATIVDLEWLNRVET
 YIKWPWWTWLLIILAIATFACIVITIFLCTGCCGGCFGC--FGGCFGLFRRKPR-----L
 EDT----------NPTPVSFKVKEW
->BBC54822.1 spike protein [Falcon coronavirus UAE-HKU27]
+>FalconHKU27
 ----------MQSIILVTILSAVTA-----------------------------------
 ------------------------------------------------------------
 ------------------------------------------------------------
@@ -2848,7 +2848,7 @@ YQPRQASMSDFVTIESCTVTYLNLTDTTIDAVI-PDY-VDVNKTVEDILNNL--PNYTKP
 DLD---LGRYNNTILNLTNEIDDLNGRAENLTQIVANLQDYIDKINATIVDLEWLNRVET
 YIKWPWWVWLLIVLAIAAFACIVVTIFLCTGCCGGCFGC--CGGCFGLFSKKRH-----L
 NTE-----------PTPVSFKLKEW
->BBC54842.1 spike protein [Pigeon coronavirus UAE-HKU29]
+>PigeonHKU29
 ----------MQSIILVTILSAATA-----------------------------------
 ------------------------------------------------------------
 ------------------------------------------------------------
@@ -2886,7 +2886,7 @@ YQPRQASISDFVTIESCTVTYLNLTDTTIDAVI-PDY-VDVNKTVEDILNNL--PNYTKP
 DLD---LGRYNNTILNLTTEINDLNGRAENLTQIVENLQEYIDKINATIIDLEWLNRVET
 YIKWPWWVWLLIVLAIAAFACIVVTIFLCTGCCGGCFGC--CGGCFGLFSKKRH-----L
 NTE-----------PTPVSFKLKEW
->BBC54832.1 spike protein [Houbara coronavirus UAE-HKU28]
+>HoubaraHKU28
 ----------MQSIILVTILSAATA-----------------------------------
 ------------------------------------------------------------
 ------------------------------------------------------------
@@ -2924,7 +2924,7 @@ YQPRQASISDFVTIESCTVTYLNLTDTTIDAVI-PDY-VDVNKTVEDILNNL--PNYTKP
 DLD---LGRYNNTILNLTTEINDLNGRAENLTQIVENLQEYIDKINATIIDLEWLNRVET
 YIKWPWWVWLLIVLAIAAFACIVVTIFLCTGCCGGCFGC--CGGCFGLFSKKRH-----L
 NTE-P----------TPVSFKLKEW
->YP_009256197.1 spike protein [Ferret coronavirus]
+>Ferret
 ---MFEMRTPVFLTVCIVLLQYAHC---------------------------D-----TF
 NCSTLHNTTLWA---TDQTRLLDYFIANYSSRLPTGASVVLGDYFPTLGPWYDCVSNT--
 --TYGGVVLEDLRALYLDH----------------QQGVARDLAFAVYGYPYTAIVVLNK
@@ -2962,7 +2962,7 @@ YEPRVATMSDFVQIESCTTTFVNATVAELPSII-PDY-IDINGTIKDMLDQY-KPNWTVP
 ELT---IDVFNQTYLNLTGEINELENRSVILQQTVLELESLIDNINGTLVNLEWLNRVET
 FVKWPWWVWVIIGLILLIALPMLLFCCLSTGCC-GCCGC--LTSCLAGCCKNSC--KRP-
 SYY-E--------PMEKVHIN----
->ADI80523.1 spike protein [Mink coronavirus strain WD1133]
+>MinkWD1133
 ---------MRKMLLILVLIPCVLG-----------------DLFPCRTSINS-----TI
 GNHWYLIDNFVK---NYSVSLPSNSDVVLGDYFP-----TVEPWHNCLLEQTNSTVIFD-
 --GLRALYWD----YNNGQ--------VPVRRYLAVAVYGDPYSVSVY--------FTLD
@@ -3000,7 +3000,7 @@ YQPRVATSADFVQIVDCDVLFVNATILELPSIV-PDY-IDINKTVQDLLDSY-KPNWTVP
 EFS---LDIFNQTYLNITNEINDLENRSVVLYNTTKELELLIQSINNTLVDLEWLNKIET
 YVKWPWYVWVLIALIFLFVLPMLLFCCLSTGCC-GCCGC--LSSCAAGCCKYGC--SRDL
 SRY-E--------PIEKVHVN----
->AVY53336.1 spike protein [Alphacoronavirus Mink/China/1/2016]
+>Mink2016
 ----------MLLILAFLPGVLSDV-------------------FPCQTSINT-----TI
 GNHWYLIDNFIK---NYSVSLPSNSQVVLGDYFP-----TVEQWHNCLLEQTDSTVIFD-
 --GLRALYWD----YNNGY--------VSVKRFLAVAVYGSPYSVSVY--------FTQD
@@ -3038,7 +3038,7 @@ YQPRVATSADFVQIVDCDVLFVNATILELPSII-PDY-IDINKTVQDLLDSY-KPNWTVP
 DLS---LDIFNQTYLNITNEINDLENRSVVLYNTTKELELLIQSINNTLVDLEWLNRIET
 YVKWPWYVWVAIALIFLLVLPMLLFCCLSTGCC-GCCGC--LSSCAAGCCKYSC--SRDL
 SRY-E--------PIEKVHVN----
->YP_009019182.1 spike protein [Mink coronavirus strain WD1127]
+>Mink
 --------MFTKLLLLAVVSVAVKC------------DDIRNLTARCATLQNV-----SI
 GSHWYLIDNFVK---NYSSRLPSNSDVVLGDYFP-----TVKPWYNCVFRYWG-------
 --AHNALLLENLKALYWDT---VQGVTGVNNKYLLVSIHGSPYSATVY----------HK
@@ -3076,7 +3076,7 @@ YQPRIATSADFVQIADCDVLFVNATILELPSII-PDY-IDINKTVQDLLDSY-KPNWTVP
 ELS---LDIFNQTYLNITNEINDLENRSVVLYNTTKELELLIQSINNTLVDLEWLNKIET
 YVKWPWYVWVLIALIFLFVLPMLLFCCLSTGCC-GCCGC--LSSCAAGCCKYSC--SRDL
 SRY-E--------PIEKVHVN----
->QPP46979.1 spike protein [Minacovirus mink/NLD/2020/NT_4]
+>Minacovirus2020
 --------MHTKLLLLALSFVAVKC------------DDIRNLTARCATFKNE-----SI
 GSHWYLIDNFVK---NYSTRLPSNSDVVLGDYFP-----TVNPWYNCIFRYWG-------
 --DRNVLLLENVKALFWDT--------VQNVPSAPNKYLLVTVYGSPYSVSVYHKRPKST
@@ -3114,7 +3114,7 @@ YQPRVATSSDFVQIVACDVLFVNATILELPSII-PDY-IDINKTVQDLLDSY-KPNWTVP
 DLS---LDIFNQTYLNITNEINDLENRSVVLYNTTKELELLIQSINNTLVDLEWLNKIET
 YVKWPWYVWVLIALIFLFALPMLLFCCLSTGCC-GCCGC--LSSCAAGCCKYSC--SRDL
 SRY-E--------PIEKVHVN----
->AHN92552.1 spike protein, partial [Mystacina coronavirus New Zealand/2013]
+>Mystacina
 ----------GINSARGVAIGIGPS----------------------------------N
 NTALQHKERVYS---LYIWQR---------------------------------------
 --NAYSLIIRICQWYINKD-----------------------------------------
@@ -3152,7 +3152,7 @@ LYTTSLMGGILLGAFG---AG---APAIPFSNAVFSKINY--------------------
 ------------------------------------------------------------
 ------------------------------------------------------------
 -------------------------
->YP_009755890.1 spike protein [Alphacoronavirus Bat-CoV/P.kuhlii/Italy/3398-19/2015]
+>Italy2015
 ----------MNLFIVVLCALMSLV-------------------------RPQ-----RS
 PC----APTTGM---KIQLGLPPN-RTVYVSGYL----PLPNNWTCLSANNQGPVFNRIV
 G-KARAVYIR----YIQGG--YAMSFGVGPSSVQN---------FNGYSLYVTQKNDVLV
@@ -3190,7 +3190,7 @@ FQPRVPVVADFVQIQSCAVTYVNLTTEEFETVV-PDF-IDVNKTLQDLVDALPKPNYTLP
 NFP---LDQFNHTYLNLTAQIGELEARALALENISARLQGHIDSINNTLVDLEWLDRFET
 YIKWPWYVWLAIFVVLIILAGLMLWCCIATGCC-GCCSC--ITASCAGCCDCRG---RNL
 QRY----------EVEKVHVQ----
->AZF86130.1 spike protein [Alphacoronavirus Bat-CoV/P.kuhlii/Italy/206679-3/2010]
+>Italy2010
 ----------MNLFIVVLCALTSLV-------------------------RPQ-----GT
 PC----QPTTGM---KIQLGLPPNRTVYVSGYLP-----LPNNWTCLSANNQGPVFNRVV
 G-KARAVYIR----YIQGGYAMSFGVGPSSVQNFNGYSLYVTQKNDVF-----------V
@@ -3228,7 +3228,7 @@ FQPRVPVVADFVQIQSCAVTYVNLTTEEFETIV-PDF-IDVNKTLQDLVDALPKPNYTLP
 NFP---LDQFNHTYLNLTAQIGELEARALALENISARLQGHIDSINNTLVDLEWLDRFET
 YIKWPWYVWLAIFVVLIILAGLMLWCCIATGCC-GCCSC--ITASCAGCCDCRG---RNL
 QRY----------EVEKVHVQ----
->QCX35160.1 spike glycoprotein [Tylonycteris bat coronavirus HKU33]
+>BatHKU33
 ----------MKIFILFALAFASAY---------------------------A-----AN
 EC---DTVLAGM---NIRLGLPPSTSTFVSGYLP-----KPSGWNCVGSGTPNVVVD---
 --KARGVFMR----YHSYA--QEGAFGVGPRDVSTSNS------YSLF---------VWQ
@@ -3266,7 +3266,7 @@ YQPRVPTFADFVQIQSCAITYVNITTEEFNSVV-PDY-IDVNKTLEDFASTL--PNYTTP
 EFP---LDRFNYTFLNLSDQIAILENKSQELLLISQQLQENINNINNTLLDLEWLDRLET
 YIKWPWWVWLIFAIVFVVLAFLLLWCCLATGCC-GCCSC--LSTSCATLCDCRG--KR-L
 QQY-E---------VEKVHVQ----
->YP_009201730.1 spike glycoprotein [BtNv-AlphaCoV/SC2013]
+>NyctalusAlpha
 ----------MKINLGLPPSTSSFV-----------------------------------
 ------SGYLPT---PGNWTCRNGGTTKLQG-----------------------------
 --HARAVFMR----YYAYARAWSFGVGPSTTIDGH---------YGLY---------VWH
@@ -3304,7 +3304,7 @@ YQPRVPQMSDFVQIQSCAITYVNLTSEEFNSVV-PDY-IDVNKTLEDFAATL--PNRTYP
 DFS---LDQFNHTYLNISGQISVLENKSAELLLITERLQQHIQNINNSLIDLEWLDRLET
 YVKWPWWVWLCFAVVFVILLGLMLWCCIATGCC-GCCSC--ITASCAGCCDCRG--KR-L
 QRY-E---------VEKIHIQ----
->AZF86118.1 spike protein [Alphacoronavirus Bat-CoV/P.kuhlii/Italy/206645-41/2011]
+>Italy2011
 -----MVVFNLSAIYPLLLFILPFV---------------------------------NG
 AC----NDLGQH---RIQLGLPAS-TNAFVSGYL----PKPGNWTCATGRHFVVG-----
 --TARGVFMR----YFSNA--EQWALGVGPKSVTDFGK------YALY---------VQQ
@@ -3342,7 +3342,7 @@ YQPRVPQISDFVQIQSCAITYVNLTTDEFSSVV-PDY-IDVNKTLEDFAANL--PNYTAP
 DFG---IDKFNHTFLNISEQISMLENKSAQLLAITARLQGHIDNINNTLIDLEWLDRLET
 YIKWPWWVWLIFAVVFVILLGLMLWCCIATGCC-GCCSC--ITASCAGCCDCRG--SK-L
 QRY-E---------VEKVHVQ----
->YP_008439202.1 spike glycoprotein [Bat coronavirus CDPHE15/USA/2006]
+>BatHE15
 ----------MKLIILLCIGFAYAN--------------------------QR-----NV
 GCSEGGYLDPPK---RLQLGLDNVTALVPGALPL------PGLWNCTVTSNFIYGPTP--
 --RPIGLFIM----YYASAQVAQFGISSTLRRSLSP--------YSLY---------FLN
@@ -3380,7 +3380,7 @@ FEPRQPQISDFVRIEGCDVEYFNVTGESLPDIF-PDF-IDVNKTLEDILSQL--QNNTGP
 KFD---IDIFNATYLNLSSEIADLEMRSESLHNTTEELKRLIDNINSTLVDLEWLNRVET
 YIKWPWWVWLLIAIALIFTVSLLLFCCIATGCC-GCCGC--CASCLTGCCKGPR-----L
 QPY---------EAIEKVHVQ----
->ADX59458.1 spike protein [Chaerephon bat coronavirus/Kenya/KY41/2006]
+>BatKY41
 ----------MRPLILVLLTTAINCFTVPKYTVNTREILRQRRMLGYLPKPRG-----LG
 DCGVSHFNLSLF---FSTFRIPAGSNVVLGGYL---PTTNISDWQCQTTSAAHKY-----
 --TGHGVYI-----YYTQS-NMGWVIGVGMPHPSDED-------FQLF---------IFR
@@ -3418,7 +3418,7 @@ FEPRKPQVADFVQVSSCELSYFNITMEQLPDLV-PDF-VDVNKTLEEIFGSL--PNFTVP
 QFP---LDVLNQTYLNLTSEIHALENKSEHLNLIANSLQSKIDAINATLVDLQWLNRVES
 YVKWPWWVWLLILIALILTFALLTFCCLATGCC-GCCGC--IAGCCSGCCKGPR-----L
 QPY---------EPIEKVHIH----
->YP_001351684.1 spike protein [Scotophilus bat coronavirus 512]
+>Scotophilus512
 --------MKYTLLFCVVFATVSFG-------------------------FAD-----NE
 RCNKTVNLTRLF----SKFDIQPPSQVVLAGLLP----NQTAQWKCTTETNKRDEGV---
 --GVKGVFLS----YVSSG--RGFTIGVSQYNFDPST-------YQLY------LHRDTN
@@ -3456,7 +3456,7 @@ FEPRRPEVADFVQVKTCTISYVNITNNQLPDII-PDY-VDVNKTIDEILANL--PNNTVP
 DLP---LDVFNQTFLNLTGEIADLEARSESLKNTSEELRQLIQNINNTLVDLQWLNRVET
 FIKWPWYVWLAIVIALILVVSLLVFCCISTGCC-GCCGC--CGSCFSGCCRGTK-----L
 QHY---------EPIEKVHVQ----
->NP_598310.1 spike protein [Porcine epidemic diarrhea virus]
+>PorcineVirus
 ---------MRSLIYFWLLLPVLPT-----------------------LSLPQ-----DV
 TRCQSTTNFRRF---FSKFNVQAPAVVVLGGYLP---SMNSSSWYCGTGIETAS------
 --GVHGIFLS----YIDSG--QGFEIGISQEPFDPSG-------YQLY------LHKATN
@@ -3494,7 +3494,7 @@ FEPRKPTVSDFVQIESCVVTYVNLTSDQLPDVI-PDY-IDVNKTLDEILASL--PNRTGP
 SLP---LDVFNATYLNLTGEIADLEQRSESLRNTTEELRSLINNINNTLVDLEWLNRVET
 YIKWPWWVWLIIVIVLIFVVSLLVFCCISTGCC-GCCGC--CGACFSGCCRGPR-----L
 QPY---------EAFEKVHVQ----
->YP_009199242.1 spike protein [Swine enteric coronavirus]
+>Alpha1
 ---------MKFLIHCWLFLPLLSA-----------------------LSLTQ-----DV
 TRCGVNTNFRRF---FSKFNVQAPATVILGGYLP---SMNSSSWYCGQGIETAS------
 --GVHGIFLS----YIDSG--QGFEIGIAQEPFDPSG-------YQLY-------LYKDN
@@ -3532,7 +3532,7 @@ FEPRKPTVSDFVQIESCVVTYVNLTSDQLPDVI-PDY-IDVNKTFDEIVASL--PNRTGP
 SLP---IDVFNATYLNLTVEIADLEQRSESLHNITEELRSLIYNINNTLVDLEWLNRVET
 YIKWPWWVWLIIFIVLIFVVSLLVLCCISTGCC-GCCGC--CGACFSGCCRGPR-----L
 QPY-E--------AIEKVHVQ----
->ABO88150.1 spike protein, partial [Bat coronavirus Fujian/773/2005]
+>Fujian
 ----------MYILIFALLPLSVLC----------------------GCRTSR-----TG
 DVSYPDQTYSLK---TLYLDLPPNTTTVVSGYLP-----QPNKWVCGHNIG---------
 --KGGGVYYG----YNGLG-HYDVAIGVGSSEFDANK-------FGLY----WSYMPKKA
@@ -3570,7 +3570,7 @@ YEPRRPTISEFIQIESCDVEQVNITHEMLPEVI-PDY-IDVNATLNEWFDKL--PNHSLP
 DFN---VTLLNMTYLNLSSEIHKLEAKSEYLMNLSKDLQATIDNINSTLVDLEWLNRFEN
 YVKWPWYIWLAIALAFVVLTFLLLWCCLATGCC-GCLGC--LGT----------------
 -------------------------
->YP_003767.1 spike protein [Human coronavirus NL63]
+>HumanNL63
 ----------MKLFLILLVLPLASC---------------------------------FF
 TC---NSNANLS---MLQLGVPDNSSTIVTGLLP-------THWFCANQSTSVY------
 --SANGF-------FYIDVGNHRSAFALHT---------------GYYDANQYYIYVTNE
@@ -3608,7 +3608,7 @@ FQPRLPVLSDFVQIYNCNVTFVNISRVELHTVI-PDY-VDVNKTLQEFAQNL--PKYVKP
 NFD---LTPFNLTYLNLSSELKQLEAKTASLFQTTVELQGLIDQINSTYVDLKLLNRFEN
 YIKWPWWVWLIISVVFVVLLSLLVFCCLSTGCC-GCCNC--LTSSMRGCCDCGS---TKL
 PYY----------EFEKVHVQ----
->QHA24665.1 spike glycoprotein [Rousettus aegyptiacus bat coronavirus 229E-related]
+>BAT229E
 -----------MLFLLLVILPLALC-------------------------QNG-----QF
 TC----FRKDYK---LLKLGLPPS-TNALVTGYL------PTTWTCGKLTSQFT------
 --DVHGVFVG----YYDSG--LRSYFGLGTHPFDPNN-------YQLY--------FSQM
@@ -3646,7 +3646,7 @@ FEPRIPTMADFVQIENCNVTFVNISRSELQTIV-PEY-IDVNKTLQDLIEKL--PNYTTP
 DLN---IDQYNQTILNLTSEISTLENKSAELNYTVQKLQTLIDNINSTLVDLKWLNRVET
 YLKWPWWVWLCISVVLIFVVSMLLLCCCSTGCC-GFFSC--LASSTRGCCESTK-----L
 PYY----------DVEKIHIQ----
->YP_009194639.1 spike protein [Camel alphacoronavirus]
+>Human229E
 ----------MFVLVAYALLHIAGC-----------------------------------
 ------------------------------------------------------------
 ------------------------------------------------------------
@@ -3684,7 +3684,7 @@ FEPRIPTMADFVQIENCNVTFVNISRSELQTIV-PEY-IDVNKTLQELIDKL--PNYTVP
 DLG---IDQYNQTILNLTSEISTLENKSAELNYTVQRLQTLIDNINSTLVDLKWLNRVET
 YLKWPWWVWLCISVVLIFVVSVLLLCCCSTGCC-GFFSC--LASSTRGCCESTK-----L
 PYY-D---------VEKIHIQ----
->ADX59482.1 spike protein [Miniopterus bat coronavirus/Kenya/KY27/2006]
+>Minio2006
 ----------MIAFLLFFIFRCALC---------------------------N-----IG
 CTVPDNGNLGMS---RLKLGLPPNTSNAYVSGYL----PSPDKWNCTQNPAGTANITF--
 --NAKAVFIS----YYKNG--RHVAVGVGSSKSNNT--------WGLY---------FYH
@@ -3722,7 +3722,7 @@ FEPRVPVSADFVEVSSCNVTFVNLTVNELPELL-PDY-IDVNKTLKEFAATI--PNRTEM
 QLT---LNTYNATVLNLTDEVNSLTLQASELTKIASELNLTISKINNTLVELEWLNRVET
 YIKWPWYVWLAISVTLIILVGLMLWCCLATGCC-GCCSC--LVNSCSDCGGKR------L
 QRY----------EIEKIHVQ----
->YP_001718605.1 spike protein [Bat coronavirus 1A]
+>Minio
 ---------MLFILCIALCFNFVSA---------------------------N-----IG
 C--ESNGNLDMQ---RLKLGLPSNITNAYVSGYL----PSPDSWNCTQNPVGVANITY--
 --NAKAVFIS----YYKFG--REVAVGVGNSKSNDSI--------GIY---------FNH
@@ -3760,7 +3760,7 @@ FEPRVPVSADFVEVSSCNVTFINLTINELPELL-PDY-IDVNKTLKEFAATI--PNRTEM
 QLT---LNTYNATVLNLTDEVKSLMSQADDLTKIASELNLTISKINNTLVELEWLNRVET
 YIKWPWYVWLAIAVTLIILVGPMLWCCLATGCC-GCCSC--LVNSCSDCGGRR------L
 QRY----------EIEKVHVQ----
->AIA62242.1 spike glycoprotein [BtMf-AlphaCoV/HuB2013-a]
+>AlphaCorona2013
 ---------MFCILCFALCFYFTAA---------------------------N-----YG
 CTSNSNGKLDMY---NFNLGLPSNTTNAYVSGYL----PKPNAWNCIQTSNGVANITQ--
 --GAKAVFVS----YYTNG--REFAIGVGNSKNNASL--------GIY---------FYH
@@ -3798,7 +3798,7 @@ FEPRVPVIADFVEVSSCNVTFINLTINELPELL-PDY-IDVNKTLKEFAATI--PNRTEM
 QLT---LNTYNATVLNLTDEVKSLMSQADDLTKIASELNLTISKINNTLVELEWLNRVET
 YIKWPWYVWLAIAVTLIILVGLMLWCCLATGCC-GCCSC--LVNSCSDCGGRR------L
 QRY-E---------IEKVHIQ----
->QHA24671.1 spike glycoprotein [Miniopterus pusillus bat coronavirus HKU8-related]
+>MinioHKU8rel
 -------------MLFFLLVHVAFA---------------------------A-----NQ
 DCTGNGNLDSME---DLKLNLPPNVTNAYVSGYL----PLPQQWNCSVSGTSGNPRVYT-
 --GAHGVFVS----YYDSA--TDIVVGVGSTLSNSS--------WGMY---------FFQ
@@ -3836,7 +3836,7 @@ FEPRIPQMSDFVQISGCNVSYVNVSSENLPDIV-PDF-MDVNATIQDILDKL--QNYSKP
 DFS---LDIFNATYLNLSAEINDLTNRSQQLQAITDELRETIANINGTLVDLEWLNRVET
 YIKWPWYVWLAIAVALIVLTGLMLWCCLSTGCC-GCCSC--MASTLDFRGSRLQ------
 -QY----------EVEKVHIQ----
->UBB42447.1 surface glycoprotein [Jingmen Miniopterus schreibersii alphacoronavirus 1]
+>MinioAlpha
 ---------MFFLLLVLLLPTCTLC---------------------------N-----IG
 TC--AGRVDRFM---YFKLGLPVPTTNAYVPGYL----PSPTNWTCNHGTWKYY------
 --GAHGVFVT----YYSSG--LNFALGVSSSKHYSSN-------WGLY---------FWQ
@@ -3874,7 +3874,7 @@ FQPRDPQISDFVEIEGCQVSYINVTSDSLSTII-PDY-IDVNKTVEDILSKL--PNRTNP
 QFD---LGIFNATYLNLTAEIADLTNKSEILKKATEDIRELLTNINSTLVDLEWLNRVET
 YIKWPWWVWLIIVLVLILFTCLMLFCCCSTGCC-GIFSC--LASSCDIRGTKLQ------
 -RY---------EAIEKVHVQ----
->YP_009199609.1 spike glycoprotein [BtMr-AlphaCoV/SAX2011]
+>Myotis
 --------MWHVIVALVFIPFLSAA---------------------------N-----TG
 TC--SNTINRFM---YLKLGLPVPTNDAYVTGYL----PIPSNWTCSDGYWQYK------
 --NAHGLFVS----YHSTA--LDFAIGVSSSTSYAEK-------WGLY---------FWQ
@@ -3912,7 +3912,7 @@ FEPRVPQTSDFVQITGCDVVYLNVTRDELPTVI-PDY-IDVNSTVEDILSKL--PNRTTP
 EFD---LDIFNATYLNLTGEIADLTARSESLKNTTLELKELIANINATLVDLEWLNRVET
 YIKWPWWVWLIIVLVLILFTCLMLFCCCSTGCC-GIFSC--MASSCGACCDIRG---TKL
 QRY---------EAIEKVHVQ----
->UBB42440.1 surface glycoprotein [Jingmen Myotis chinensis alphacoronavirus 1]
+>JingmenAlpha
 ----------MLFVALLTLLGSVAS--------------------------AN-----IG
 TC--TQNVNRFM---YLKLGLPTSVQNAYVSGYL----PTPDNWTCESGYWRYK------
 --NAHGLFMT----YHSTA--SDWSMGVGSSTDYNNK-------WGLY--FWQKNN----
@@ -3950,7 +3950,7 @@ FEPRVPQTSDFVQITGCDVVYLNVTRDELPTVI-PDY-IDVNSTVEDILSKL--PNRTTP
 EFD---LDIFNATYLNLTGEIADLTARSESLKNTTLELKELIANINATLVDLEWLNRVET
 YIKWPWWVWLIIVLVLILFTCLMLFCCCSTGCC-GIFSC--MASSCGACCDIRG---TKL
 QRY---------EAIEKVHVQ----
->ADX59451.1 spike protein [Cardioderma bat coronavirus/Kenya/KY43/2006]
+>BatKY43
 ----------MLMLAVVIAIILDSL-------------------KLACCNNFN-----PP
 LCTAPLFTPNFT---GLRLGLPPNATNFVSGFL---PVNNFSLWYCNVHNGYGNSDVFK-
 --NAHGLWVS----YKSHG-------GPIEFTVFPSGIKQNMDQWAMY-----VYQKNND
@@ -3988,7 +3988,7 @@ YEPRVPVASDFVRIANCSVTYVNITQDTLGDII-PEY-VDVNKTLDDLLNNL--PNYTVP
 DLN---LDKFNQTYLNLSGEIDILNNKAASLENKTLVLQQLIENLNKTYVDLEWLNRVEN
 YVKWPWYVWLAIFLVVALFSFLMLYCCIATGCC-GCCSC--LASSLCDCTGKR------L
 QRY----------EVEKIHVQ----
->YP_009199790.1 spike glycoprotein [BtRf-AlphaCoV/HuB2013]
+>RhinoAlpha
 ----------MLSFAVYLAVLLSSL------------------KFVVIAGHAN-----GK
 EC--GGDPGLLP---NLNLGLPAN-SSVLVSGYLPEPV-SSNNWICPVKPLNQYGVDHFS
 --NLKGIWWS----YYTGN--EGVELGISASDYEQNPNQ-----WALY---MYQNNNATF
@@ -4026,7 +4026,7 @@ YEPRVPQESDFVRITGCSVVYLNITHTQIGDII-PEY-IDVNKTLEEFLNSY--PNYTVP
 DLN---LDLYNQTVLNLTEDISKLYEKAESLHNKTIILQQLIDNLNNTYVDLEWLNRVET
 YIKWPWYVWLLIFLALAAFTFLMLYCCIATGCC-GCLSC-----ICSSCADCRG---KRL
 QRY----------EVEKIHIQ----
->ABO88151.1 spike protein [Bat coronavirus Shandong/977/2006]
+>Shandong
 ----------MLSFAVYLAVLLSSL------------------KFVVTAGHAT-----GK
 EC--GGDPGLLP---NLNLGLPAN-STVLVSGYLPEPVSVSNNWICPVKPLDQFGVDYFT
 --NLKGIWWS----YYSGN--TGVEFGIADS-----NYEQNPNQWALY---MYQNNNVTF
@@ -4064,7 +4064,7 @@ YEPRVPQESDFVRITGCSVVYLNITHTQIGEII-PEY-IDVNKTLEEFLSSY--PNYTVP
 DLN---LDLYNQTVLNLTEDISKLYEKAESLHNKTIILQQLIDNLNNTYVDLEWLNRVET
 YIKWPWYVWLVIFLALAAFTFLMLYCCIATGCC-GCLSC--IFSSCADCRGRR------L
 QRY----------EVEKIHIQ----
->YP_006908642.1 spike glycoprotein [Rousettus bat coronavirus HKU10]
+>BatHKU10
 ----------MISLAVFIAEILVII------------------------TRFS-----CL
 ADQCQGTPWLAK---NLNLGLSPNLTNVYVPGLL--PTKDTTKWYCRTESYFFT------
 --GYKGVFLS----YHSFG--MPWSIGVSNSDLSVARET-----WSLY---------VSH
@@ -4102,7 +4102,7 @@ YEPRVPQFSDFVQVENCVVSYLNLSDVDVNTVI-PDY-IDVNKTLEDLLQQL--PNHTLP
 DLG---LDQYNNTILNLTAEIDILQNKSDLLLASTERLQQLIDNLNKTYVDLEWLNRFEQ
 YIKWPWYVWLAILLAIILFSFLMLYCCCATGCC-GCLSC--LTNSCD--CRGKN-----L
 QRY----------EVEKVHIQ----
->QCX35167.1 spike glycoprotein [Rhinolophus bat coronavirus HKU32]
+>RhinoHKUU32
 ----------MLSFAVYLAELLVIL-----------------SHVPCPGFAFR-----SV
 RDTCPSTSGVLP---NLDLGLPPNSTVLVSGYLP-----KPGNWYCNTGLSSYQ------
 --NVHGAFWS----YYSHG--TNVAIGVSSNNSPNDL--------ALY---------AFH
@@ -4140,7 +4140,7 @@ FEPRKPVQADFIRIANCSVTYLNISSSELGDVI-PDY-IDVNKTLENLEQNR--PNFTLP
 ELE---IERFNNTYLNLSGEIAILQQKSESLYNSTVKLQELIERINNSYVDLELLNRIES
 YVKWPWYVWLAIILVMILFSFLMLYCCCMTGCC-GCCSC--LANSCLDCRGKR------L
 QQY----------EVEKVHIQ----
->QDF43810.1 spike glycoprotein [Coronavirus BtRs-AlphaCoV/YN2018]
+>AlphaCorona
 ----------MISLAVFFAELLYIL-----------------------SHVPC-----PG
 LACDPFVNLQMK---QLNFGLPPNSSAVVSGYLP-----KPTGWQCANLPDVGFYT----
 --WLNGVFIT----RFNST--REFAISVSEGGHPVSAYQYYNLYASLR------------
@@ -4178,7 +4178,7 @@ FEPRTPVQADFVRIANCSVNYLNISSSELGTII-PDY-IDVNKTLEELEQQR--PNYTLP
 ELD---IDRFNNTYLNLSAEIAELQRKSESLQNSTIQLQELIERINSSYVDLELLKRIET
 YVKWPWYVWLAIILVMSLFSFLMLYCCCMTGCC-GCCSC--LTSCC-FDCRGKR-----L
 QQY----------EVEKVHIQ----
->QHA24710.1 spike glycoprotein [Hipposideros pomona bat coronavirus HKU10-related]
+>BATHKU10
 ----------MISLAVYLAELLVII--------------------TNLPYARA-----NN
 GCSSAQNPDALP---NLNLGLPANSNVFVSGYLP-----IKNNWRCQTGDTVYN------
 --NVNAVYWS----YYSHG-------TPVELAISNPDQLQNADQWALY---------IYQ
@@ -4216,7 +4216,7 @@ YQPRPPQVSDFVQIKDCQVDYLNLTLD---------------------------------
 ------------------------------------------------------------
 ------------------------------------------------------------
 -------------------------
->QHA24724.1 spike glycoprotein [Hipposideros pomona bat coronavirus CHB25]
+>BATCHB25
 ----------MISLAVFLAELLVII-----------------SKLPPVLLNSP-----AD
 LC--NWNAGEKP---TIDLGLPPN-STVFVSGYLPTP---ENQWHCKAGLVSYN------
 --DVHGFFWS----YYAQA--ENVAIGISSADQTSNSDQ-----WAMY--IWQRNN----
@@ -4254,7 +4254,7 @@ YEPRTPQSSDFVRITGCIVTYLNLSSDELSQVI-PDY-IDVNKTLEDFAQNM--PNYSVP
 DLD---LGVYNHTILNLTTEIDLLQNKSDQLLASTVRLQELIDNLNKTYVDLEWLNRFEQ
 YIKWPWYVWLAIFLAIILFSFLMLYCCCATGCC-GCLSC--LSSSCD-CGKN-------L
 QHY----------EVEKVHIQ----
->YP_001718612.1 spike protein [Miniopterus bat coronavirus HKU8]
+>MinioHKU8
 ----------MKSLLVLSLLALLAT-----------LSVNAQVTGEGGVAEGN-----YW
 VNASCAGWSYFY---ALKLGLPPNASAIVTGYLP-----KPKGWICPRFNGAGIYTRN--
 --NANAVFVM----YRTKA--LAFEIGVSSSAGGEQYSAYMAQQNGKY------------
@@ -4292,7 +4292,7 @@ YQPRTPTSADFIRISGCNVVYVNITDEQLPQVQ-PEF-IDVNKTLEELMSRL--PNNTGP
 NLP---LDIFNQTYLNISAEIDALENKSLELQATADKLQLTIEQLNATLVDLEWLNRFEQ
 YVKWPWWVWLTMIIALVLLTGLMLWCCLATGCC-GCCSC--MASTLDFRGSRLQ------
 -QY----------EVEKVHIQ----
->ADX59495.1 spike protein [Chaerephon bat coronavirus/Kenya/KY22/2006]
+>BatKY22
 ---------MFLILSLFVALSNAAC-----------------------------------
 ---PGTPHLSYK---HLQLGLPPNYNGFVSGYL---PDMTTSEWICEYGEKTWA------
 --NVHGVFSS----YWNTG--RTFALTAAANKFADVKGQ-----WALY----------LR
@@ -4330,7 +4330,7 @@ YEPREPTFADFVRIAHCDISYVNITSDNVQAVV-PDY-IDVNKTLEEFLQNH--NASQGP
 NLP---LDIFNQTYLNLSSEIALLENKSAQLELTAKQLEETIKLINSSLVDLQWLNRFEQ
 YVKWPWYVWLLIVVALTILAGLMLYCCLATGCC-GCCSC--MTNTLDFRGRNLQ------
 -RY----------EVEKVHVQ----
->QWN56273.1 spike glycoprotein [Alphacoronavirus sp.]
+>Alpha
 ----------MSLVLLLCAVVTAVV-------------------ADSSFNTAF-----NG
 TC---TQGDVFK---YLKLGLPANTTALVTGYLP-----IPQNWICAKDHNQQYWFHAS-
 --GVHGIFLS----YMQKA--ERVEIGVSSGRVDPTA-------WSLY-------FSQKN

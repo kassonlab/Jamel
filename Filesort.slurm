@@ -1,7 +1,7 @@
 #!/bin/python3
 #SBATCH -A kas_dev
 #SBATCH -N 1
-#SBATCH -n 8
+#SBATCH -n 1
 #SBATCH -p standard
 #SBATCH -t 50:00:00
 #SBATCH -o /sfs/lustre/bahamut/scratch/jws6pq/CMfiles/filesort.out
