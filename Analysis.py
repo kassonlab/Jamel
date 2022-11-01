@@ -34,6 +34,7 @@ def OverallRMSD(Protein,Comparison='3merSARS2.pdb'):
     cmd.remove('organic')
     cmd.load(proteinpdb)
     RMSD = cmd.align('CP', 'Protein')[0]
+    cmd.delete('all')
     return RMSD
 
 def SequenceSimilarity(Protein,Domain):
@@ -41,12 +42,16 @@ def SequenceSimilarity(Protein,Domain):
     # EmbossScore = open('/gpfs/gpfs0/scratch/jws6pq/Notebook/Emboss/Full' + key + '.emboss', 'r').readlines()[25].split()[-1]
     EmbossScore=open(Protein+Domain+'.emboss','r').readlines()[25].split()[-1]
     return EmbossScore.replace('(','').replace(')','').replace('%','')
-def ConfidenceComparison(Protein,ChimeraSplice1,ChimeraSplice2,SARS2Splice1,SARS2Splice2,Domain):
+def OverallConfidence(plddtfile):
+    plddt= list(map(float, open(plddtfile, 'r').readlines()))
+    Averageplddt=sum(plddt)/len(plddt)
+    return Averageplddt
+OverallConfidence('3merSARS2.plddt')
 
+def ConfidenceComparison(Protein,ChimeraSplice1,ChimeraSplice2,SARS2Splice1,SARS2Splice2,Domain):
     SARS2Score = list(map(float, open('SARS2.plddt', 'r').readlines()))
     ProteinScore=list(map(float, open(Protein+'.plddt', 'r').readlines()))
     ChimeraScore=list(map(float,open('SARS2w'+Protein+Domain+'.plddt', 'r').readlines()))
-    ChimeraResidue=0
     j=0
     k=0
     SpliceLength=ChimeraSplice2-ChimeraSplice1
@@ -70,7 +75,6 @@ def MultimerConfidenceComparison(Protein,ChimeraSplice1,ChimeraSplice2,Compariso
     ProteinScore=list(map(float, open('Avg'+Protein+'.plddt', 'r').readlines()))
     Protein=Protein[4:]
     ChimeraScore=list(map(float,open('Avg'+ComparisonProtein+'w'+Protein+Domain+'.plddt', 'r').readlines()))
-    ChimeraResidue=0
     j=0
     k=0
     SpliceLength=ChimeraSplice2-ChimeraSplice1
@@ -138,44 +142,38 @@ def CorrectResiduePositionforAlignment(Protein,alignment):
     ResiduePositionDictionary = {indx: indy for indx, indy in enumerate(SeqIndexing)}
     UpdatedContactMap = [[ResiduePositionDictionary[y] for y in ContactMap[ind]] for ind, x in enumerate(ContactMap)]
     return UpdatedContactMap
-def ContactOverlap(Alignmentfile,reference='6vsb_B'):
-    from numpy import empty
-    from numpy import savetxt
-    # from multiprocessing import Process
-    # from os import system
+def ContactOverlap(Alignmentfile,comparison,reference='6vsb_B'):
     # Alignment in FASTA format. Make sure your benchmark sequence is first
     Sequences = open(Alignmentfile, "r").read().split('>')
     SequenceDictionary={sequence.split('\n')[0]:sequence.split('\n')[1].strip() for sequence in Sequences if len(sequence)!=0}
-    ScoreArray=empty((len(SequenceDictionary)-1,3), dtype=object)
-
-    for key, value in SequenceDictionary.items():
-        j=0
-        UpdatedContactMap=CorrectResiduePositionforAlignment(key,value)
-        MapwResidue=[]
-        for x in value:
-            if x.isalpha():
-                MapwResidue.append([x]+UpdatedContactMap[j])
-                j+=1
-            else:
-                MapwResidue.append([x])
-        SequenceDictionary[key]=MapwResidue
-    ReferenceContactMap=SequenceDictionary[reference]
-    del SequenceDictionary[reference]
+    ReferenceSequence,ComparisonSequence=SequenceDictionary[reference],SequenceDictionary[comparison]
+    #CP is Comparison Protein and RP is Reference Protein
+    CPUpdatedContactMap=CorrectResiduePositionforAlignment(comparison,ComparisonSequence)
+    RPUpdatedContactMap = CorrectResiduePositionforAlignment(reference, ReferenceSequence)
+    ReferenceContactMap,ComparisonContactMap=[],[]
     j=0
-    for key, value in SequenceDictionary.items():
-        Overlap = 0
-        for x,y in zip(ReferenceContactMap,value):
-            for w in x:
-                if w in y and w!='-':
-                    Overlap+=1
-        ScoreArray[j,0]=key
-        ScoreArray[j,1]=Overlap
-        # system('/scratch/jws6pq/EMBOSS-6.6.0/emboss/needle -sprotein -gapopen 10 -gapextend 0.5 -outfile /gpfs/gpfs0/scratch/jws6pq/Notebook/Emboss/Full' + key + '.emboss -asequence /gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/' + key + '.fasta -bsequence /gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/SARS2.fasta')
-        EmbossScore = open('/gpfs/gpfs0/scratch/jws6pq/Notebook/Emboss/Full' + key + '.emboss', 'r').readlines()[25].split()[-1]
-        ScoreArray[j, 2] = EmbossScore.replace('(', '').replace(')', '').replace('%', '')
-        j+=1
-    savetxt('ContactScore.tsv', ScoreArray, fmt="%s,%s,%s", delimiter="")
-    return ScoreArray
+    #Should this be a function?
+    for x in ReferenceSequence:
+        if x.isalpha():
+            ReferenceContactMap.append([x]+RPUpdatedContactMap[j])
+            j+=1
+        else:
+            ReferenceContactMap.append([x])
+    j=0
+    for x in ComparisonSequence:
+        if x.isalpha():
+            ComparisonContactMap.append([x]+CPUpdatedContactMap[j])
+            j+=1
+        else:
+            ComparisonContactMap.append([x])
+    Overlap = 0
+    for x,y in zip(ReferenceContactMap,ComparisonContactMap):
+        for w in x:
+            if w in y and w!='-' and len(x)>1 or w in y and w!='-' and len(y)>1:
+                Overlap+=1
+    # system('/scratch/jws6pq/EMBOSS-6.6.0/emboss/needle -sprotein -gapopen 10 -gapextend 0.5 -outfile /gpfs/gpfs0/scratch/jws6pq/Notebook/Emboss/Full' + key + '.emboss -asequence /gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/' + key + '.fasta -bsequence /gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/SARS2.fasta')
+    EmbossScore = open('/gpfs/gpfs0/scratch/jws6pq/Notebook/Emboss/Full' + comparison + '.emboss', 'r').readlines()[25].split()[-1]
+    return comparison,Overlap,EmbossScore.replace('(','').replace(')','').replace('%','')
 #Do i consider all the times where there are residues beyond SARS???????
 def FaultScan(proteinpdb):
-    return 1 if OverallRMSD(proteinpdb)>35 else 0
+    return 1 if OverallRMSD(proteinpdb)>35.5 else 0

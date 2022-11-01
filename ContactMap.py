@@ -28,46 +28,44 @@ def CorrectResiduePositionforAlignment(Protein,alignment):
     ResiduePositionDictionary = {indx: indy for indx, indy in enumerate(SeqIndexing)}
     UpdatedContactMap = [[ResiduePositionDictionary[y] for y in ContactMap[ind]] for ind, x in enumerate(ContactMap)]
     return UpdatedContactMap
-def ContactOverlap(Alignmentfile,reference='6vsb_B'):
-    from numpy import empty
-    from numpy import savetxt
+def ContactOverlap(Alignmentfile,comparison,reference='6vsb_B'):
     # Alignment in FASTA format. Make sure your benchmark sequence is first
-    Sequences = open(Alignmentfile, "r").read().split('>')[0:4]
+    Sequences = open(Alignmentfile, "r").read().split('>')
     SequenceDictionary={sequence.split('\n')[0]:sequence.split('\n')[1].strip() for sequence in Sequences if len(sequence)!=0}
-    ScoreArray=empty((len(SequenceDictionary)-1,3), dtype=object)
-
-    for key, value in SequenceDictionary.items():
-        j=0
-
-        UpdatedContactMap=CorrectResiduePositionforAlignment(key,value)
-        MapwResidue=[]
-        for x in value:
-            if x.isalpha():
-                MapwResidue.append([x]+UpdatedContactMap[j])
-                j+=1
-            else:
-                MapwResidue.append([x])
-        SequenceDictionary[key]=MapwResidue
-    ReferenceContactMap=SequenceDictionary[reference]
-    del SequenceDictionary[reference]
+    ReferenceSequence,ComparisonSequence=SequenceDictionary[reference],SequenceDictionary[comparison]
+    #CP is Comparison Protein and RP is Reference Protein
+    CPUpdatedContactMap=CorrectResiduePositionforAlignment(comparison,ComparisonSequence)
+    RPUpdatedContactMap = CorrectResiduePositionforAlignment(reference, ReferenceSequence)
+    ReferenceContactMap,ComparisonContactMap=[],[]
     j=0
-    for key, value in SequenceDictionary.items():
-        Overlap = 0
-        for x,y in zip(ReferenceContactMap,value):
-            for w in x:
-                if w in y and w!='-':
-                    Overlap+=1
-        ScoreArray[j,0]=key
-        ScoreArray[j,1]=Overlap
-        # system('/scratch/jws6pq/EMBOSS-6.6.0/emboss/needle -sprotein -gapopen 10 -gapextend 0.5 -outfile /gpfs/gpfs0/scratch/jws6pq/Notebook/Emboss/Full' + key + '.emboss -asequence /gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/' + key + '.fasta -bsequence /gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/SARS2.fasta')
-        # EmbossScore = open('/gpfs/gpfs0/scratch/jws6pq/Notebook/Emboss/Full' + key + '.emboss', 'r').readlines()[25].split()[-1]
-        # ScoreArray[j, 2] = EmbossScore.replace('(', '').replace(')', '').replace('%', '')
-        j+=1
+    #Should this be a function?
+    for x in ReferenceSequence:
+        if x.isalpha():
+            ReferenceContactMap.append([x]+RPUpdatedContactMap[j])
+            j+=1
+        else:
+            ReferenceContactMap.append([x])
+    j=0
+    for x in ComparisonSequence:
+        if x.isalpha():
+            ComparisonContactMap.append([x]+CPUpdatedContactMap[j])
+            j+=1
+        else:
+            ComparisonContactMap.append([x])
+    Overlap = 0
+    for x,y in zip(ReferenceContactMap,ComparisonContactMap):
+        print(x,y)
+        for w in x:
+            if w in y and w!='-' and len(x)>1 or w in y and w!='-' and len(y)>1:
+                Overlap+=1
+                print(Overlap)
+    # system('/scratch/jws6pq/EMBOSS-6.6.0/emboss/needle -sprotein -gapopen 10 -gapextend 0.5 -outfile /gpfs/gpfs0/scratch/jws6pq/Notebook/Emboss/Full' + key + '.emboss -asequence /gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/' + key + '.fasta -bsequence /gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/SARS2.fasta')
+    # EmbossScore = open('/gpfs/gpfs0/scratch/jws6pq/Notebook/Emboss/Full' + key + '.emboss', 'r').readlines()[25].split()[-1]
+    # ScoreArray[j, 2] = EmbossScore.replace('(', '').replace(')', '').replace('%', '')
     # savetxt('ContactScore.tsv', ScoreArray, fmt="%s,%s,%s", delimiter="")
-    return ScoreArray
+    return comparison,Overlap
 #Do i consider all the times where there are residues beyond SARS???????
-import concurrent.futures
-if __name__ == '__main__':
-    with concurrent.futures.ProcessPoolExecutor() as executor:
+
+
 
 
