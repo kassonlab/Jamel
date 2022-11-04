@@ -1,4 +1,3 @@
-import multiprocessing
 def calc_dist_matrix(chain_one, chain_two,DistanceCutoff):
     from numpy import array
     # """Returns a matrix of C-alpha distances between two chains"""
@@ -39,9 +38,11 @@ def ContactOverlap(Alignmentfile,comparison,reference='6vsb_B'):
     ReferenceContactMap,ComparisonContactMap=[],[]
     j=0
     #Should this be a function?
+    RPContactCount,CPContactCount=0,0
     for x in ReferenceSequence:
         if x.isalpha():
             ReferenceContactMap.append([x]+RPUpdatedContactMap[j])
+            RPContactCount+=len(RPUpdatedContactMap[j])+1
             j+=1
         else:
             ReferenceContactMap.append([x])
@@ -49,23 +50,23 @@ def ContactOverlap(Alignmentfile,comparison,reference='6vsb_B'):
     for x in ComparisonSequence:
         if x.isalpha():
             ComparisonContactMap.append([x]+CPUpdatedContactMap[j])
+            CPContactCount+=len(CPUpdatedContactMap[j])+1
             j+=1
         else:
             ComparisonContactMap.append([x])
-    Overlap = 0
+    TotalContacts = RPContactCount+CPContactCount
     for x,y in zip(ReferenceContactMap,ComparisonContactMap):
-        print(x,y)
         for w in x:
-            if w in y and w!='-' and len(x)>1 or w in y and w!='-' and len(y)>1:
-                Overlap+=1
-                print(Overlap)
+            if w not in y and w!='-' and len(x)>1 or w not in y and w!='-' and len(y)>1:
+                TotalContacts+=-1
+        for v in y:
+            if v not in x and v!='-' and len(x)>1 or v not in x and v!='-' and len(y)>1:
+                TotalContacts += -1
     # system('/scratch/jws6pq/EMBOSS-6.6.0/emboss/needle -sprotein -gapopen 10 -gapextend 0.5 -outfile /gpfs/gpfs0/scratch/jws6pq/Notebook/Emboss/Full' + key + '.emboss -asequence /gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/' + key + '.fasta -bsequence /gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/SARS2.fasta')
-    # EmbossScore = open('/gpfs/gpfs0/scratch/jws6pq/Notebook/Emboss/Full' + key + '.emboss', 'r').readlines()[25].split()[-1]
-    # ScoreArray[j, 2] = EmbossScore.replace('(', '').replace(')', '').replace('%', '')
-    # savetxt('ContactScore.tsv', ScoreArray, fmt="%s,%s,%s", delimiter="")
-    return comparison,Overlap
+    # EmbossScore = open('/gpfs/gpfs0/scratch/jws6pq/Notebook/Emboss/Full' + comparison + '.emboss', 'r').readlines()[25].split()[-1]
+    # return comparison,Overlap,EmbossScore.replace('(','').replace(')','').replace('%','')
 #Do i consider all the times where there are residues beyond SARS???????
-
+ContactOverlap('SARS2wEverythingstable.aln','WhiteHKU16')
 
 
 
