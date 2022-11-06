@@ -21,11 +21,11 @@ def SequenceSplice(Fastafile1, Boundary1, Boundary2,Pythonindexforboundary='Yes'
 
     return [x for x in Sections[:,0] if len(x)>0]
 
-print(SequenceSplice('FullMERS.fasta',0,10))
-def FastaCreation(Filename,ListofSeqquences,Subunits=1):
+def FastaCreation(Filename,Sequence,Subunits=1):
     file = open(Filename, 'w')
-    file.write('>' +Filename.replace('.fasta','') + '\n' + ''.join(ListofSeqquences) + '\n')
-    if Subunits>1:
-        for x in range(Subunits):
-            file.write('>' +Filename.replace('.fasta','') + '\n' + ''.join(ListofSeqquences) + '\n')
-            file.close()
+    if '/' in Filename:
+        Filename=Filename.split('/')[-1]
+    file.write('>' +Filename.replace('.fasta','') + '\n' + Sequence + '\n')
+    for x in range(Subunits-1):
+        file.write('>' +Filename.replace('.fasta','') + '\n' + Sequence + '\n')
+    file.close()
