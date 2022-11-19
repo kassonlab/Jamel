@@ -1,41 +1,44 @@
 #!/bin/python3
  
-#SBATCH -p standard          # partition
+#SBATCH -p gpu          # partition
+#SBATCH --gres=gpu
 #SBATCH -N 1           # number of nodes
-#SBATCH -c 4           # number of cores
+#SBATCH --ntasks-per-node=6           # number of cores
 #SBATCH --mail-user=jws6pq@virginia.edu
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
 #SBATCH --mem=200000
 #SBATCH -t 10:00:00     # time
-#SBATCH -o /scratch/jws6pq/CMfiles/filecheck.out
-#SBATCH -e /scratch/jws6pq/CMfiles/filecheck.err
+#SBATCH -o /gpfs/gpfs0/scratch/jws6pq/BridCMfiles/Flusstoberun.out
+#SBATCH -e /gpfs/gpfs0/scratch/jws6pq/BridCMfiles/filecheck.err
 #SBATCH -A kas_dev
 #Run program
+from os import path
+from os import system
+Runstragglers='Yes'
+Proteinsperslurm=10
+#Multimer or Flu_Covid
+Slurmname='Flu_Covid'
+Input="/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/Flu_CovidList"
+Listtocheck=open(Input,'r').readlines()
+Listtocheck=[x.rstrip() for x in Listtocheck]
+Listtorun=[]
 
-import os
-NativeList={'/scratch/jws6pq/Notebook/PDB/3mer'+x.split()[-1]+'.pdb':'/scratch/jws6pq/Notebook/Finished/Fastas/3mer'+x.split()[-1]+'.fasta' for x in open('/scratch/jws6pq/CMfiles/List', 'r').readlines()}
-ChimeraList={'/scratch/jws6pq/Notebook/PDB/3merSARS2w'+x.split()[-1]+'S1.pdb':'/scratch/jws6pq/Notebook/Finished/Fastas/3merSARS2w'+x.split()[-1]+'S1.fasta' for x in open('/scratch/jws6pq/CMfiles/List', 'r').readlines()}
-Fulllist={**ChimeraList,**NativeList}
-Submitlist=[]
-# for file in Fulllist.keys():
-#     if os.path.exists(file)==False:
-#         Submitlist.append(Fulllist[file])
-Submitlist=[Fulllist[file] for file in Fulllist.keys() if os.path.exists(file)==False]
-CommandStart='/scratch/jws6pq/CMfiles/MultimerAlphaFold.sh '
-CommandEnd=' /scratch/jws6pq/Notebook/Finished'
-# ProteinsPerSlurm=3
-# k=0
-# Proteinindex=0
-SubmitList=['/scratch/jws6pq/BridNotebook/Fastas/3mer'+x.split()[-1]+'.fasta' for x in open('/scratch/jws6pq/BridCMfiles/List').readlines()]
-Submit=[SubmitList.append('/scratch/jws6pq/BridNotebook/Fastas/3merSARS2w'+x.split()[-1]+'S1.fasta') for x in open('/scratch/jws6pq/BridCMfiles/List').readlines()]
-Slurmfilenumber=0
-
-for file in SubmitList:
-    os.system('cp /scratch/jws6pq/BridCMfiles/MultimerAlphaFold.slurm /scratch/jws6pq/BridCMfiles/'+str(Slurmfilenumber)+'MultimerAlphaFold.slurm')
-    Slurmfile=open('/scratch/jws6pq/BridCMfiles/'+str(Slurmfilenumber)+'MultimerAlphaFold.slurm','a')
-    FullCommand=CommandStart+file+CommandEnd
-    Slurmfile.write('\n#SBATCH -o /scratch/jws6pq/BridCMfiles/'+str(Slurmfilenumber)+'multimerslurm.out\n#Run program\n'+FullCommand)
+for file in Listtocheck:
+  if path.exists("/gpfs/gpfs0/scratch/jws6pq/Notebook/Plddt/"+file+".plddt")==False:
+    Listtorun.append('/gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/'+file+'.fasta')
+    print(file.split('SARS2w')[-1].replace('RBD','').replace('S1',''))
+def ProductionRun(Listtorun,Slurmname,Proteinsperslurm):
+  fileindex=0
+  Slurmfilenumber=1
+  while fileindex in range(len(Listtorun)):
+    system('cp /gpfs/gpfs0/scratch/jws6pq/BridCMfiles/'+Slurmname+'AlphaFold.slurm /scratch/jws6pq/BridCMfiles/' + str(Slurmfilenumber) +Slurmname+'AlphaFold.slurm')
+    Slurmfile = open('/scratch/jws6pq/BridCMfiles/' + str(Slurmfilenumber) +Slurmname+'AlphaFold.slurm', 'a')
+    Slurmfile.write('\n#SBATCH -e /scratch/jws6pq/BridCMfiles/' + str(Slurmfilenumber) +Slurmname+'slurm.out\n#Run program\n')
+    Slurmfile.write('/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/MultimerAlphaFold.sh '+','.join(Listtorun[fileindex:fileindex+Proteinsperslurm])+' /scratch/jws6pq/Notebook/Finished')
     Slurmfile.close()
-    os.system('sbatch /scratch/jws6pq/BridCMfiles/'+str(Slurmfilenumber)+'MultimerAlphaFold.slurm')
+#    system('sbatch /scratch/jws6pq/BridCMfiles/' + str(Slurmfilenumber) +Slurmname+'AlphaFold.slurm')
+    fileindex+=Proteinsperslurm
     Slurmfilenumber+=1
+if Runstragglers=='Yes':
+  ProductionRun(Listtorun,Slurmname,Proteinsperslurm)
