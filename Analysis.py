@@ -46,7 +46,6 @@ def OverallConfidence(plddtfile):
     plddt= list(map(float, open(plddtfile, 'r').readlines()))
     Averageplddt=sum(plddt)/len(plddt)
     return Averageplddt
-OverallConfidence('3merSARS2.plddt')
 
 def ConfidenceComparison(Protein,ChimeraSplice1,ChimeraSplice2,SARS2Splice1,SARS2Splice2,Domain):
     SARS2Score = list(map(float, open('SARS2.plddt', 'r').readlines()))
@@ -70,28 +69,28 @@ def ConfidenceComparison(Protein,ChimeraSplice1,ChimeraSplice2,SARS2Splice1,SARS
     AveragePercentScoreDifference=ScoreDifference/ChimeraLength*100
 
     return AveragePercentScoreDifference
-def MultimerConfidenceComparison(plddt1,plddt2,Chimeraplddt,BoundaryDictionary1,BoundaryDictionary2):
+def MultimerConfidenceComparison(plddt,splicedinplddt,Chimeraplddt,NonSpliceDictionary,SpliceDictionary):
     #For this function you need very specific dictionary inputs that pair the splice locations of the chimera with the splice locations it from in the original protein
-    #The key value is the chimera boundaries and the value is the native protein, make the 4 values into 2 list tuples
-    #Example {[chimeraboundary1,boundary2]:[nativeboundary1,Boundary2]}
-    Protein1Score = list(map(float, open(plddt1, 'r').readlines()))
-    Protein2Score=list(map(float, open(plddt2, 'r').readlines()))
+    #The key value is the chimera boundaries and the value is the native protein, make the 4 values into 2 tuples
+    #Example {(chimeraboundary1,boundary2):(nativeboundary1,Boundary2)}
+    Protein1Score = list(map(float, open(plddt, 'r').readlines()))
+    Protein2Score=list(map(float, open(splicedinplddt, 'r').readlines()))
     ChimeraScore=list(map(float,open(Chimeraplddt, 'r').readlines()))
-    Percentdifference=0
-    for key,value in BoundaryDictionary1.items():
-        Proteinregionscore=sum(Protein1Score[value[0]:value[1]])
-        Chimerregionscore=sum(ChimeraScore[key[0]:key[1]])
-        Percentdifference+=(Chimerregionscore-Proteinregionscore)/Proteinregionscore
-    for key,value in BoundaryDictionary2.items():
-        Proteinregionscore=sum(Protein2Score[value[0]:value[1]])
-        Chimerregionscore=sum(ChimeraScore[key[0]:key[1]])
-        Percentdifference+=(Chimerregionscore-Proteinregionscore)/Proteinregionscore
-    NumberofSections=len(BoundaryDictionary1)+len(BoundaryDictionary2)
-    AveragePercentScoreDifference=Percentdifference/NumberofSections
+    Relativedifference=0
+    for key,value in NonSpliceDictionary.items():
+        Spliceregionscore=sum(Protein1Score[value[0]:value[1]])
+        Chimerregion1score=sum(ChimeraScore[key[0]:key[1]])
+        Relativedifference+=(Chimerregion1score-Spliceregionscore)/Spliceregionscore
+    for key,value in SpliceDictionary.items():
+        Spliceregionscore2=sum(Protein2Score[value[0]:value[1]])
+        Chimerregion2score=sum(ChimeraScore[key[0]:key[1]])
+        Relativedifference+=(Chimerregion2score-Spliceregionscore2)/Spliceregionscore2
+    NumberofSections=len(NonSpliceDictionary)+len(SpliceDictionary)
+    AveragePercentScoreDifference=Relativedifference/NumberofSections
     # input is a tuple where the first intro and outro of a spliced region is given (maybe a dictionary that transltes boundaries)
-
+    print(AveragePercentScoreDifference)
     return AveragePercentScoreDifference
-
+MultimerConfidenceComparison('3merMERS.plddt','3merMERS.plddt','3merMERS.plddt',{(0,10):(0,10)},{(0,10):(0,10)})
 #make sure the number of multimers is indicated at the front of the filename
 def AveragingMultimerPLDDT(Plddtfilename,Subunits=3):
     MultimerPlddt=list(map(float, open(Plddtfilename, 'r').readlines()))

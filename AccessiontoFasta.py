@@ -13,10 +13,10 @@ def AccessionNumbertoFasta(Protein,Accession,Subunits=3):
         file.write('>'+Protein+'\n'+Sequence+'\n')
         file.close()
 def FastatoAlignmentFinder(Protein):
-    import os
-    os.system('cp  /scratch/jws6pq/CMfiles/SARS2.fasta  /gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/'+Protein+"onSARS2.fasta")
-    os.system("cat /gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/"+Protein+".fasta >> /gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/"+Protein+"onSARS2.fasta")
-    os.system('module load gcc/9.2.0 && module load muscle/3.8.31 && muscle -in ' + Protein+'onSARS2.fasta -clw -out /scratch/jws6pq/Notebook/Alignment/'+ Protein+'onSARS2.aln')
+    from os import system
+    system('cp  /scratch/jws6pq/CMfiles/SARS2.fasta  /gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/'+Protein+"onSARS2.fasta")
+    system("cat /gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/"+Protein+".fasta >> /gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/"+Protein+"onSARS2.fasta")
+    system('module load gcc/9.2.0 && module load muscle/3.8.31 && muscle -in /gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/'+Protein+'onSARS2.fasta -clw -out /scratch/jws6pq/Notebook/Alignment/'+ Protein+'onSARS2.aln')
 def MultipleSequenceAlignment(ProteinList):
     import os
     List=[line.split()[-1] for line in open(ProteinList,'r').readlines()]
@@ -38,9 +38,3 @@ def pdb2fasta(Protein):
         for record in SeqIO.parse(pdb_file, 'pdb-atom'):
             print('>' + record.id)
             print(record.seq)
-
-ProteinList=open('List','r').readlines()
-for line in ProteinList:
-    ProteinInfo=line.split()
-    AccessionNumbertoFasta(ProteinInfo[-1],ProteinInfo[0])
-MultipleSequenceAlignment('List')
