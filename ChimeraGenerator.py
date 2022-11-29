@@ -1,5 +1,4 @@
 def SequenceSplice(Fastafile, Boundary1, Boundary2,Pythonindexforboundary='Yes'):
-    import numpy as np
     import os
 
     if Pythonindexforboundary=='No':
@@ -7,17 +6,18 @@ def SequenceSplice(Fastafile, Boundary1, Boundary2,Pythonindexforboundary='Yes')
         Boundary2+=-1
 
     Fasta = open(Fastafile, "r")
-    Protein= os.path.basename(Fastafile).replace('.fasta', '')
 
     Sequence = ''.join([x for x in Fasta if x[0] != '>' if x != '']).rstrip().strip().replace('\n', '').replace(' ','')
     #The spliced region between the 2 specified boundaries is the first sequence in the list followed by the sequence with the spliced region replace by a '-'
     SplicedRegion=''.join(Sequence[Boundary1:Boundary2])
     Nonspliced=Sequence.replace(SplicedRegion,'-')
-
     return SplicedRegion,Nonspliced
 def ChimeraSequenceCreation(SectiontobeSplicedin,MarkedSequence):
     ChimeraSequence=MarkedSequence.replace('-',SectiontobeSplicedin)
-    return ChimeraSequence
+
+    ChimeraSplicetuple=(ChimeraSequence.find('SectiontobeSplicedin'),ChimeraSequence.find('SectiontobeSplicedin')+len(SectiontobeSplicedin))
+    Nonsplicetuple=[(ChimeraSequence.find(x),ChimeraSequence.find(x)+len(x)) for x in MarkedSequence.split('-')]
+    return ChimeraSequence,ChimeraSplicetuple,Nonsplicetuple
 
 
 def FastaCreation(Filename,Sequence,Subunits=1):
