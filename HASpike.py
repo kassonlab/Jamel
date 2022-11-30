@@ -13,7 +13,7 @@ SequenceList2=list(map(ChimeraGenerator.SequenceSplice,Protein2,Boundary3,Bounda
 Slurmfilenumber=1
 for i in range(len(Boundary1)):
     for j in range(len(Boundary3)):
-        ChimeraSequence=SequenceList1[i][1]+SequenceList2[j][1]
+        ChimeraSequence=SequenceList1[i][0]+SequenceList2[j][0]
         Filename='/gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/HA' + str(Boundary1[i]+1) + 'to' + str(Boundary2[i]+1) + 'Spike' + str(Boundary3[j]+1) + 'to' + str(Boundary4[j]+1) + '.fasta'
         ChimeraGenerator.FastaCreation(Filename,ChimeraSequence,3)
         system('cp /scratch/jws6pq/BridCMfiles/MultimerAlphaFold.slurm /scratch/jws6pq/BridCMfiles/' + str(Slurmfilenumber) + 'HASPIKEAlphaFold.slurm')

@@ -15,9 +15,7 @@ def SequenceSplice(Fastafile, Boundary1, Boundary2,Pythonindexforboundary='Yes')
 def ChimeraSequenceCreation(SectiontobeSplicedin,MarkedSequence):
     ChimeraSequence=MarkedSequence.replace('-',SectiontobeSplicedin)
 
-    ChimeraSplicetuple=(ChimeraSequence.find('SectiontobeSplicedin'),ChimeraSequence.find('SectiontobeSplicedin')+len(SectiontobeSplicedin))
-    Nonsplicetuple=[(ChimeraSequence.find(x),ChimeraSequence.find(x)+len(x)) for x in MarkedSequence.split('-')]
-    return ChimeraSequence,ChimeraSplicetuple,Nonsplicetuple
+    return ChimeraSequence
 
 
 def FastaCreation(Filename,Sequence,Subunits=1):

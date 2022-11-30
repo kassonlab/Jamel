@@ -1,5 +1,4 @@
 def AlignmentFinder(AlignmentFile,SequenceofInterest):
-    import os
     #Must be in CLW format
     Alignment=open(AlignmentFile,'r').readlines()
     i=3
@@ -37,7 +36,7 @@ def RunEmboss(AlignmentFile,Protein,Domain,SequenceofInterest):
     FirstSeqIndexing=[ind for ind, x in enumerate(FirstSequence) if x != '-']
     NogapFirstSequence=''.join([x for ind, x in enumerate(FirstSequence) if x != '-'])
     #Splice numbers are given in python index so add 1 for actual residue position
-    #Additionally the SpliceStart is the first residue that is spliced, and End is the last residue thats spliced
+    #Additionally the SpliceStart is the first residue that is spliced, and End is the first residue of the next domain
     SpliceStart=FirstSeqIndexing[NogapFirstSequence.find(SequenceofInterest)]
     SpliceEnd=FirstSeqIndexing[NogapFirstSequence.find(SequenceofInterest)+len(SequenceofInterest)]
     FoundAlignment=SecondSequence[SpliceStart:SpliceEnd].replace('-','')

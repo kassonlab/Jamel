@@ -38,14 +38,13 @@ def OverallRMSD(Protein,Comparison='3merSARS2.pdb'):
     return RMSD
 
 def SequenceSimilarity(Protein,Domain):
-    #Should i do full similarity or just the spliced region?
-    # EmbossScore = open('/gpfs/gpfs0/scratch/jws6pq/Notebook/Emboss/Full' + key + '.emboss', 'r').readlines()[25].split()[-1]
     EmbossScore=open(Protein+Domain+'.emboss','r').readlines()[25].split()[-1]
     return EmbossScore.replace('(','').replace(')','').replace('%','')
 def OverallConfidence(plddtfile):
     plddt= list(map(float, open(plddtfile, 'r').readlines()))
     Averageplddt=sum(plddt)/len(plddt)
     return Averageplddt
+OverallConfidence('3merSARS2.plddt')
 
 def ConfidenceComparison(Protein,ChimeraSplice1,ChimeraSplice2,SARS2Splice1,SARS2Splice2,Domain):
     SARS2Score = list(map(float, open('SARS2.plddt', 'r').readlines()))
@@ -69,28 +68,24 @@ def ConfidenceComparison(Protein,ChimeraSplice1,ChimeraSplice2,SARS2Splice1,SARS
     AveragePercentScoreDifference=ScoreDifference/ChimeraLength*100
 
     return AveragePercentScoreDifference
-def MultimerConfidenceComparison(plddt,splicedinplddt,Chimeraplddt,NonSpliceDictionary,SpliceDictionary):
+# def BoundaryDictionary():
+def MultimerConfidenceComparison(nativeplddt,Chimeraplddt,Chimeraboundarytuple,NativeBoundaryTuple):
     #For this function you need very specific dictionary inputs that pair the splice locations of the chimera with the splice locations it from in the original protein
-    #The key value is the chimera boundaries and the value is the native protein, make the 4 values into 2 tuples
-    #Example {(chimeraboundary1,boundary2):(nativeboundary1,Boundary2)}
-    Protein1Score = list(map(float, open(plddt, 'r').readlines()))
-    Protein2Score=list(map(float, open(splicedinplddt, 'r').readlines()))
+    #The key value is the chimera boundaries and the value is the native protein, make the 4 values into 2 list tuples
+    #Example {[chimeraboundary1,boundary2]:[whichprotein(1 or 2),nativeboundary1,nativeBoundary2]}
+    # make it a function that only takes one protein at a time
+    NativeProteinScore = list(map(float, open(nativeplddt, 'r').readlines()))
     ChimeraScore=list(map(float,open(Chimeraplddt, 'r').readlines()))
+    SpliceLength=len(ChimeraScore[Chimeraboundarytuple[0]:Chimeraboundarytuple[1]])
     Relativedifference=0
-    for key,value in NonSpliceDictionary.items():
-        Spliceregionscore=sum(Protein1Score[value[0]:value[1]])
-        Chimerregion1score=sum(ChimeraScore[key[0]:key[1]])
-        Relativedifference+=(Chimerregion1score-Spliceregionscore)/Spliceregionscore
-    for key,value in SpliceDictionary.items():
-        Spliceregionscore2=sum(Protein2Score[value[0]:value[1]])
-        Chimerregion2score=sum(ChimeraScore[key[0]:key[1]])
-        Relativedifference+=(Chimerregion2score-Spliceregionscore2)/Spliceregionscore2
-    NumberofSections=len(NonSpliceDictionary)+len(SpliceDictionary)
-    AveragePercentScoreDifference=Relativedifference/NumberofSections
-    # input is a tuple where the first intro and outro of a spliced region is given (maybe a dictionary that transltes boundaries)
-    print(AveragePercentScoreDifference)
-    return AveragePercentScoreDifference
-MultimerConfidenceComparison('3merMERS.plddt','3merMERS.plddt','3merMERS.plddt',{(0,10):(0,10)},{(0,10):(0,10)})
+    Nativerange=[ind+NativeBoundaryTuple[0] for ind,x in enumerate(NativeProteinScore[NativeBoundaryTuple[0]:NativeBoundaryTuple[1]])]
+    Chimerarange = [ind+Chimeraboundarytuple[0] for ind,x in enumerate(ChimeraScore[Chimeraboundarytuple[0]:Chimeraboundarytuple[1]])]
+    for x,y in zip(Chimerarange,Nativerange):
+        Relativedifference+=(ChimeraScore[x]-NativeProteinScore[y])/NativeProteinScore[y]*100
+    Relativedifference=Relativedifference
+    # input is a tuple where the first intro and outro of a spliced region is given (maybe a dictionary that transltes boundaries
+    return Relativedifference,SpliceLength
+
 #make sure the number of multimers is indicated at the front of the filename
 def AveragingMultimerPLDDT(Plddtfilename,Subunits=3):
     MultimerPlddt=list(map(float, open(Plddtfilename, 'r').readlines()))
@@ -100,15 +95,16 @@ def AveragingMultimerPLDDT(Plddtfilename,Subunits=3):
     while ResidueIndex in range(Monomerlength):
         SubunitIndex = 0
         AveragedPlddt=0
-        while SubunitIndex in range(Subunits-1):
+        #You can step through list
+        while SubunitIndex in range(Subunits):
             AveragedPlddt+=MultimerPlddt[ResidueIndex+(Monomerlength*SubunitIndex)]
-            AveragedPlddt=AveragedPlddt/Subunits
-            SubunitIndex+=1
+            SubunitIndex += 1
+        AveragedPlddt=AveragedPlddt/Subunits
         Newplddtfile.write(str(AveragedPlddt) + '\n')
         ResidueIndex+=1
     Newplddtfile.close()
     return Newplddtfile.name
-
+AveragingMultimerPLDDT('3merSARS2.plddt')
 def calc_dist_matrix(chain_one, chain_two,DistanceCutoff):
     from numpy import array
     # """Returns a matrix of C-alpha distances between two chains"""
