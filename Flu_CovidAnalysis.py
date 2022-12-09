@@ -1,14 +1,10 @@
 import numpy as np
 import Analysis
-from RBDFinder import AlignmentFinder
-import os
-import concurrent.futures
-PresetList='Yes'
-Proteinlist=[line.split()[-1] for line in open('Flu_CovidList','r').readlines()]
+
+Proteinlist=[line.split()[-1] for line in open('/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/Flu_CovidList','r').readlines()]
 PDB=[x+'.pdb' for x in Proteinlist]
 Plddtfiles=[x+'.plddt' for x in Proteinlist]
 
-os.chdir('/scratch/jws6pq/Notebook/Overall')
 PlddtResults=list(map(Analysis.AveragingMultimerPLDDT,Plddtfiles))
 
 SpliceLength1=200
@@ -21,18 +17,27 @@ Boundary3=[x for x in range(540,973-SpliceLength2,20)]
 Protein2=['SARS2.fasta' for x in Boundary3]
 Boundary4=[x+SpliceLength1 for x in Boundary3]
 
-with concurrent.futures.ProcessPoolExecutor() as executor:
-    AverageDifference=list(executor.map(Analysis.MultimerConfidenceComparison,Proteinlist,ChimeraBoundary1,ChimeraBoundary2,SARS2Splice1,SARS2Splice2,DomainSetting,ComparisonSetting))
-    OverallDiff=list(executor.map(Analysis.OverallConfidence,Plddtfiles))
-    # Overlap=list(executor.map(Analysis.ContactOverlap,OverlapAlignment,BasenameList))
-OverlapScore=[x[1] for x in Overlap]
-OverallSimilarity=[x[2] for x in Overlap]
-DataChart=np.empty((len(ProteinList)+1,6),dtype=object)
-DataChart[0,0],DataChart[1:,0]='Protein',ProteinList
-DataChart[0,1],DataChart[1:,1]='Average Stability Difference',AverageDifference
-DataChart[0,2],DataChart[1:,2]='Overall native plddt',OverallDiff[0:len(ProteinList)]
-DataChart[0,3],DataChart[1:,3]='Overall chimera plddt',OverallDiff[len(ProteinList):]
-DataChart[0,4],DataChart[1:,4]='Sequence Similarity (%)',OverallSimilarity
-DataChart[0,5],DataChart[1:,5]='Contact Overlap',OverlapScore
+AverageRelativeDifference=[]
+HADifference=[]
+SARSDifference=[]
+k=0
+for i in range(len(Boundary1)):
+    for j in range(len(Boundary3)):
+        print(PlddtResults[k], Boundary1[i], Boundary2[i], Boundary3[j], Boundary4[j],k)
+        Protein1AverageDifference = Analysis.MultimerConfidenceComparison('AvgHA.plddt', PlddtResults[k], [0, 0 + SpliceLength1],[Boundary1[i], Boundary2[i]])
+        Protein2AverageDifference = Analysis.MultimerConfidenceComparison('Avg3merSARS2.plddt', PlddtResults[k],[0 + SpliceLength1, None],[Boundary3[j], Boundary4[j]])
+        AverageRelativeDifference.append((Protein1AverageDifference[0] + Protein2AverageDifference[0]) / ( Protein1AverageDifference[1] + Protein2AverageDifference[1]))
+        HADifference.append(Protein1AverageDifference[0]/Protein1AverageDifference[1])
+        SARSDifference.append(Protein2AverageDifference[0]/Protein2AverageDifference[1])
+        k+=1
+OverallDiff=list(map(Analysis.OverallConfidence,Plddtfiles))
 
-np.savetxt('/gpfs/gpfs0/scratch/jws6pq/CMfiles/'+DomainSetting[0]+'1031ChimeraAnalysis.tsv', DataChart, fmt="%s,%s,%s,%s,%s,%s", delimiter="")
+DataChart=np.empty((len(Proteinlist)+1,5),dtype=object)
+DataChart[0,0],DataChart[1:,0]='Protein',Proteinlist
+DataChart[0,1],DataChart[1:,1]='Average Stability Difference',AverageRelativeDifference
+DataChart[0,2],DataChart[1:,2]='HA Difference',HADifference
+DataChart[0,3],DataChart[1:,3]='SARS Difference',SARSDifference
+DataChart[0,4],DataChart[1:,4]='Overall chimera plddt',OverallDiff
+
+
+np.savetxt('/gpfs/gpfs0/scratch/jws6pq/CMfiles/120522HACovidAnalysis.tsv', DataChart, fmt="%s,%s,%s,%s,%s", delimiter="")

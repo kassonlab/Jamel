@@ -44,7 +44,7 @@ def OverallConfidence(plddtfile):
     plddt= list(map(float, open(plddtfile, 'r').readlines()))
     Averageplddt=sum(plddt)/len(plddt)
     return Averageplddt
-OverallConfidence('3merSARS2.plddt')
+
 
 def ConfidenceComparison(Protein,ChimeraSplice1,ChimeraSplice2,SARS2Splice1,SARS2Splice2,Domain):
     SARS2Score = list(map(float, open('SARS2.plddt', 'r').readlines()))
@@ -68,12 +68,7 @@ def ConfidenceComparison(Protein,ChimeraSplice1,ChimeraSplice2,SARS2Splice1,SARS
     AveragePercentScoreDifference=ScoreDifference/ChimeraLength*100
 
     return AveragePercentScoreDifference
-# def BoundaryDictionary():
 def MultimerConfidenceComparison(nativeplddt,Chimeraplddt,Chimeraboundarytuple,NativeBoundaryTuple):
-    #For this function you need very specific dictionary inputs that pair the splice locations of the chimera with the splice locations it from in the original protein
-    #The key value is the chimera boundaries and the value is the native protein, make the 4 values into 2 list tuples
-    #Example {[chimeraboundary1,boundary2]:[whichprotein(1 or 2),nativeboundary1,nativeBoundary2]}
-    # make it a function that only takes one protein at a time
     NativeProteinScore = list(map(float, open(nativeplddt, 'r').readlines()))
     ChimeraScore=list(map(float,open(Chimeraplddt, 'r').readlines()))
     SpliceLength=len(ChimeraScore[Chimeraboundarytuple[0]:Chimeraboundarytuple[1]])
@@ -83,10 +78,9 @@ def MultimerConfidenceComparison(nativeplddt,Chimeraplddt,Chimeraboundarytuple,N
     for x,y in zip(Chimerarange,Nativerange):
         Relativedifference+=(ChimeraScore[x]-NativeProteinScore[y])/NativeProteinScore[y]*100
     Relativedifference=Relativedifference
-    # input is a tuple where the first intro and outro of a spliced region is given (maybe a dictionary that transltes boundaries
+
     return Relativedifference,SpliceLength
 
-#make sure the number of multimers is indicated at the front of the filename
 def AveragingMultimerPLDDT(Plddtfilename,Subunits=3):
     MultimerPlddt=list(map(float, open(Plddtfilename, 'r').readlines()))
     Monomerlength=int(len(MultimerPlddt)/int(Subunits))
@@ -104,7 +98,6 @@ def AveragingMultimerPLDDT(Plddtfilename,Subunits=3):
         ResidueIndex+=1
     Newplddtfile.close()
     return Newplddtfile.name
-AveragingMultimerPLDDT('3merSARS2.plddt')
 def calc_dist_matrix(chain_one, chain_two,DistanceCutoff):
     from numpy import array
     # """Returns a matrix of C-alpha distances between two chains"""
@@ -175,3 +168,7 @@ def ContactOverlap(Alignmentfile,comparison,reference='6vsb_B'):
 #Do i consider all the times where there are residues beyond SARS???????
 def FaultScan(proteinpdb):
     return 1 if OverallRMSD(proteinpdb)>35.5 else 0
+def RMSF(Protein,Timestepinps):
+    from os import system as sys
+    sys('echo 1 | gmx_mpi trjconv -f /gpfs/gpfs0/scratch/jws6pq/Gromacs/'+Protein+'.xtc -s /gpfs/gpfs0/scratch/jws6pq/Gromacs/3merSARS2wBatHKU4S1_production_1.tpr -dt '+Timestepinps+' -o /scratch/jws6pq/Gromacs/'+Protein+'RMSF.xtc')
+    sys('echo 1 | gmx_mpi rmsf -dt '+Timestepinps+' -res -f /gpfs/gpfs0/scratch/jws6pq/Gromacs/'+Protein+'RMSF.xtc -s /gpfs/gpfs0/scratch/jws6pq/Gromacs/'+Protein+'_production_1.tpr -o '+Protein+'rmsf.xvg')
