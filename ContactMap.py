@@ -28,22 +28,28 @@ def residue_dist_matrix(pdb_file,chain_identifier,make_it_binary='Yes',distance_
 
 
 def get_residue_contact_pairs(pdb_filename,chain_identifier):
-    """Takes a pdb structure and return a nested list where each residue index in the list has a list with the python indexes for the residues its in contact with.
+    """Takes a pdb structure and return a nested list where each residue index in the list has a list with the python
+    indexes for the residues it's in contact with.
     Residue indexes that have no contacts will have an empty list"""
     from numpy import where
-    DIST_MATRIX = residue_dist_matrix(pdb_filename,chain_identifier)
-    x_axis,y_axis=list(where(DIST_MATRIX==1)[0]),list(where(DIST_MATRIX==1)[1])
-    list_of_contact_pairs=[[] for x in DIST_MATRIX]
+    dist_matrix = residue_dist_matrix(pdb_filename,chain_identifier)
+    x_axis,y_axis=list(where(dist_matrix==1)[0]),list(where(dist_matrix==1)[1])
+    list_of_contact_pairs=[[] for x in dist_matrix]
     for x, y in zip(x_axis, y_axis):
         list_of_contact_pairs[x].append(y)
     return list_of_contact_pairs
 print(get_residue_contact_pairs('6VSB_B.pdb','B'))
-def CorrectResiduePositionforAlignment(Protein,alignment):
-    ContactMap = GetResidueContactPairs(Protein, '3mer' + Protein + '.pdb', 7)
-    SeqIndexing = [ind for ind, x in enumerate(alignment) if x != '-']
-    ResiduePositionDictionary = {indx: indy for indx, indy in enumerate(SeqIndexing)}
-    UpdatedContactMap = [[ResiduePositionDictionary[y] for y in ContactMap[ind]] for ind, x in enumerate(ContactMap)]
-    return UpdatedContactMap
+
+
+def correct_residue_position_for_alignment(pdb_file,chain_identifier,alignment):
+    """Takes an alignment and creates a nested list"""
+    contact_map = get_residue_contact_pairs(pdb_file,chain_identifier)
+    sequence_indexing = [ind for ind, x in enumerate(alignment) if x != '-']
+    residue_position_dictionary = {indx: indy for indx, indy in enumerate(sequence_indexing)}
+    updated_contact_map = [[residue_position_dictionary[y] for y in contact_map[ind]] for ind, x in enumerate(contact_map)]
+    return updated_contact_map
+correct_residue_position_for_alignment()
+
 def ContactOverlap(Alignmentfile,comparison,reference='6vsb_B'):
     # Alignment in FASTA format. Make sure your benchmark sequence is first
     Sequences = open(Alignmentfile, "r").read().split('>')
