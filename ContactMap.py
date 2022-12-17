@@ -23,8 +23,9 @@ def residue_dist_matrix(pdb_file,chain_identifier,make_it_binary='Yes',distance_
         # and at least 6 residue separation or 0 for no contact
         return array([[1 if (calc_residue_dist(res_one, res_two)) <= distance_cutoff and (row-col) >= RESIDUE_NUMBER_CUTOFF else 0 for row, res_one in enumerate(PROTEIN)] for col, res_two in enumerate(PROTEIN)])
     else:
-        # Using list comprehension to create a list then an array of each residue distance to the rest of the chain and stacking those tuples to make a matrix
-        return array([[calc_residue_dist(x,y) for x in PROTEIN] for y in PROTEIN])
+        # Using list comprehension to create a list then an array of each residue distance
+        # to the rest of the chain and stacking those tuples to make a matrix
+        return array([[calc_residue_dist(res_one,res_one) for res_one in PROTEIN] for res_one in PROTEIN])
 
 
 def get_residue_contact_pairs(pdb_filename,chain_identifier):
@@ -34,24 +35,23 @@ def get_residue_contact_pairs(pdb_filename,chain_identifier):
     from numpy import where
     dist_matrix = residue_dist_matrix(pdb_filename,chain_identifier)
     x_axis,y_axis=list(where(dist_matrix==1)[0]),list(where(dist_matrix==1)[1])
-    list_of_contact_pairs=[[] for x in dist_matrix]
+    list_of_contact_pairs=[[] for rows in dist_matrix]
     for x, y in zip(x_axis, y_axis):
         list_of_contact_pairs[x].append(y)
     return list_of_contact_pairs
 print(get_residue_contact_pairs('6VSB_B.pdb','B'))
 
 
-def correct_residue_position_for_alignment(pdb_file,chain_identifier,alignment):
+def correct_residue_position_for_alignment(pdb_file,chain_identifier,sequence_from_alignment):
     """Takes an alignment and creates a nested list"""
-    contact_map = get_residue_contact_pairs(pdb_file,chain_identifier)
-    sequence_indexing = [ind for ind, x in enumerate(alignment) if x != '-']
-    residue_position_dictionary = {indx: indy for indx, indy in enumerate(sequence_indexing)}
-    updated_contact_map = [[residue_position_dictionary[y] for y in contact_map[ind]] for ind, x in enumerate(contact_map)]
+    contact_pairs = get_residue_contact_pairs(pdb_file,chain_identifier)
+    sequence_indexing = [ind for ind, x in enumerate(sequence_from_alignment) if x != '-']
+    index_dictionary = {real_index:alignment_index for real_index, alignment_index in enumerate(sequence_indexing)}
+    updated_contact_map = [[index_dictionary[real_index] for real_index in contact_pairs[alignment_index]] for alignment_index, pairs in enumerate(contact_pairs)]
     return updated_contact_map
 correct_residue_position_for_alignment()
 
 def ContactOverlap(Alignmentfile,comparison,reference='6vsb_B'):
-    # Alignment in FASTA format. Make sure your benchmark sequence is first
     Sequences = open(Alignmentfile, "r").read().split('>')
     SequenceDictionary={sequence.split('\n')[0]:sequence.split('\n')[1].strip() for sequence in Sequences if len(sequence)!=0}
     ReferenceSequence,ComparisonSequence=SequenceDictionary[reference],SequenceDictionary[comparison]
