@@ -39,25 +39,38 @@ def get_residue_contact_pairs(pdb_filename,chain_identifier):
     for x, y in zip(x_axis, y_axis):
         list_of_contact_pairs[x].append(y)
     return list_of_contact_pairs
-print(get_residue_contact_pairs('6VSB_B.pdb','B'))
 
 
 def correct_residue_position_for_alignment(pdb_file,chain_identifier,sequence_from_alignment):
-    """Takes an alignment and creates a nested list"""
+    """Takes a nested list of residue positions
+    and translates them into the residue position they are found in the alignment given"""
     contact_pairs = get_residue_contact_pairs(pdb_file,chain_identifier)
     sequence_indexing = [ind for ind, x in enumerate(sequence_from_alignment) if x != '-']
     index_dictionary = {real_index:alignment_index for real_index, alignment_index in enumerate(sequence_indexing)}
     updated_contact_map = [[index_dictionary[real_index] for real_index in contact_pairs[alignment_index]] for alignment_index, pairs in enumerate(contact_pairs)]
     return updated_contact_map
-correct_residue_position_for_alignment()
+
+
+from ColorCoding import blosum_62_matrix
+from numpy import delete
+from numpy import max as npmax
+from numpy import min as npmin
+# residuenumber,blosumscore,absolute value of confidence score difference,binary contact
+blosum=blosum_62_matrix()
+blosum=delete(blosum,0,axis=0)
+blosum=delete(blosum,0,axis=1)
+maxi, mini=npmax((blosum)),npmin(blosum)
+print(maxi,mini)
+lambda x:(2*((x-mini)/(maxi-mini))-1)*-1
+print(blosum)
 
 def ContactOverlap(Alignmentfile,comparison,reference='6vsb_B'):
     Sequences = open(Alignmentfile, "r").read().split('>')
     SequenceDictionary={sequence.split('\n')[0]:sequence.split('\n')[1].strip() for sequence in Sequences if len(sequence)!=0}
     ReferenceSequence,ComparisonSequence=SequenceDictionary[reference],SequenceDictionary[comparison]
     #CP is Comparison Protein and RP is Reference Protein
-    CPUpdatedContactMap=CorrectResiduePositionforAlignment(comparison,ComparisonSequence)
-    RPUpdatedContactMap = CorrectResiduePositionforAlignment(reference, ReferenceSequence)
+    CPUpdatedContactMap=correct_residue_position_for_alignment(comparison,ComparisonSequence)
+    RPUpdatedContactMap = correct_residue_position_for_alignment(reference, ReferenceSequence)
     ReferenceContactMap,ComparisonContactMap=[],[]
     j=0
     #Should this be a function?

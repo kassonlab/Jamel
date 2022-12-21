@@ -5,7 +5,7 @@ Proteinlist=[line.split()[-1] for line in open('/gpfs/gpfs0/scratch/jws6pq/BridC
 PDB=[x+'.pdb' for x in Proteinlist]
 Plddtfiles=[x+'.plddt' for x in Proteinlist]
 
-PlddtResults=list(map(Analysis.AveragingMultimerPLDDT,Plddtfiles))
+PlddtResults=list(map(Analysis.averaging_multimer_plddt, Plddtfiles))
 
 SpliceLength1=200
 Boundary1=[x for x in range(0,489-SpliceLength1,10)]

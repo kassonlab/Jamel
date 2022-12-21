@@ -1,6 +1,6 @@
 import numpy as np
 import Analysis
-from RBDFinder import AlignmentFinder
+from RBDFinder import alignment_finder
 import concurrent.futures
 
 Listtoanalyze='List'
@@ -15,10 +15,10 @@ SequenceofInterest=['TSNFRVQPTESIVRFPNITNLCPFGEVFNATRFASVYAWNRKRISNCVADYSVLYNSAS
 Chimerasplice=[(223,424) for x in ProteinList]
 DomainSetting=['RBD' for x in ProteinList]
 ComparisonSetting=['3merSARS2' for x in ProteinList]
-PlddtResults=list(map(Analysis.AveragingMultimerPLDDT,Plddtfiles))
+PlddtResults=list(map(Analysis.averaging_multimer_plddt, Plddtfiles))
 
 with concurrent.futures.ProcessPoolExecutor() as executor:
-    SpliceBoundaries = list(executor.map(AlignmentFinder, AlignmentFileNames, SequenceofInterest))
+    SpliceBoundaries = list(executor.map(alignment_finder, AlignmentFileNames, SequenceofInterest))
     SpliceLength=[x[1]-x[0] for x in SpliceBoundaries]
     Similarity=list(executor.map(Analysis.SequenceSimilarity, BasenameList, DomainSetting))
     AverageDifference=[]

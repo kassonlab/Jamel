@@ -8,125 +8,129 @@ def FoldXStability(Protein,Domain,ComparisonScore=827.13):
     FoldxScore=float(open('/scratch/jws6pq/Notebook/FoldXResults/SARS2w'+Protein+Domain+'_0_ST.fxout','r').readlines()[0].split()[1])
     FoldXDifference=-((ComparisonScore-FoldxScore)/ComparisonScore)*100
     return FoldXDifference
-def PieceWiseRMSD(Protein,CPSplice1,CPSplice2,SpliceBoundary1,SpliceBoundary2,ComparisonProtein='6VSB_B.pdb'):
+
+def PieceWiseRMSD(pdb_file_one, boundary_tuples, CPSplice1, CPSplice2, SpliceBoundary1, SpliceBoundary2, pdb_file_two='6VSB_B.pdb'):
     from pymol import cmd
-    cmd.load(ComparisonProtein,object='CP')
-    cmd.remove('organic')
-    proteinpdb = Protein + '.pdb'
-    cmd.load(proteinpdb)
     # ComparisonProtein=CP
+    cmd.load(pdb_file_two, object='CP')
+    cmd.load(pdb_file_one, object='Protein')
+    cmd.remove('organic')
     cmd.select('CPNonDomain', selection='CP and not resi '+str(CPSplice1)+'-'+str(CPSplice2))
     cmd.select('CPDomain', selection='CP and resi '+str(CPSplice1)+'-'+str(CPSplice2))
-    Domainindex = Protein+' and resi '+str(SpliceBoundary1)+'-'+str(SpliceBoundary2)
-    NonDomainindex = Protein+' and not resi '+ str(SpliceBoundary1)+'-'+str(SpliceBoundary2)
-    DomainName = Protein +'Domain'
-    NonDomainName = Protein +'NonDomain'
+    # for boundaries in boundary_tuples:
+
+    Domainindex = pdb_file_one + ' and resi ' + str(SpliceBoundary1) + '-' + str(SpliceBoundary2)
+    NonDomainindex = pdb_file_one + ' and not resi ' + str(SpliceBoundary1) + '-' + str(SpliceBoundary2)
+    DomainName = pdb_file_one + 'Domain'
+    NonDomainName = pdb_file_one + 'NonDomain'
     cmd.select(DomainName, selection=Domainindex)
     cmd.select(NonDomainName, selection=NonDomainindex)
     DomainRMSD=cmd.align('CPDomain', DomainName)[0]
     cmd.delete('all')
     return DomainRMSD
-def OverallRMSD(Protein,Comparison='3merSARS2.pdb'):
+def pymol_rmsd(pdb_file_one, pdb_file_two='3merSARS2.pdb'):
+    """This function takes two proteins and uses pymol to calculate the RMSD between the entirety of both proteins.
+    This must be run in pymol"""
     from pymol import cmd
-    proteinpdb = Protein
-    cmd.load(Comparison, object='CP')
-    cmd.load(proteinpdb,object='Protein')
+
+    cmd.load(pdb_file_two, object='CP')
+    cmd.load(pdb_file_one, object='Protein')
     cmd.remove('organic')
-    cmd.load(proteinpdb)
-    RMSD = cmd.align('CP', 'Protein')[0]
+    rmsd = cmd.align('CP', 'Protein')[0]
     cmd.delete('all')
-    return RMSD
+    return rmsd
 
 def SequenceSimilarity(Protein,Domain):
     EmbossScore=open(Protein+Domain+'.emboss','r').readlines()[25].split()[-1]
     return EmbossScore.replace('(','').replace(')','').replace('%','')
-def OverallConfidence(plddtfile):
-    plddt= list(map(float, open(plddtfile, 'r').readlines()))
-    Averageplddt=sum(plddt)/len(plddt)
-    return Averageplddt
+def OverallConfidence(plddt_file):
+    plddt= [float(score) for score in open(plddt_file, 'r').readlines()]
+    average_plddt=sum(plddt)/len(plddt)
+    return average_plddt
 
 
-def ConfidenceComparison(Protein,ChimeraSplice1,ChimeraSplice2,SARS2Splice1,SARS2Splice2,Domain):
-    SARS2Score = list(map(float, open('SARS2.plddt', 'r').readlines()))
-    ProteinScore=list(map(float, open(Protein+'.plddt', 'r').readlines()))
-    ChimeraScore=list(map(float,open('SARS2w'+Protein+Domain+'.plddt', 'r').readlines()))
-    j=0
-    k=0
-    SpliceLength=ChimeraSplice2-ChimeraSplice1
-    ScoreDifference=0
-    ChimeraLength=len(ChimeraScore)
-    for ChimeraResidue in range(ChimeraLength):
-        if SARS2Splice1<=ChimeraResidue<=(SARS2Splice1+SpliceLength):
-            ScoreDifference+=(ChimeraScore[ChimeraResidue]-ProteinScore[ChimeraSplice1+j])/ProteinScore[ChimeraSplice1+j]
-            j+=1
-        elif 0<=ChimeraResidue<SARS2Splice1:
-            #This statement is calculating the difference for the first part of SARS where there was no cleaving
-            ScoreDifference+=(ChimeraScore[ChimeraResidue]-SARS2Score[ChimeraResidue])/SARS2Score[ChimeraResidue]
-        else:
-            ScoreDifference+=(ChimeraScore[ChimeraResidue]-SARS2Score[SARS2Splice2+1+k])/SARS2Score[SARS2Splice2+1+k]
-            k+=1
-    AveragePercentScoreDifference=ScoreDifference/ChimeraLength*100
+def confidence_comparison(native_plddt, chimera_plddt, chimera_boundary_tuple, native_boundary_tuple):
+    native_protein_score = [float(score) for score in open(native_plddt, 'r').readlines()]
+    chimera_score=[float(score) for score in open(chimera_plddt, 'r').readlines()]
+    splice_length=len(chimera_score[chimera_boundary_tuple[0]:chimera_boundary_tuple[1]])
+    relative_difference=0
+    native_range=[ind + native_boundary_tuple[0] for ind, x in enumerate(native_protein_score[native_boundary_tuple[0]:native_boundary_tuple[1]])]
+    chimera_range = [ind + chimera_boundary_tuple[0] for ind, x in enumerate(chimera_score[chimera_boundary_tuple[0]:chimera_boundary_tuple[1]])]
+    for x,y in zip(chimera_range,native_range):
+        relative_difference += (chimera_score[x]-native_protein_score[y])/native_protein_score[y]*100
+    relative_difference=relative_difference
 
-    return AveragePercentScoreDifference
-def MultimerConfidenceComparison(nativeplddt,Chimeraplddt,Chimeraboundarytuple,NativeBoundaryTuple):
-    NativeProteinScore = list(map(float, open(nativeplddt, 'r').readlines()))
-    ChimeraScore=list(map(float,open(Chimeraplddt, 'r').readlines()))
-    SpliceLength=len(ChimeraScore[Chimeraboundarytuple[0]:Chimeraboundarytuple[1]])
-    Relativedifference=0
-    Nativerange=[ind+NativeBoundaryTuple[0] for ind,x in enumerate(NativeProteinScore[NativeBoundaryTuple[0]:NativeBoundaryTuple[1]])]
-    Chimerarange = [ind+Chimeraboundarytuple[0] for ind,x in enumerate(ChimeraScore[Chimeraboundarytuple[0]:Chimeraboundarytuple[1]])]
-    for x,y in zip(Chimerarange,Nativerange):
-        Relativedifference+=(ChimeraScore[x]-NativeProteinScore[y])/NativeProteinScore[y]*100
-    Relativedifference=Relativedifference
+    return relative_difference,splice_length
 
-    return Relativedifference,SpliceLength
+def averaging_multimer_plddt(plddt_file, subunits=3):
+    """This function takes a plddt and averages the scores
+    for each residue position across the number of subunints specified"""
+    # Using list comprehension to turn the plddt file into a list of floats
+    multimer_plddt=[float(score) for score in open(plddt_file, 'r').readlines()]
+    # Calculating the length a subunits to have for step size when iterating through the list later
+    monomer_length=int(len(multimer_plddt) / int(subunits))
+    # creating a file to input the averaged scores
+    new_plddt_file = open('Avg' + plddt_file, 'w')
+    # using list comprehension to step through each the residue position of each subunit and
+    # collect their scores, averaged them and return them to the new list
+    averaged_scores=[sum(multimer_plddt[residue_index::monomer_length])/subunits for residue_index in range(monomer_length)]
+    # Looping through the new list and inputing the averaged scores into the new file that was created
+    for score in averaged_scores:
+        new_plddt_file.write(str(score) + '\n')
+    new_plddt_file.close()
+    return new_plddt_file.name
 
-def AveragingMultimerPLDDT(Plddtfilename,Subunits=3):
-    MultimerPlddt=list(map(float, open(Plddtfilename, 'r').readlines()))
-    Monomerlength=int(len(MultimerPlddt)/int(Subunits))
-    Newplddtfile = open('Avg'+Plddtfilename, 'w')
-    ResidueIndex=0
-    while ResidueIndex in range(Monomerlength):
-        SubunitIndex = 0
-        AveragedPlddt=0
-        #You can step through list
-        while SubunitIndex in range(Subunits):
-            AveragedPlddt+=MultimerPlddt[ResidueIndex+(Monomerlength*SubunitIndex)]
-            SubunitIndex += 1
-        AveragedPlddt=AveragedPlddt/Subunits
-        Newplddtfile.write(str(AveragedPlddt) + '\n')
-        ResidueIndex+=1
-    Newplddtfile.close()
-    return Newplddtfile.name
-def calc_dist_matrix(chain_one, chain_two,DistanceCutoff):
-    from numpy import array
-    # """Returns a matrix of C-alpha distances between two chains"""
-    answer=array([1 if (calc_residue_dist(residue_one, residue_two)) <= DistanceCutoff and (col-row) >= 6 else 0 for row, residue_one in enumerate(chain_one) for col, residue_two in enumerate(chain_two)]).reshape((len(chain_one), len(chain_two)))
-    return array(answer)
-#Copied from https://warwick.ac.uk/fac/sci/moac/people/students/peter_cock/python/protein_contact_map/
+
 def calc_residue_dist(residue_one, residue_two) :
+    """Returns the C-alpha distance between two residues"""
+    # Mostly copied from https://warwick.ac.uk/fac/sci/moac/people/students/peter_cock/python/protein_contact_map/
     from numpy import sqrt
-        # """Returns the C-alpha distance between two residues"""
+    # Using distance formula to calculate residue distance
     diff_vector  = residue_one["CA"].coord - residue_two["CA"].coord
     return sqrt(sum(diff_vector * diff_vector))
-def GetResidueContactPairs(PDBnickname,PDBFilename,DistanceCutoff):
+def residue_dist_matrix(pdb_file,chain_identifier,make_it_binary='Yes',distance_cutoff=7):
+    """Takes a distance matrix of a protein and converts it to a binary matrix that uses 1 to signify a residue
+    contact and 0 for no contact or Returns a matrix of C-alpha distances between residues in a protein chain or b"""
+    # Mostly copied from https://warwick.ac.uk/fac/sci/moac/people/students/peter_cock/python/protein_contact_map/
+    from numpy import array
     from Bio.PDB import PDBParser
+    RESIDUE_NUMBER_CUTOFF=6
+    # Calling the PDB structure with the parser
+    STRUCTURE = PDBParser().get_structure(pdb_file, pdb_file)
+    # Then selecting the chain
+    PROTEIN = STRUCTURE[0][chain_identifier]
+    if make_it_binary=='Yes':
+        # Using list comprehension to create a nested list
+        # then an array(protein length by protein length) of 1 to signifying a residue contact below distance_cutoff
+        # and at least 6 residue separation or 0 for no contact
+        return array([[1 if (calc_residue_dist(res_one, res_two)) <= distance_cutoff and (row-col) >= RESIDUE_NUMBER_CUTOFF else 0 for row, res_one in enumerate(PROTEIN)] for col, res_two in enumerate(PROTEIN)])
+    else:
+        # Using list comprehension to create a list then an array of each residue distance
+        # to the rest of the chain and stacking those tuples to make a matrix
+        return array([[calc_residue_dist(res_one,res_one) for res_one in PROTEIN] for res_one in PROTEIN])
+
+
+def get_residue_contact_pairs(pdb_filename,chain_identifier):
+    """Takes a pdb structure and return a nested list where each residue index in the list has a list with the python
+    indexes for the residues it's in contact with.
+    Residue indexes that have no contacts will have an empty list"""
     from numpy import where
-    pdb_code,pdb_filename = PDBnickname,PDBFilename
-    structure = PDBParser().get_structure(pdb_code, pdb_filename)
-    model = structure[0]
-    dist_matrix = calc_dist_matrix(model["B"], model["B"],DistanceCutoff)
-    X_axis,Y_axis=list(where(dist_matrix==1)[0]),list(where(dist_matrix==1)[1])
-    ListofContactPairs=[[] for x in dist_matrix]
-    for x, y in zip(X_axis, Y_axis):
-        ListofContactPairs[x].append(y)
-    return ListofContactPairs
-def CorrectResiduePositionforAlignment(Protein,alignment):
-    ContactMap = GetResidueContactPairs(Protein, '3mer' + Protein + '.pdb', 7)
-    SeqIndexing = [ind for ind, x in enumerate(alignment) if x != '-']
-    ResiduePositionDictionary = {indx: indy for indx, indy in enumerate(SeqIndexing)}
-    UpdatedContactMap = [[ResiduePositionDictionary[y] for y in ContactMap[ind]] for ind, x in enumerate(ContactMap)]
-    return UpdatedContactMap
+    dist_matrix = residue_dist_matrix(pdb_filename,chain_identifier)
+    x_axis,y_axis=list(where(dist_matrix==1)[0]),list(where(dist_matrix==1)[1])
+    list_of_contact_pairs=[[] for rows in dist_matrix]
+    for x, y in zip(x_axis, y_axis):
+        list_of_contact_pairs[x].append(y)
+    return list_of_contact_pairs
+
+
+def correct_residue_position_for_alignment(pdb_file,chain_identifier,sequence_from_alignment):
+    """Takes a nested list of residue positions
+    and translates them into the residue position they are found in the alignment given"""
+    contact_pairs = get_residue_contact_pairs(pdb_file,chain_identifier)
+    sequence_indexing = [ind for ind, x in enumerate(sequence_from_alignment) if x != '-']
+    index_dictionary = {real_index:alignment_index for real_index, alignment_index in enumerate(sequence_indexing)}
+    updated_contact_map = [[index_dictionary[real_index] for real_index in contact_pairs[alignment_index]] for alignment_index, pairs in enumerate(contact_pairs)]
+    return updated_contact_map
 def ContactOverlap(Alignmentfile,comparison,reference='6vsb_B'):
     # Alignment in FASTA format. Make sure your benchmark sequence is first
     Sequences = open(Alignmentfile, "r").read().split('>')
@@ -167,7 +171,7 @@ def ContactOverlap(Alignmentfile,comparison,reference='6vsb_B'):
     return comparison,TotalContacts,EmbossScore.replace('(','').replace(')','').replace('%','')
 #Do i consider all the times where there are residues beyond SARS???????
 def FaultScan(proteinpdb):
-    return 1 if OverallRMSD(proteinpdb)>35.5 else 0
+    return 1 if pymol_rmsd(proteinpdb) > 35.5 else 0
 def RMSF(Protein,Timestepinps):
     from os import system as sys
     sys('echo 1 | gmx_mpi trjconv -f /gpfs/gpfs0/scratch/jws6pq/Gromacs/'+Protein+'.xtc -s /gpfs/gpfs0/scratch/jws6pq/Gromacs/3merSARS2wBatHKU4S1_production_1.tpr -dt '+Timestepinps+' -o /scratch/jws6pq/Gromacs/'+Protein+'RMSF.xtc')
