@@ -144,7 +144,7 @@ protein_list = ['BAT2006',
                 'Hedgehog',
                 'Zhejiang2013',
                 'BATGCCDC1']
-protein=protein_list[3]
+# protein=protein_list[3]
 # loop=[float(score) for index,score in enumerate(open('Avg3merSARS2wBAT2006S1.plddt', 'r').readlines()) if index not in range(647, 682)]
 # noloop=[float(score) for score in open('Avg3merSARS2wBAT2006S1mutatedloop.plddt', 'r').readlines()]
 # del noloop[647:650]
@@ -153,7 +153,7 @@ protein=protein_list[3]
 # color_coding('SARSw'+protein+'S1frame0', differenec, (min(differenec),max(differenec)), ('red','green'))
 # plddt_color_coding('Avg3merSARS2w'+protein+'S1.plddt', 'SARSw'+protein+'S1frame0', ('red', 'green'))
 # plddt_color_coding('Avg3merSARS2w'+protein+'S1mutatedloop.plddt', '3merSARS2w'+protein+'S1mutatedloop', ('red', 'green'))
-plddt_color_coding('Avg3merSARS2.plddt', '3merSARS2', ('red', 'green'))
+# plddt_color_coding('Avg3merSARS2.plddt', '3merSARS2', ('red', 'green'))
 
 # for protein in protein_list[0:1]:
 #     plddt_color_coding('Avg3merSARS2w'+protein+'S1.plddt', 'SARSw'+protein+'S1frame0', ('red', 'green'))

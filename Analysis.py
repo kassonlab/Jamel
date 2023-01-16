@@ -1,5 +1,3 @@
-import os
-
 
 def RunFoldX(Protein,Domain,ComparisonScore=827.13):
     import os
@@ -40,8 +38,8 @@ def pymol_rmsd(pdb_file_one, pdb_file_two='3merSARS2.pdb'):
     cmd.delete('all')
     return rmsd
 
-def SequenceSimilarity(Protein,Domain):
-    EmbossScore=open(Protein+Domain+'.emboss','r').readlines()[25].split()[-1]
+def SequenceSimilarity(emboss_file):
+    EmbossScore=open(emboss_file,'r').readlines()[25].split()[-1]
     return EmbossScore.replace('(','').replace(')','').replace('%','')
 def OverallConfidence(plddt_file):
     plddt= [float(score) for score in open(plddt_file, 'r').readlines()]
@@ -50,16 +48,12 @@ def OverallConfidence(plddt_file):
 
 
 def confidence_comparison(native_plddt, chimera_plddt, chimera_boundary_tuple, native_boundary_tuple):
-    native_protein_score = [float(score) for score in open(native_plddt, 'r').readlines()]
-    chimera_score=[float(score) for score in open(chimera_plddt, 'r').readlines()]
-    splice_length=len(chimera_score[chimera_boundary_tuple[0]:chimera_boundary_tuple[1]])
+    native_protein_score = [float(score) for score in open(native_plddt, 'r').readlines()][native_boundary_tuple[0]:native_boundary_tuple[1]]
+    chimera_score=[float(score) for score in open(chimera_plddt, 'r').readlines()][chimera_boundary_tuple[0]:chimera_boundary_tuple[1]]
+    splice_length=len(chimera_score)
     relative_difference=0
-    native_range=[ind + native_boundary_tuple[0] for ind, x in enumerate(native_protein_score[native_boundary_tuple[0]:native_boundary_tuple[1]])]
-    chimera_range = [ind + chimera_boundary_tuple[0] for ind, x in enumerate(chimera_score[chimera_boundary_tuple[0]:chimera_boundary_tuple[1]])]
-    for x,y in zip(chimera_range,native_range):
-        relative_difference += (chimera_score[x]-native_protein_score[y])/native_protein_score[y]*100
-    relative_difference=relative_difference
-
+    for i in range(splice_length):
+        relative_difference += (chimera_score[i]-native_protein_score[i])/native_protein_score[i]*100
     return relative_difference,splice_length
 
 def averaging_multimer_plddt(plddt_file, subunits=3):
@@ -70,13 +64,13 @@ def averaging_multimer_plddt(plddt_file, subunits=3):
     # Calculating the length a subunits to have for step size when iterating through the list later
     monomer_length=int(len(multimer_plddt) / int(subunits))
     # creating a file to input the averaged scores
-    new_plddt_file = open('Avg' + plddt_file, 'w')
+    new_plddt_file = open(f'Avg{plddt_file}', 'w')
     # using list comprehension to step through each the residue position of each subunit and
     # collect their scores, averaged them and return them to the new list
     averaged_scores=[sum(multimer_plddt[residue_index::monomer_length])/subunits for residue_index in range(monomer_length)]
     # Looping through the new list and inputing the averaged scores into the new file that was created
     for score in averaged_scores:
-        new_plddt_file.write(str(score) + '\n')
+        new_plddt_file.write(f'{score}\n')
     new_plddt_file.close()
     return new_plddt_file.name
 

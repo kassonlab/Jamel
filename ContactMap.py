@@ -51,7 +51,7 @@ def correct_residue_position_for_alignment(pdb_file,chain_identifier,sequence_fr
     return updated_contact_map
 
 
-from ColorCoding import blosum_62_matrix
+from ColorCoding import blosum_62_matrix,create_dictionary_from_alignment
 from numpy import delete
 from numpy import max as npmax
 from numpy import min as npmin
@@ -60,47 +60,52 @@ blosum=blosum_62_matrix()
 blosum=delete(blosum,0,axis=0)
 blosum=delete(blosum,0,axis=1)
 maxi, mini=npmax((blosum)),npmin(blosum)
-print(maxi,mini)
-lambda x:(2*((x-mini)/(maxi-mini))-1)*-1
+
+# normalize between zero an -1 and then flip the signs, also check distribution of blosum scores
+# low + (high-low)*(x-minimum)/(maximum-minimmum)
+normalize = lambda x: (-1+2*(x-mini)/(maxi-mini))
+blosum=[list(normalize(y) for y in x) for x in blosum]
+# 1 if both contact, 0 if no contact, -1 if only one contact
+
 print(blosum)
 
-def ContactOverlap(Alignmentfile,comparison,reference='6vsb_B'):
-    Sequences = open(Alignmentfile, "r").read().split('>')
-    SequenceDictionary={sequence.split('\n')[0]:sequence.split('\n')[1].strip() for sequence in Sequences if len(sequence)!=0}
-    ReferenceSequence,ComparisonSequence=SequenceDictionary[reference],SequenceDictionary[comparison]
+def ContactOverlap(alignment_file, comparison, reference='6VSB_B'):
+    from ColorCoding import create_dictionary_from_alignment
+    from numpy import where
+    sequence_dictionary=create_dictionary_from_alignment(alignment_file)
+    reference_sequence,comparison_sequence=sequence_dictionary[reference],sequence_dictionary[comparison]
     #CP is Comparison Protein and RP is Reference Protein
-    CPUpdatedContactMap=correct_residue_position_for_alignment(comparison,ComparisonSequence)
-    RPUpdatedContactMap = correct_residue_position_for_alignment(reference, ReferenceSequence)
-    ReferenceContactMap,ComparisonContactMap=[],[]
+    cp_updated_contact_map=correct_residue_position_for_alignment(f'3mer{comparison}.pdb','B',comparison_sequence)
+    rp_updated_contact_map = correct_residue_position_for_alignment(f'{reference}.pdb',"B", reference_sequence)
+    rp_contact_map,cp_contact_map=[],[]
     j=0
-    #Should this be a function?
-    RPContactCount,CPContactCount=0,0
-    for x in ReferenceSequence:
-        if x.isalpha():
-            ReferenceContactMap.append([x]+RPUpdatedContactMap[j])
-            RPContactCount+=len(RPUpdatedContactMap[j])+1
+    residue_comparison=[blosum[where(blosum_62_matrix()[:, 0] == res_ref)[0][0]-1][where(blosum_62_matrix()[0, :] == res_com)[0][0]-1]
+                        for res_ref, res_com in zip(reference_sequence,comparison_sequence)]
+    print(blosum[0][19],list(zip(reference_sequence,comparison_sequence)))
+    print(residue_comparison)
+    for residue in reference_sequence:
+        if residue.isalpha():
+            rp_contact_map.append(rp_updated_contact_map[j])
             j+=1
         else:
-            ReferenceContactMap.append([x])
+            rp_contact_map.append([])
     j=0
-    for x in ComparisonSequence:
-        if x.isalpha():
-            ComparisonContactMap.append([x]+CPUpdatedContactMap[j])
-            CPContactCount+=len(CPUpdatedContactMap[j])+1
+    for residue in comparison_sequence:
+        if residue.isalpha():
+            cp_contact_map.append(cp_updated_contact_map[j])
             j+=1
         else:
-            ComparisonContactMap.append([x])
-    TotalContacts = RPContactCount+CPContactCount
-    for x,y in zip(ReferenceContactMap,ComparisonContactMap):
-        for w in x:
-            if w not in y and w!='-' and len(x)>1 or w not in y and w!='-' and len(y)>1:
-                TotalContacts+=-1
-        for v in y:
-            if v not in x and v!='-' and len(x)>1 or v not in x and v!='-' and len(y)>1:
-                TotalContacts += -1
-    # system('/scratch/jws6pq/EMBOSS-6.6.0/emboss/needle -sprotein -gapopen 10 -gapextend 0.5 -outfile /gpfs/gpfs0/scratch/jws6pq/Notebook/Emboss/Full' + key + '.emboss -asequence /gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/' + key + '.fasta -bsequence /gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/SARS2.fasta')
-    EmbossScore = open('/gpfs/gpfs0/scratch/jws6pq/Notebook/Emboss/Full' + comparison + '.emboss', 'r').readlines()[25].split()[-1]
-    return comparison,TotalContacts,EmbossScore.replace('(','').replace(')','').replace('%','')
-#Do i consider all the times where there are residues beyond SARS???????
-#
-#
+            cp_contact_map.append([])
+    fraction_conserved=[]
+    # print(list(zip(rp_contact_map,cp_contact_map)))
+
+    for x, y in zip(rp_contact_map,cp_contact_map):
+        if x==[] and y==[]: fraction_conserved.append(1); continue
+        elif x == [] or y == []: fraction_conserved.append(0); continue
+        x_set = set(); y_set = set()
+        [x_set.update(num for num in range(contact-6,contact+7)) for contact in x]
+        [y_set.update(num for num in range(contact - 6, contact + 7)) for contact in y]
+        fraction_conserved.append((len([contact for contact in y if contact in x_set])+len([contact for contact in x if contact in y_set]))/(len(x)+len(y)))
+    print(fraction_conserved)
+
+ContactOverlap('SARS2wEverythingstable.aln','EidolonBat')

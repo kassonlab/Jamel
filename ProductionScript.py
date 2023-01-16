@@ -1,6 +1,4 @@
-from numpy import empty
 from RBDFinder import alignment_finder
-import AccessiontoFasta
 import ChimeraGenerator
 from os import system as syst
 from concurrent.futures import ProcessPoolExecutor
@@ -20,15 +18,15 @@ Executable,DestinationFolder='/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/MultimerAlp
                              ' /scratch/jws6pq/Notebook/Finished\n'
 proteins_per_slurm=2
 chimera_only= 'Yes'
-DomainSetting=['S1' for x in info_list]
+DomainSetting=['S1' for protein in info_list]
 AccessionNumber=[x.split()[0] for x in info_list]
 protein_list=[x.split()[-1] for x in info_list]
 SequenceofInterest=[SequenceofInterest for x in protein_list]
 SARS2=['/scratch/jws6pq/BridCMfiles/SARS2.fasta' for x in protein_list]
-splice_partner=["/gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/" + x + ".fasta" for x in protein_list]
-Fastafilenames=["/gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/3mer" + x +".fasta" for x in protein_list]
-Chimerafilenames=["/gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/3merSARS2w" + x + DomainSetting[0] +".fasta" for x in protein_list]
-Alignmentfile=['/scratch/jws6pq/Notebook/Alignment/' + x +'onSARS2.aln' for x in protein_list]
+splice_partner=[f"/gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/{protein}.fasta" for protein in protein_list]
+Fastafilenames=[f"/gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/3mer{protein}.fasta" for protein in protein_list]
+Chimerafilenames=[f"/gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/3merSARS2w{protein}{DomainSetting[0]}.fasta" for protein in protein_list]
+Alignmentfile=[f'/scratch/jws6pq/Notebook/Alignment/{protein}onSARS2.aln' for protein in protein_list]
 Subunits=[3 for x in protein_list]
 # SP is splice_partner
 sars_boundary_one, sars_boundary_two= [0 for x in protein_list], [540 for x in protein_list]
@@ -45,25 +43,25 @@ Fileindex=0
 Slurmfilenumber=1
 if chimera_only== 'Yes':
     while Fileindex in range(len(Chimerafilenames)):
-        syst('cp /scratch/jws6pq/BridCMfiles/MultimerAlphaFold.slurm /scratch/jws6pq/BridCMfiles/' + str(Slurmfilenumber) + 'MultimerAlphaFold.slurm')
-        Slurmfile = open('/scratch/jws6pq/BridCMfiles/' + str(Slurmfilenumber) + 'MultimerAlphaFold.slurm', 'a')
-        Slurmfile.write('\n#SBATCH -e /scratch/jws6pq/BridCMfiles/' + str(Slurmfilenumber) + 'multimerslurm.out\n#Run program\n')
+        syst(f'cp /scratch/jws6pq/BridCMfiles/MultimerAlphaFold.slurm /scratch/jws6pq/BridCMfiles/{Slurmfilenumber}MultimerAlphaFold.slurm')
+        Slurmfile = open(f'/scratch/jws6pq/BridCMfiles/{Slurmfilenumber}MultimerAlphaFold.slurm', 'a')
+        Slurmfile.write(f'\n#SBATCH -e /scratch/jws6pq/BridCMfiles/{Slurmfilenumber}multimerslurm.out\n#Run program\n')
         files=','.join(Chimerafilenames[Fileindex:Fileindex + proteins_per_slurm])
         Slurmfile.write(Executable+files+DestinationFolder)
         Slurmfile.close()
-        syst('sbatch /scratch/jws6pq/BridCMfiles/'+str(Slurmfilenumber)+'MultimerAlphaFold.slurm')
+        syst(f'sbatch /scratch/jws6pq/BridCMfiles/{Slurmfilenumber}MultimerAlphaFold.slurm')
         Fileindex+=proteins_per_slurm
         Slurmfilenumber+=1
 
 if chimera_only== 'No':
     Fullfilelist=Fastafilenames+Chimerafilenames
     while Fileindex in range(len(Fullfilelist)):
-        syst('cp /scratch/jws6pq/BridCMfiles/MultimerAlphaFold.slurm /scratch/jws6pq/BridCMfiles/' + str(Slurmfilenumber) + 'MultimerAlphaFold.slurm')
-        Slurmfile = open('/scratch/jws6pq/BridCMfiles/' + str(Slurmfilenumber) + 'MultimerAlphaFold.slurm', 'a')
-        Slurmfile.write('\n#SBATCH -e /scratch/jws6pq/BridCMfiles/' + str(Slurmfilenumber) + 'multimerslurm.out\n#Run program\n')
+        syst(f'cp /scratch/jws6pq/BridCMfiles/MultimerAlphaFold.slurm /scratch/jws6pq/BridCMfiles/{Slurmfilenumber}MultimerAlphaFold.slurm')
+        Slurmfile = open(f'/scratch/jws6pq/BridCMfiles/{Slurmfilenumber}MultimerAlphaFold.slurm', 'a')
+        Slurmfile.write(f'\n#SBATCH -e /scratch/jws6pq/BridCMfiles/{Slurmfilenumber}multimerslurm.out\n#Run program\n')
         files=','.join(Chimerafilenames[Fileindex:Fileindex + proteins_per_slurm])
         Slurmfile.write(Executable+files+DestinationFolder)
         Slurmfile.close()
-        syst('sbatch /scratch/jws6pq/BridCMfiles/'+str(Slurmfilenumber)+'MultimerAlphaFold.slurm')
+        syst(f'sbatch /scratch/jws6pq/BridCMfiles/{Slurmfilenumber}MultimerAlphaFold.slurm')
         Fileindex+=proteins_per_slurm
         Slurmfilenumber+=1
