@@ -1,6 +1,6 @@
 import numpy as np
 import Analysis
-from RBDFinder import AlignmentFinder
+from AlignmentFinder import alignment_finder
 import concurrent.futures
 
 Listtoanalyze='List'
@@ -15,14 +15,14 @@ SequenceofInterest=['TSNFRVQPTESIVRFPNITNLCPFGEVFNATRFASVYAWNRKRISNCVADYSVLYNSAS
 Chimerasplice=[(223,424) for x in ProteinList]
 DomainSetting=['RBD' for x in ProteinList]
 ComparisonSetting=['3merSARS2' for x in ProteinList]
-PlddtResults=list(map(Analysis.AveragingMultimerPLDDT,Plddtfiles))
+PlddtResults=list(map(Analysis.averaging_multimer_plddt, Plddtfiles))
 
 with concurrent.futures.ProcessPoolExecutor() as executor:
-    SpliceBoundaries = list(executor.map(AlignmentFinder, AlignmentFileNames, SequenceofInterest))
+    SpliceBoundaries = list(executor.map(alignment_finder, AlignmentFileNames, SequenceofInterest))
     SpliceLength=[x[1]-x[0] for x in SpliceBoundaries]
-    Similarity=list(executor.map(Analysis.SequenceSimilarity, BasenameList, DomainSetting))
+    Similarity=list(executor.map(Analysis.get_sequence_similarity, BasenameList, DomainSetting))
     AverageDifference=[]
-    Fault=list(executor.map(Analysis.FaultScan,PDB))
+    Fault=list(executor.map(Analysis.fault_scan, PDB))
     i=0
     for x in NativePlddtfiles:
         Section1=Analysis.MultimerConfidenceComparison('Avg3merSARS2.plddt',ChimeraPlddtfiles[i],(0,223),(0,223))
@@ -31,8 +31,8 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
         AverageRelativeDifference=(Section1[0]+Section2[0]+Section3[0])/(Section1[1]+Section2[1]+Section3[1])
         AverageDifference.append(AverageRelativeDifference)
         i+=1
-    OverallDiff=list(executor.map(Analysis.OverallConfidence,NativePlddtfiles))
-    OverallChiDiff = list(executor.map(Analysis.OverallConfidence, ChimeraPlddtfiles))
+    OverallDiff=list(executor.map(Analysis.overall_confidence, NativePlddtfiles))
+    OverallChiDiff = list(executor.map(Analysis.overall_confidence, ChimeraPlddtfiles))
 DataChart=np.empty((len(ProteinList)+1,6),dtype=object)
 DataChart[0,0],DataChart[1:,0]='Protein',ProteinList
 DataChart[0,1],DataChart[1:,1]='Average Stability Difference',AverageDifference

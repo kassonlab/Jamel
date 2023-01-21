@@ -15,7 +15,7 @@
 #Run program
 from os import path
 from os import system
-Runstragglers='Yes'
+Runstragglers='No'
 Proteinsperslurm=10
 #Multimer or Flu_Covid
 Slurmname='Flu_Covid'
@@ -42,3 +42,4 @@ def ProductionRun(Listtorun,Slurmname,Proteinsperslurm):
     Slurmfilenumber+=1
 if Runstragglers=='Yes':
   ProductionRun(Listtorun,Slurmname,Proteinsperslurm)
+

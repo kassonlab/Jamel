@@ -23,65 +23,89 @@ def residue_dist_matrix(pdb_file,chain_identifier,make_it_binary='Yes',distance_
         # and at least 6 residue separation or 0 for no contact
         return array([[1 if (calc_residue_dist(res_one, res_two)) <= distance_cutoff and (row-col) >= RESIDUE_NUMBER_CUTOFF else 0 for row, res_one in enumerate(PROTEIN)] for col, res_two in enumerate(PROTEIN)])
     else:
-        # Using list comprehension to create a list then an array of each residue distance to the rest of the chain and stacking those tuples to make a matrix
-        return array([[calc_residue_dist(x,y) for x in PROTEIN] for y in PROTEIN])
+        # Using list comprehension to create a list then an array of each residue distance
+        # to the rest of the chain and stacking those tuples to make a matrix
+        return array([[calc_residue_dist(res_one,res_one) for res_one in PROTEIN] for res_one in PROTEIN])
 
 
 def get_residue_contact_pairs(pdb_filename,chain_identifier):
-    """Takes a pdb structure and return a nested list where each residue index in the list has a list with the python indexes for the residues its in contact with.
+    """Takes a pdb structure and return a nested list where each residue index in the list has a list with the python
+    indexes for the residues it's in contact with.
     Residue indexes that have no contacts will have an empty list"""
     from numpy import where
-    DIST_MATRIX = residue_dist_matrix(pdb_filename,chain_identifier)
-    x_axis,y_axis=list(where(DIST_MATRIX==1)[0]),list(where(DIST_MATRIX==1)[1])
-    list_of_contact_pairs=[[] for x in DIST_MATRIX]
+    dist_matrix = residue_dist_matrix(pdb_filename,chain_identifier)
+    x_axis,y_axis=list(where(dist_matrix==1)[0]),list(where(dist_matrix==1)[1])
+    list_of_contact_pairs=[[] for rows in dist_matrix]
     for x, y in zip(x_axis, y_axis):
         list_of_contact_pairs[x].append(y)
     return list_of_contact_pairs
-print(get_residue_contact_pairs('6VSB_B.pdb','B'))
-def CorrectResiduePositionforAlignment(Protein,alignment):
-    ContactMap = GetResidueContactPairs(Protein, '3mer' + Protein + '.pdb', 7)
-    SeqIndexing = [ind for ind, x in enumerate(alignment) if x != '-']
-    ResiduePositionDictionary = {indx: indy for indx, indy in enumerate(SeqIndexing)}
-    UpdatedContactMap = [[ResiduePositionDictionary[y] for y in ContactMap[ind]] for ind, x in enumerate(ContactMap)]
-    return UpdatedContactMap
-def ContactOverlap(Alignmentfile,comparison,reference='6vsb_B'):
-    # Alignment in FASTA format. Make sure your benchmark sequence is first
-    Sequences = open(Alignmentfile, "r").read().split('>')
-    SequenceDictionary={sequence.split('\n')[0]:sequence.split('\n')[1].strip() for sequence in Sequences if len(sequence)!=0}
-    ReferenceSequence,ComparisonSequence=SequenceDictionary[reference],SequenceDictionary[comparison]
+
+
+def correct_residue_position_for_alignment(pdb_file,chain_identifier,sequence_from_alignment):
+    """Takes a nested list of residue positions
+    and translates them into the residue position they are found in the alignment given"""
+    contact_pairs = get_residue_contact_pairs(pdb_file,chain_identifier)
+    sequence_indexing = [ind for ind, x in enumerate(sequence_from_alignment) if x != '-']
+    index_dictionary = {real_index:alignment_index for real_index, alignment_index in enumerate(sequence_indexing)}
+    updated_contact_map = [[index_dictionary[real_index] for real_index in contact_pairs[alignment_index]] for alignment_index, pairs in enumerate(contact_pairs)]
+    return updated_contact_map
+
+
+from ColorCoding import blosum_62_matrix,create_dictionary_from_alignment
+from numpy import delete
+from numpy import max as npmax
+from numpy import min as npmin
+# residuenumber,blosumscore,absolute value of confidence score difference,binary contact
+blosum=blosum_62_matrix()
+blosum=delete(blosum,0,axis=0)
+blosum=delete(blosum,0,axis=1)
+maxi, mini=npmax((blosum)),npmin(blosum)
+
+# normalize between zero an -1 and then flip the signs, also check distribution of blosum scores
+# low + (high-low)*(x-minimum)/(maximum-minimmum)
+normalize = lambda x: (-1+2*(x-mini)/(maxi-mini))
+blosum=[list(normalize(y) for y in x) for x in blosum]
+# 1 if both contact, 0 if no contact, -1 if only one contact
+
+print(blosum)
+
+def ContactOverlap(alignment_file, comparison, reference='6VSB_B'):
+    from ColorCoding import create_dictionary_from_alignment
+    from numpy import where
+    sequence_dictionary=create_dictionary_from_alignment(alignment_file)
+    reference_sequence,comparison_sequence=sequence_dictionary[reference],sequence_dictionary[comparison]
     #CP is Comparison Protein and RP is Reference Protein
-    CPUpdatedContactMap=CorrectResiduePositionforAlignment(comparison,ComparisonSequence)
-    RPUpdatedContactMap = CorrectResiduePositionforAlignment(reference, ReferenceSequence)
-    ReferenceContactMap,ComparisonContactMap=[],[]
+    cp_updated_contact_map=correct_residue_position_for_alignment(f'3mer{comparison}.pdb','B',comparison_sequence)
+    rp_updated_contact_map = correct_residue_position_for_alignment(f'{reference}.pdb',"B", reference_sequence)
+    rp_contact_map,cp_contact_map=[],[]
     j=0
-    #Should this be a function?
-    RPContactCount,CPContactCount=0,0
-    for x in ReferenceSequence:
-        if x.isalpha():
-            ReferenceContactMap.append([x]+RPUpdatedContactMap[j])
-            RPContactCount+=len(RPUpdatedContactMap[j])+1
+    residue_comparison=[blosum[where(blosum_62_matrix()[:, 0] == res_ref)[0][0]-1][where(blosum_62_matrix()[0, :] == res_com)[0][0]-1]
+                        for res_ref, res_com in zip(reference_sequence,comparison_sequence)]
+    print(blosum[0][19],list(zip(reference_sequence,comparison_sequence)))
+    print(residue_comparison)
+    for residue in reference_sequence:
+        if residue.isalpha():
+            rp_contact_map.append(rp_updated_contact_map[j])
             j+=1
         else:
-            ReferenceContactMap.append([x])
+            rp_contact_map.append([])
     j=0
-    for x in ComparisonSequence:
-        if x.isalpha():
-            ComparisonContactMap.append([x]+CPUpdatedContactMap[j])
-            CPContactCount+=len(CPUpdatedContactMap[j])+1
+    for residue in comparison_sequence:
+        if residue.isalpha():
+            cp_contact_map.append(cp_updated_contact_map[j])
             j+=1
         else:
-            ComparisonContactMap.append([x])
-    TotalContacts = RPContactCount+CPContactCount
-    for x,y in zip(ReferenceContactMap,ComparisonContactMap):
-        for w in x:
-            if w not in y and w!='-' and len(x)>1 or w not in y and w!='-' and len(y)>1:
-                TotalContacts+=-1
-        for v in y:
-            if v not in x and v!='-' and len(x)>1 or v not in x and v!='-' and len(y)>1:
-                TotalContacts += -1
-    # system('/scratch/jws6pq/EMBOSS-6.6.0/emboss/needle -sprotein -gapopen 10 -gapextend 0.5 -outfile /gpfs/gpfs0/scratch/jws6pq/Notebook/Emboss/Full' + key + '.emboss -asequence /gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/' + key + '.fasta -bsequence /gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/SARS2.fasta')
-    EmbossScore = open('/gpfs/gpfs0/scratch/jws6pq/Notebook/Emboss/Full' + comparison + '.emboss', 'r').readlines()[25].split()[-1]
-    return comparison,TotalContacts,EmbossScore.replace('(','').replace(')','').replace('%','')
-#Do i consider all the times where there are residues beyond SARS???????
-#
-#
+            cp_contact_map.append([])
+    fraction_conserved=[]
+    # print(list(zip(rp_contact_map,cp_contact_map)))
+
+    for x, y in zip(rp_contact_map,cp_contact_map):
+        if x==[] and y==[]: fraction_conserved.append(1); continue
+        elif x == [] or y == []: fraction_conserved.append(0); continue
+        x_set = set(); y_set = set()
+        [x_set.update(num for num in range(contact-6,contact+7)) for contact in x]
+        [y_set.update(num for num in range(contact - 6, contact + 7)) for contact in y]
+        fraction_conserved.append((len([contact for contact in y if contact in x_set])+len([contact for contact in x if contact in y_set]))/(len(x)+len(y)))
+    print(fraction_conserved)
+
+ContactOverlap('SARS2wEverythingstable.aln','EidolonBat')

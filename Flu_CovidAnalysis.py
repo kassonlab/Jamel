@@ -1,43 +1,42 @@
-import numpy as np
-import Analysis
+from numpy import empty,savetxt
+from Analysis import relative_stability,overall_confidence,averaging_multimer_plddt
 
-Proteinlist=[line.split()[-1] for line in open('/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/Flu_CovidList','r').readlines()]
-PDB=[x+'.pdb' for x in Proteinlist]
-Plddtfiles=[x+'.plddt' for x in Proteinlist]
+protein_list=[line.split() for line in open('/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/Flu_CovidList', 'r').readlines()]
+PDB=[x +'.pdb' for x in protein_list]
+plddt_files=[x + '.plddt' for x in protein_list]
 
-PlddtResults=list(map(Analysis.AveragingMultimerPLDDT,Plddtfiles))
+averaged_plddt=list(map(averaging_multimer_plddt, plddt_files))
 
-SpliceLength1=200
-Boundary1=[x for x in range(0,489-SpliceLength1,10)]
-Protein1=['HA.fasta' for x in Boundary1]
-Boundary2=[x+SpliceLength1 for x in Boundary1]
+splice_length_one=200
+boundary_one=[x for x in range(0, 489 - splice_length_one, 10)]
+protein_one=['HA.fasta' for x in boundary_one]
+boundary_two=[x + splice_length_one for x in boundary_one]
 
-SpliceLength2=200
-Boundary3=[x for x in range(540,973-SpliceLength2,20)]
-Protein2=['SARS2.fasta' for x in Boundary3]
-Boundary4=[x+SpliceLength1 for x in Boundary3]
+splice_length_two=200
+boundary_three=[x for x in range(540, 973 - splice_length_two, 20)]
+protein_two=['SARS2.fasta' for x in boundary_three]
+boundary_four=[x + splice_length_one for x in boundary_three]
 
-AverageRelativeDifference=[]
-HADifference=[]
-SARSDifference=[]
+relative_stability_list=[]
+HA_relative=[]
+SARS_relative=[]
 k=0
-for i in range(len(Boundary1)):
-    for j in range(len(Boundary3)):
-        print(PlddtResults[k], Boundary1[i], Boundary2[i], Boundary3[j], Boundary4[j],k)
-        Protein1AverageDifference = Analysis.MultimerConfidenceComparison('AvgHA.plddt', PlddtResults[k], [0, 0 + SpliceLength1],[Boundary1[i], Boundary2[i]])
-        Protein2AverageDifference = Analysis.MultimerConfidenceComparison('Avg3merSARS2.plddt', PlddtResults[k],[0 + SpliceLength1, None],[Boundary3[j], Boundary4[j]])
-        AverageRelativeDifference.append((Protein1AverageDifference[0] + Protein2AverageDifference[0]) / ( Protein1AverageDifference[1] + Protein2AverageDifference[1]))
-        HADifference.append(Protein1AverageDifference[0]/Protein1AverageDifference[1])
-        SARSDifference.append(Protein2AverageDifference[0]/Protein2AverageDifference[1])
+for i in range(len(boundary_one)):
+    for j in range(len(boundary_three)):
+        protein_one_rs = relative_stability('AvgHA.plddt', averaged_plddt[k], [0, 0 + splice_length_one], [boundary_one[i], boundary_two[i]])
+        protein_two_rs = relative_stability('Avg3merSARS2.plddt', averaged_plddt[k], [0 + splice_length_one, None], [boundary_three[j], boundary_four[j]])
+        relative_stability_list.append((protein_one_rs[0] + protein_two_rs[0]) / (protein_one_rs[1] + protein_two_rs[1]))
+        HA_relative.append(protein_one_rs[0] / protein_one_rs[1])
+        SARS_relative.append(protein_two_rs[0] / protein_two_rs[1])
         k+=1
-OverallDiff=list(map(Analysis.OverallConfidence,Plddtfiles))
+overall_stability=list(map(overall_confidence, plddt_files))
 
-DataChart=np.empty((len(Proteinlist)+1,5),dtype=object)
-DataChart[0,0],DataChart[1:,0]='Protein',Proteinlist
-DataChart[0,1],DataChart[1:,1]='Average Stability Difference',AverageRelativeDifference
-DataChart[0,2],DataChart[1:,2]='HA Difference',HADifference
-DataChart[0,3],DataChart[1:,3]='SARS Difference',SARSDifference
-DataChart[0,4],DataChart[1:,4]='Overall chimera plddt',OverallDiff
+data_chart=empty((len(protein_list) + 1, 5), dtype=object)
+data_chart[0, 0], data_chart[1:, 0]= 'Protein', protein_list
+data_chart[0, 1], data_chart[1:, 1]= 'Average Stability Difference', relative_stability_list
+data_chart[0, 2], data_chart[1:, 2]= 'HA Difference', HA_relative
+data_chart[0, 3], data_chart[1:, 3]= 'SARS Difference', SARS_relative
+data_chart[0, 4], data_chart[1:, 4]= 'Overall chimera plddt', overall_stability
 
 
-np.savetxt('/gpfs/gpfs0/scratch/jws6pq/CMfiles/120522HACovidAnalysis.tsv', DataChart, fmt="%s,%s,%s,%s,%s", delimiter="")
+savetxt('/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/120522HACovidAnalysis.tsv', data_chart, fmt="%s,%s,%s,%s,%s", delimiter="")
