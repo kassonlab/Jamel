@@ -1,6 +1,6 @@
 import numpy as np
 import Analysis
-from RBDFinder import alignment_finder
+from AlignmentFinder import alignment_finder
 import os
 import concurrent.futures
 PresetList='Yes'
@@ -34,20 +34,20 @@ ComparisonSetting=['3merSARS2' for x in protein_list]
 with concurrent.futures.ProcessPoolExecutor() as executor:
     SpliceBoundaries = list(executor.map(alignment_finder, alignment_files, SequenceofInterest))
     SpliceLength=[x[1]-x[0] for x in SpliceBoundaries]
-    Similarity=list(executor.map(Analysis.SequenceSimilarity, [f'{protein}.emboss' for protein in basename_list]))
+    Similarity=list(executor.map(Analysis.get_sequence_similarity, [f'{protein}.emboss' for protein in basename_list]))
     AverageDifference=[] ; sars_difference=[] ; native_difference=[]
     for i in range(len(native_plddts)):
         # fix this for next production
-        Section1=Analysis.confidence_comparison('Avg3merSARS2.plddt', chimera_plddt[i], (0, 1), (0, 1))
-        Section2=Analysis.confidence_comparison(native_plddts[i], chimera_plddt[i], (1, 1 + SpliceLength[i]),
-                                                (SpliceBoundaries[i][0], SpliceBoundaries[i][1]))
+        Section1=Analysis.relative_stability('Avg3merSARS2.plddt', chimera_plddt[i], (0, 1), (0, 1))
+        Section2=Analysis.relative_stability(native_plddts[i], chimera_plddt[i], (1, 1 + SpliceLength[i]),
+                                             (SpliceBoundaries[i][0], SpliceBoundaries[i][1]))
         native_difference.append(Section2[0]/Section2[1])
-        Section3=Analysis.confidence_comparison('Avg3merSARS2.plddt', chimera_plddt[i], (1 + SpliceLength[i], None), (540, None))
+        Section3=Analysis.relative_stability('Avg3merSARS2.plddt', chimera_plddt[i], (1 + SpliceLength[i], None), (540, None))
         sars_difference.append(Section3[0] / Section3[1])
         AverageRelativeDifference=(Section1[0]+Section2[0]+Section3[0])/(Section1[1]+Section2[1]+Section3[1])
         AverageDifference.append(AverageRelativeDifference)
-    OverallDiff=list(executor.map(Analysis.OverallConfidence, native_plddts))
-    OverallChiDiff = list(executor.map(Analysis.OverallConfidence, chimera_plddt))
+    OverallDiff=list(executor.map(Analysis.overall_confidence, native_plddts))
+    OverallChiDiff = list(executor.map(Analysis.overall_confidence, chimera_plddt))
 DataChart=np.empty((len(protein_list) + 1, 7), dtype=object)
 DataChart[0,0],DataChart[1:,0]='Protein', protein_list
 DataChart[0,1],DataChart[1:,1]='S1 Sequence Similarity (%)',Similarity
