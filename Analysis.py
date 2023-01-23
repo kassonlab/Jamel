@@ -34,11 +34,14 @@ def relative_stability(native_plddt, chimera_plddt, chimera_boundary_tuple, nati
     native_protein_score = [float(score) for score in open(native_plddt, 'r').readlines()][native_boundary_tuple[0]:native_boundary_tuple[1]]
     chimera_score=[float(score) for score in open(chimera_plddt, 'r').readlines()][chimera_boundary_tuple[0]:chimera_boundary_tuple[1]]
     splice_length=len(chimera_score)
+    print(splice_length)
     relative_difference=0
     for i in range(splice_length):
         relative_difference += (chimera_score[i]-native_protein_score[i])/native_protein_score[i]*100
     return relative_difference,splice_length
 
+
+relative_stability('AvgHA171to371.plddt','AvgHA171to371Spike541to741.plddt',[0, 200], [170, 370])
 
 def averaging_multimer_plddt(plddt_file, subunits=3):
     """This function takes a plddt and averages the scores
