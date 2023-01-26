@@ -16,7 +16,7 @@ if PresetList=='Yes':
 elif PresetList=='No':
     plddt_files=[x for x in os.listdir('/scratch/jws6pq/Notebook/Plddt/') if x[0]=='3']
     protein_list=[x.replace('.plddt','') for x in plddt_files if x.find('3merSARS')==-1]
-    plddt_files=[x for x in map(Analysis.AveragingMultimerPLDDT,plddt_files) if x.find('3merSARS')==-1]
+    plddt_files=[x for x in map(Analysis.averaging_multimer_plddt(),plddt_files) if x.find('3merSARS')==-1]
     basename_list=[x.replace('3mer','') for x in protein_list]
     alignment_files=[x.replace('3mer','')+'onSARS2.aln' for x in protein_list if x.find('3merSARS')==-1]
 

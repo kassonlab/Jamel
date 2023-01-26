@@ -29,5 +29,4 @@ def limited_alphafold_transfer(folder_direc,alphafold_folder,pdb_destin,plddt_de
         for index,file in enumerate([file for file in listdir(full_path) if file.startswith('result')]):
             with open(full_path+file, 'rb') as pkl:
                 data=pload(pkl)
-                print(f'{plddt_destin}{alphafold_folder}_{index}_plddt.npy')
                 save(f'{plddt_destin}{alphafold_folder}_{index}_plddt.npy', data['plddt'])
