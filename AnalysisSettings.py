@@ -36,7 +36,6 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
     Similarity=list(executor.map(Analysis.get_sequence_similarity, [f'{protein}.emboss' for protein in basename_list]))
     AverageDifference=[] ; sars_difference=[] ; native_difference=[]
     for i in range(len(native_plddts)):
-        # fix this for next production
         Section1=Analysis.relative_stability('Avg3merSARS2.plddt', chimera_plddt[i], (0, 1), (0, 1))
         Section2=Analysis.relative_stability(native_plddts[i], chimera_plddt[i], (1, 1 + SpliceLength[i]),
                                              (SpliceBoundaries[i][0], SpliceBoundaries[i][1]))
