@@ -1,0 +1,13 @@
+{
+    "arguments": {
+        "character_to_replace": "*",
+        "tpr_naming": "/gpfs/gpfs0/scratch/jws6pq/Gromacs/*_production_1.tpr",
+        "xtc_naming": "/gpfs/gpfs0/scratch/jws6pq/Gromacs/*_production_1.xtc",
+        "rmsf_timestep_ps": 1000,
+        "truncated_xtc_naming": "/gpfs/gpfs0/scratch/jws6pq/Gromacs/*dt1000.xtc",
+        "xvg_naming": "/gpfs/gpfs0/scratch/jws6pq/Gromacs/*dt1000.xvg",
+        "averaged_xvg_naming": "/gpfs/gpfs0/scratch/jws6pq/Gromacs/Avg*dt1000.xvg",
+        "rmsd_timestep_ps": [0,100001,10000],
+        "movie_pdb_file": "/gpfs/gpfs0/scratch/jws6pq/Gromacs/*movie.pdb"
+    }
+}

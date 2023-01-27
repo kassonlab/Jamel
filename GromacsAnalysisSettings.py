@@ -39,7 +39,7 @@ for protein_index, protein in enumerate(protein_list):
     for time in rmsd_time_steps:
         GromacsAnalysis.create_pdb_from_trajectory(tprfile[protein_index], newxtcfile[protein_index],
                                                    f'/gpfs/gpfs0/scratch/jws6pq/Gromacs/SARSw{protein}S1frame{time}.pdb', time)
-        rmsd_change.append(GromacsAnalysis.pymol_rmsd(f'/gpfs/gpfs0/scratch/jws6pq/Gromacs/SARSw{protein}S1frame{time}.pdb',
+        rmsd_change.append(GromacsAnalysis.rmsd(f'/gpfs/gpfs0/scratch/jws6pq/Gromacs/SARSw{protein}S1frame{time}.pdb',
                                                       f'/gpfs/gpfs0/scratch/jws6pq/Gromacs/SARSw{protein}S1frame0.pdb'))
     all_rmsd_changes.append(rmsd_change)
 

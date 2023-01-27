@@ -4,13 +4,13 @@ def generate_alphafold_plddt(alphafold_folder, new_plddt_file):
     from json import load as j_load
     from os.path import exists
     from numpy import savetxt
-    # Checking to see if ranking_debug.json exists. This file is the last to be output by alphafold and is a check that
+    # Checking to see if gromacs_arguments.json exists. This file is the last to be output by alphafold and is a check that
     # the pkl file you want to extract from exists, as well as to avoid errors
-    if exists(alphafold_folder+'ranking_debug.json'):
+    if exists(alphafold_folder+'gromacs_arguments.json'):
         # ranking_debug is also useful for determining which result pkl file is highest ranked. The model result pkls are
         # numbered by the order they are created and not their overall confidence score. The information about their rank by
         # score is found in ranking_debug
-        with open(alphafold_folder+'ranking_debug.json', 'r') as json_file:
+        with open(alphafold_folder+'gromacs_arguments.json', 'r') as json_file:
             highest_rank_model=j_load(json_file)['order'][0][0:7]
             with open(f'{alphafold_folder}result_{highest_rank_model}_multimer_v2_pred_0.pkl', 'rb') as pkl:
                 prediction_data=p_load(pkl)
