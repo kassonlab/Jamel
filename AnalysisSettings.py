@@ -3,22 +3,14 @@ import Analysis
 from AlignmentFinder import alignment_finder
 import os
 import concurrent.futures
-PresetList='Yes'
-if PresetList=='Yes':
-    basename_list=[line.split()[-1] for line in open('List', 'r').readlines()]
-    protein_list=[f'3mer{x.split()[-1]}' for x in basename_list]
-    alignment_files=[f'{protein}onSARS2.aln' for protein in basename_list]
-    pdb_files= [f'{protein}.pdb' for protein in protein_list] + [f'3merSARS2w{protein}S1.pdb' for protein in basename_list]
-    native_plddts = [f'Avg{protein}.plddt' for protein in protein_list]
-    chimera_plddt=[f'Avg3merSARS2w{protein}S1.plddt' for protein in basename_list]
-    plddt_files= [f'{protein}.plddt' for protein in protein_list] + [f'3merSARS2w{protein}S1.plddt' for protein in basename_list]
 
-elif PresetList=='No':
-    plddt_files=[x for x in os.listdir('/scratch/jws6pq/Notebook/Plddt/') if x[0]=='3']
-    protein_list=[x.replace('.plddt','') for x in plddt_files if x.find('3merSARS')==-1]
-    plddt_files=[x for x in map(Analysis.averaging_multimer_plddt(),plddt_files) if x.find('3merSARS')==-1]
-    basename_list=[x.replace('3mer','') for x in protein_list]
-    alignment_files=[x.replace('3mer','')+'onSARS2.aln' for x in protein_list if x.find('3merSARS')==-1]
+basename_list=[line.split()[-1] for line in open('List', 'r').readlines()]
+protein_list=[f'3mer{x.split()[-1]}' for x in basename_list]
+alignment_files=[f'{protein}onSARS2.aln' for protein in basename_list]
+pdb_files= [f'{protein}.pdb' for protein in protein_list] + [f'3merSARS2w{protein}S1.pdb' for protein in basename_list]
+native_plddts = [f'Avg{protein}.plddt' for protein in protein_list]
+chimera_plddt=[f'Avg3merSARS2w{protein}S1.plddt' for protein in basename_list]
+plddt_files= [f'{protein}.plddt' for protein in protein_list] + [f'3merSARS2w{protein}S1.plddt' for protein in basename_list]
 
 os.chdir('/scratch/jws6pq/Notebook/Overall')
 SequenceofInterest=['AYTNSFTRGVYYPDKVFRSSVLHSTQDLFLPFFSNVTWFHNPVLPFNDGVYFASTEKSNIIRGWIFGTTLDSKTQSLLIVNNATNVVIKVCEFQFCND' \
