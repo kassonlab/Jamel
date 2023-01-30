@@ -1,19 +1,18 @@
-def generate_alphafold_files(FolderDir, AlphafoldFolder, PDBDest_Name='NA', PlddtDest_Name='NA'):
+def generate_alphafold_files(output_folder, new_pdb='NA', new_plddt='NA'):
     from pickle import load as pload
     from  json import load as jload
     from os import path
     from shutil import copy
     from numpy import savetxt
-    Fullpath=FolderDir+AlphafoldFolder+'/'
-    if path.exists(Fullpath+'gromacs_arguments.json'):
-        if PDBDest_Name!='NA':
-            copy(Fullpath+'ranked_0.pdb',PDBDest_Name)
-        if PlddtDest_Name!='NA':
-            with open(Fullpath+'gromacs_arguments.json', 'r') as jfile:
+    if path.exists(output_folder + 'ranking_debug.json'):
+        if new_pdb!= 'NA':
+            copy(output_folder + 'ranked_0.pdb', new_pdb)
+        if new_plddt!= 'NA':
+            with open(output_folder + 'ranking_debug.json', 'r') as jfile:
                 HighestRankModel=jload(jfile)['order'][0]
-                with open({HighestRankModel}+'.pkl', 'rb') as pkl:
-                    data=pload(pkl)
-                    savetxt(PlddtDest_Name,data['plddt'],fmt="%s",delimiter=" ")
+                with open({HighestRankModel}+'.pkl', 'rb') as pfile:
+                    data=pload(pfile)
+                    savetxt(new_plddt, data['plddt'], fmt="%s", delimiter=" ")
 
 
 def limited_alphafold_transfer(folder_direc,alphafold_folder,pdb_destin,plddt_destin):
@@ -22,8 +21,8 @@ def limited_alphafold_transfer(folder_direc,alphafold_folder,pdb_destin,plddt_de
     from shutil import copy
     from numpy import save
     full_path=folder_direc+alphafold_folder+'/'
-    if path.exists(full_path+'gromacs_arguments.json'):
-        copy(full_path+'gromacs_arguments.json',plddt_destin+alphafold_folder+'_ranking_debug.json')
+    if path.exists(full_path+'ranking_debug.json'):
+        copy(full_path+'ranking_debug.json',plddt_destin+alphafold_folder+'ranking_debug.json')
         for file in [file for file in listdir(full_path) if file.startswith('ranked')]:
             copy(full_path+file,pdb_destin+alphafold_folder+'_'+file)
         for index,file in enumerate([file for file in listdir(full_path) if file.startswith('result')]):

@@ -1,4 +1,4 @@
-def alignment_finder(alignment_file, sequence_of_interest,comparison_protein,reference_protein='6vsb_B'):
+def alignment_finder(alignment_file, sequence_of_interest,comparison_protein,run_emboss='No',reference_protein='6vsb_B'):
     #Must be in fasta format
     alignment = open(alignment_file, "r").read().split('>')
     sequence_dictionary = {sequence.split('\n')[0]: ''.join(sequence.split('\n')[1:]) for sequence in alignment if
@@ -15,6 +15,7 @@ def alignment_finder(alignment_file, sequence_of_interest,comparison_protein,ref
     found_alignment = comparison_sequence[reference_start:reference_end].replace('-','')
     splice_start=comparison_sequence.replace('-','').find(found_alignment)
     splice_end=splice_start+len(found_alignment)
+
     return found_alignment,splice_start,splice_end
 
 

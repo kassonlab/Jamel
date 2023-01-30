@@ -26,15 +26,22 @@ def multiple_sequence_alignment(list_of_fastas, fasta_for_alignment, new_alignme
     system(f'module load gcc/9.2.0 && module load muscle/3.8.31 && muscle -in {fasta_for_alignment} -out {new_alignment_file}')
 
 
-def alignment_finder(alignment_file, sequence_of_interest,comparison_protein,reference_protein):
+def run_emboss_needle(new_emboss_file, sequence_one, sequence_two,needle_directory):
+    """This runs EMBOSS on the command line."""
+    from os import system as syst
+    syst(f'{needle_directory}  -sprotein -gapopen 10 -gapextend 0.5 -outfile {new_emboss_file} -asequence asis:{sequence_one} -bsequence asis:{sequence_two}')
+
+
+def alignment_finder(alignment_file, sequence_of_interest,comparison_protein,reference_protein,run_emboss='',new_emboss_file=''):
     """Takes a fasta style alignment and a sequence_of_interest from a reference_protein and returns the sequence of the
     comparison_protein that is outlined in the boundaries of the sequence_of_interest, as well as the python index boundaries
      for the found_alignment of the comparison_protein. reference_protein and comparison_protein must the names following
       '>' in the alignment file"""
     #Must be in fasta format
-    alignment = open(alignment_file, "r").read().split('>')
-    # Splitting up the sequences names and sequences into a dictionary
-    sequence_dictionary = {sequence.split('\n')[0]: ''.join(sequence.split('\n')[1:]) for sequence in alignment if
+    with open(alignment_file, "r") as alignment:
+        alignment=alignment.read().split('>')
+        # Splitting up the sequences names and sequences into a dictionary
+        sequence_dictionary = {sequence.split('\n')[0]: ''.join(sequence.split('\n')[1:]) for sequence in alignment if
                            len(sequence) != 0}
     # Recording the specified sequences as variables
     reference_sequence=sequence_dictionary[reference_protein]
@@ -55,14 +62,9 @@ def alignment_finder(alignment_file, sequence_of_interest,comparison_protein,ref
     # and splice_end is the first residue that's not spliced
     splice_start=comparison_sequence.replace('-','').find(found_alignment)
     splice_end=splice_start+len(found_alignment)
-    return found_alignment,splice_start,splice_end,no_gap_reference_start,no_gap_reference_end
-
-
-def run_emboss_needle(new_emboss_file, sequence_one, sequence_two,needle_directory):
-    """This runs EMBOSS on the command line."""
-    from os import system as syst
-    syst(f'{needle_directory} -sprotein -gapopen 10 -gapextend 0.5 -outfile {new_emboss_file} '
-         f'-asequence asis:{sequence_one} -bsequence asis:{sequence_two}')
+    if run_emboss!='':
+        run_emboss_needle(new_emboss_file,found_alignment,sequence_of_interest,run_emboss)
+    return found_alignment,(splice_start,splice_end),(no_gap_reference_start,no_gap_reference_end)
 
 
 def fasta_creation(file_name, sequence, subunits):
