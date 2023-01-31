@@ -2,10 +2,10 @@
     "arguments": {
         "character_to_replace": "*",
         "alphafold_outputs_directory": ["","/gpfs/gpfs0/scratch/jws6pq/Notebook/Finished/"],
-        "emboss_command": ["#","/scratch/jws6pq/EMBOSS-6.6.0/emboss/needle"],
-        "emboss_names": ["#","/gpfs/gpfs0/scratch/jws6pq/Notebook/Emboss/*S1vsSARS2.emboss"],
+        "emboss_command": ["","/scratch/jws6pq/EMBOSS-6.6.0/emboss/needle"],
+        "emboss_names": ["","/gpfs/gpfs0/scratch/jws6pq/Notebook/Emboss/*S1vsSARS2.emboss"],
         "msa_file_name": "/gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/CoronavirusMSA.aln",
-        "number_of_subunits": 3,
+        "number_of_subunits": 1,
         "native_plddt": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/3mer*.plddt",
         "averaged_native_plddt": ["","/gpfs/gpfs0/scratch/jws6pq/Notebook/test/Avg3mer*.plddt"],
         "chimera_plddt": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/3merSARS2w*S1.plddt",

@@ -39,20 +39,20 @@ msa_file=[argument_dict['msa_file_name'][1] for x in protein_list]
 character_to_replace=argument_dict['character_to_replace']
 subunits=[argument_dict['number_of_subunits'] for x in protein_list]
 email=[argument_dict['email_for_accession'] for x in protein_list]
-monomer_fasta=[argument_dict['monomer_fasta'].replace(character_to_replace,protein) for protein in protein_list]
-multimer_fasta=[argument_dict['multimer_fasta'].replace(character_to_replace,protein) for protein in protein_list]
+monomer_fastas=[argument_dict['monomer_fasta'].replace(character_to_replace, protein) for protein in protein_list]
+multimer_fastas=[argument_dict['multimer_fasta'].replace(character_to_replace, protein) for protein in protein_list]
 chimera_fastas=[argument_dict['chimera_fastas'].replace(character_to_replace,protein) for protein in protein_list]
 msa_fasta=argument_dict['msa_fasta']
 reference_protein_name=[argument_dict['reference_protein_fasta_identifier'] for protein in protein_list]
 # Here it is being determined whether you require multimer files for your protein, monomers files are created by default,
 # matter what for alignment purposes
 if subunits==1:
-    list(map(AccessiontoAlignment.accession_to_fasta, monomer_fasta, accession_number,email,subunits))
+    list(map(AccessiontoAlignment.accession_to_fasta, monomer_fastas, accession_number, email, subunits))
 else:
-    list(map(AccessiontoAlignment.accession_to_fasta, monomer_fasta, accession_number, email, subunits,multimer_fasta))
+    list(map(AccessiontoAlignment.accession_to_fasta, monomer_fastas, accession_number, email, subunits, multimer_fastas))
 # This is the code enacting the msa creation switch that's called by putting a # in the json file, outlined in above comments
 if argument_dict['msa_file_name'][0]!='#':
-    AccessiontoAlignment.multiple_sequence_alignment(monomer_fasta,msa_fasta,
+    AccessiontoAlignment.multiple_sequence_alignment(monomer_fastas, msa_fasta,
                                                      msa_file[0],
                                                      reference_protein[0])
 # Here splicing information like the boundaries containing the sequence outlined in sequence_of_interest_fasta for your reference
@@ -70,8 +70,8 @@ list(map(ChimeraGenerator.fasta_creation, chimera_fastas, chimera_sequences, sub
 # this list can be useful when inputting fasta files to alphafold, especially if you're scripting slurm jobs, this file's
 # creation can be turned on by removing the # from within the quotes in the json file on the dictionary key "fasta_file_list_name"
 if argument_dict['fasta_file_list_name'][0]!='#':
-    if subunits==1: fasta_list=monomer_fasta+chimera_fastas
-    else: fasta_list=multimer_fasta+chimera_fastas
+    if subunits==1: fasta_list= monomer_fastas + chimera_fastas
+    else: fasta_list= multimer_fastas + chimera_fastas
     with open(argument_dict['fasta_file_list_name'][1], 'w') as fasta_list_file:
         for fasta in fasta_list:
             fasta_list_file.write(f'{fasta}\n')
