@@ -1,5 +1,19 @@
+def run_Foldx(foldx_file,pdb_file,foldx_command):
+    from os import system
+    from os.path import dirname,basename
+    pdb_dir=dirname(pdb_file)
+    foldx_dir=dirname(foldx_file)
+    system(f'{foldx_command}  -c Stability --pdb {basename(pdb_file)} --output-dir {foldx_dir} --output-file {basename(foldx_file)} --pdb-dir {pdb_dir}')
+
+
+def get_Foldx_results(foldx_file):
+    with open(foldx_file, 'r') as foldx_score:
+        return foldx_score.read().split()[1]
+
+
 def generate_alphafold_files(output_folder, new_plddt='NA',new_pdb='NA'):
-    """Creates a text file containing the plddt values of the highest ranked model, extracted from alphafold's result pkl file."""
+    """Creates a text file containing the plddt values of the highest_rank_model extracted from alphafold's result pkl file
+    and renames the ranked_0.pdb file and places it in the desired directory."""
     from pickle import load as pload
     from  json import load as jload
     from os import path
@@ -9,15 +23,17 @@ def generate_alphafold_files(output_folder, new_plddt='NA',new_pdb='NA'):
     # the pkl file you want to extract from exists, as well as to avoid errors
     if path.exists(output_folder + 'ranking_debug.json'):
         if new_pdb!= 'NA':
+            # The highest ranked structure is copied with a new name and directory
             copy(output_folder + 'ranked_0.pdb', new_pdb)
         if new_plddt!= 'NA':
-            # ranking_debug is also useful for determining which result pkl file is highest ranked. The model result pkls are
+            # ranking_debug is also useful for determining which result pkl file is the highest ranked. The model result pkl files are
             # numbered by the order they are created and not their overall confidence score. The information about their rank by
-            # score is found in ranking_debug.json
+            # confidence score is found in ranking_debug.json
             with open(output_folder + 'ranking_debug.json', 'r') as jfile:
-                HighestRankModel=jload(jfile)['order'][0]
-                with open({HighestRankModel}+'.pkl', 'rb') as pfile:
+                highest_rank_model=jload(jfile)['order'][0]
+                with open(f'{output_folder}result_{highest_rank_model}.pkl', 'rb') as pfile:
                     data=pload(pfile)
+                    # The plddt scores are put into a column in a text file named by new_plddt
                     savetxt(new_plddt, data['plddt'], fmt="%s", delimiter=" ")
 
 
@@ -39,24 +55,33 @@ def overall_confidence(plddt_file):
 
 
 def get_reference_boundaries(sequence_of_interest, msa, fasta_identifier):
+    """Returns the list_of_boundary_tuples within the reference protein that contain the sequence_of_interest, as well as, the boundaries of the
+    sections before and after. Boundary tuples that contain the sequence_of_interest are marked by 'NS' as in Not Spliced into
+    the resulting chimera, and all other tuples are marked with 'S' as in spliced into the chimera.
+    The tuples are provided as so: ('NS',boundary_one,boundary_two) or ('S',boundary_one,boundary_two)"""
+    # This uses the msa to grab the reference sequence outlined by fasta_identifier
     with open(msa, "r") as alignment:
         alignment = alignment.read().split('>')
         sequence_dictionary = {sequence.split('\n')[0]: ''.join(sequence.split('\n')[1:]) for sequence in alignment if
                                len(sequence) != 0}
     reference_sequence = ''.join([x for x in sequence_dictionary[fasta_identifier] if x != '-'])
-
+    # This is recording the 'NS' boundaries that indicate the boundaries of the sequence_of_interest
     splice_start = reference_sequence.find(sequence_of_interest)
     splice_end = splice_start + len(sequence_of_interest)
-    boundaries = list({0, splice_start, splice_end, len(reference_sequence) - 1})
+    # Then those boundaries are compared against the very beginning and end of the proteins, by introducing them into a set
+    # to get of redundancy if the sequence_of_interest boundaries contain the beginning or end
+    boundaries = list({0, splice_start, splice_end, len(reference_sequence)})
+    # They are sorted into ascending order
     boundaries.sort()
     spliced_out = (splice_start, splice_end)
-    boundaries_tuples = []
+    list_of_boundary_tuples = []
+    # Then the loop checks if they're the sequence_of_interest boundaries and marks them accordingly
     for x in range(len(boundaries) - 1):
         if (boundaries[x], boundaries[x + 1]) == spliced_out:
-            boundaries_tuples.append(('NS', boundaries[x], boundaries[x + 1]))
+            list_of_boundary_tuples.append(('NS', boundaries[x], boundaries[x + 1]))
         else:
-            boundaries_tuples.append(('S', boundaries[x], boundaries[x + 1]))
-    return boundaries_tuples
+            list_of_boundary_tuples.append(('S', boundaries[x], boundaries[x + 1]))
+    return list_of_boundary_tuples
 
 
 def relative_stability(native_plddt, native_boundary_tuple,chimera_plddt, chimera_boundary_tuple):
@@ -73,22 +98,29 @@ def relative_stability(native_plddt, native_boundary_tuple,chimera_plddt, chimer
     return relative_difference,splice_length
 
 
-def relative_stability_full_protein(native_plddt, native_boundary_tuple,chimera_plddt,reference_plddt,reference_tuples):
-    native_score = [float(score) for score in open(native_plddt, 'r').readlines()]
-    chimera_score = [float(score) for score in open(chimera_plddt, 'r').readlines()]
+def average_relative_stability_full_chimera(native_plddt, native_boundary_tuple, chimera_plddt, reference_plddt, sequence_of_interest,msa,reference_fasta_identifier):
+    """Returns the averaged relative stability of a full length chimera, given a: multiple sequence alignment, reference
+    protein's plddt and identifier in the msa, the plddt of the wild-type splice partner for the reference and the boundaries as a tuple
+    that contain the spliced in sequence, and the resulting chimera's plddt"""
     raw_stability = 0
+    # This variable is recording the chimera boundaries for relative stability comparison and will also help withe averaging later
     current_chimera_index=0
-    for index,tuples in enumerate(reference_tuples):
+    # Retrieves boundaries for which sections of the reference protein to compare to the chimera
+    reference_boundaries=get_reference_boundaries(sequence_of_interest,msa,reference_fasta_identifier)
+    for index,tuples in enumerate(reference_boundaries):
+        # NS indicates that its time to calculate relative stability against the parent splice partner rather than the
+        #reference protein
         if tuples[0] == 'NS':
             comparison_splice_length = native_boundary_tuple[1] - native_boundary_tuple[0]
-            raw_stability += relative_stability(native_score, native_boundary_tuple, chimera_score,
+            raw_stability += relative_stability(native_plddt, native_boundary_tuple, chimera_plddt,
                                                 (current_chimera_index, current_chimera_index + comparison_splice_length))[0]
             current_chimera_index+=comparison_splice_length
+        # S represents the opposite, that the chimera should now be compared to the reference protein
         elif tuples[0] == 'S':
-            reference_splice_length=tuples[1]-tuples[0]
-            raw_stability += relative_stability(reference_plddt,tuples[1:],chimera_score,(current_chimera_index,current_chimera_index+reference_splice_length))[0]
+            reference_splice_length=tuples[2]-tuples[1]
+            raw_stability += relative_stability(reference_plddt,tuples[1:],chimera_plddt,(current_chimera_index,current_chimera_index+reference_splice_length))[0]
             current_chimera_index += reference_splice_length
-    averaged_relative_stability=raw_stability/len(chimera_plddt)
+    averaged_relative_stability=raw_stability/(current_chimera_index)
     return averaged_relative_stability
 
 
