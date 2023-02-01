@@ -38,7 +38,7 @@ with open(argument_json, 'rb') as jfile:
 character_to_replace=argument_dict['character_to_replace']
 sequence_of_interest=[sequence_of_interest for x in protein_list]
 msa_file=[argument_dict['msa_file_name'] for protein in protein_list]
-native_plddts = [argument_dict['native_plddt'].replace(character_to_replace,protein) for protein in protein_list]
+native_plddts = [argument_dict['native_plddt'][1].replace(character_to_replace,protein) for protein in protein_list]
 chimera_plddt=[argument_dict['chimera_plddt'].replace(character_to_replace,protein) for protein in protein_list]
 plddt_files= native_plddts+chimera_plddt
 number_of_subunits=[argument_dict['number_of_subunits'] for x in plddt_files]
@@ -48,10 +48,10 @@ emboss_files=[argument_dict['emboss_names'][1].replace(character_to_replace,prot
 # in protein_info including the reference and chimeras
 # CONSISTENT NAMING IS IMPORTANT, ALPHAFOLD FOLDERS ARE NAMED AFTER FASTA FILES, MAKE SURE PLDDT AND FASTA HAVE EXACT
 # SAME NAMING CONVENTIONS AND THAT ALL NECESSARY ALPHAFOLD FOLDERS ARE IN THE SAME PLACE
-if argument_dict['alphafold_outputs_directory'][0]=='':
-    alphafold_folders=[argument_dict['alphafold_outputs_directory'][1]+Path(file).stem+'/' for file in plddt_files]
+if argument_dict['native_plddt'][0]=='':
+    alphafold_folders=[argument_dict['alphafold_outputs_directory']+Path(file).stem+'/' for file in plddt_files]
     list(map(Analysis.generate_alphafold_files,alphafold_folders,plddt_files))
-    Analysis.generate_alphafold_files(argument_dict['alphafold_outputs_directory'][1] + argument_dict['reference_alphafold_folder_name'] + '/',
+    Analysis.generate_alphafold_files(argument_dict['alphafold_outputs_directory'] + argument_dict['reference_alphafold_folder_name'] + '/',
                                       argument_dict['reference_plddt'])
     reference_plddt=[argument_dict['reference_plddt'] for x in chimera_plddt]
 # If no # was indicated in front of the averaged_native_plddt argument and you have a multimer protein, all plddt files will be averaged across

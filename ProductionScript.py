@@ -15,7 +15,7 @@ protein_info=str(argv[1])
 # character_to_replace which is defaulted with an asterisk ('*'), with the names supplied in the protein_info list that was generated
 # for the last input, there are also a couple operation that come as arrays with enclosed in [] and the first input is just
 # quotations "", if you place a # within the quotes it will prevent that file from being created, for example you prevent
-# the msa from being calculated by the script using this method like this ["#","/gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/CoronavirusMSA.aln"]
+# the msa from being calculated by the script using this method like this "muscle_command_for_msa": ["#","module load gcc / 9.2.0 & & module load muscle / 3.8.31 & & muscle"]
 # PROVIDE YOUR REFERENCE IN THE JSON INPUT FILE
 argument_json=str(argv[2])
 # Lastly and most simply, create a fasta file with the sequence that you want spliced out and replaced of your reference protein
@@ -35,7 +35,7 @@ with open(protein_info, 'r') as info_list:
 # Here, important information from your command line inputs are turned into list iterables to be used in the map function later
 sequence_of_interest=[sequence_of_interest for x in protein_list]
 reference_protein=[argument_dict['reference_protein'] for x in protein_list]
-msa_file=[argument_dict['msa_file_name'][1] for x in protein_list]
+msa_file=[argument_dict['msa_file_name'] for x in protein_list]
 character_to_replace=argument_dict['character_to_replace']
 subunits=[argument_dict['number_of_subunits'] for x in protein_list]
 email=[argument_dict['email_for_accession'] for x in protein_list]
@@ -51,10 +51,10 @@ if subunits==1:
 else:
     list(map(AccessiontoAlignment.accession_to_fasta, monomer_fastas, accession_number, email, subunits, multimer_fastas))
 # This is the code enacting the msa creation switch that's called by putting a # in the json file, outlined in above comments
-if argument_dict['msa_file_name'][0]!='#':
+if argument_dict['muscle_command_for_msa'][0]=='':
     AccessiontoAlignment.multiple_sequence_alignment(monomer_fastas, msa_fasta,
                                                      msa_file[0],
-                                                     reference_protein[0])
+                                                     reference_protein[0],argument_dict['muscle_command_for_msa'][1])
 # Here splicing information like the boundaries containing the sequence outlined in sequence_of_interest_fasta for your reference
 # protein and the sequence from your partner proteins that aligns with the sequence_of_interest in the msa
 splice_info=list(map(AccessiontoAlignment.alignment_finder,msa_file, sequence_of_interest,protein_list,reference_protein_name))

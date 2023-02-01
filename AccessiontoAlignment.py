@@ -13,7 +13,7 @@ def accession_to_fasta(monomer_file_name, accession, email_for_Bio,subunits, mul
         fasta_creation(multimer_name,sequence,subunits)
 
 
-def multiple_sequence_alignment(list_of_fastas, fasta_for_alignment, new_alignment_file, reference_protein_fasta):
+def multiple_sequence_alignment(list_of_fastas, fasta_for_alignment, new_alignment_file, reference_protein_fasta,muscle_command):
     """Creates a multiple sequence alignment using muscle and a concatenated fasta file with a reference fasta as the base,
      joined with all fastas specified in list_of_fastas."""
     from os import system
@@ -23,7 +23,7 @@ def multiple_sequence_alignment(list_of_fastas, fasta_for_alignment, new_alignme
     for fasta in list_of_fastas:
         system(f"cat {fasta} >> {fasta_for_alignment}")
     # Using muscle to perform the alignment
-    system(f'module load gcc/9.2.0 && module load muscle/3.8.31 && muscle -in {fasta_for_alignment} -out {new_alignment_file}')
+    system(f'{muscle_command} -in {fasta_for_alignment} -out {new_alignment_file}')
 
 
 def run_emboss_needle(new_emboss_file, sequence_one, sequence_two,needle_directory):
