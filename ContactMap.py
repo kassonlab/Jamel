@@ -59,11 +59,11 @@ from numpy import min as npmin
 blosum=blosum_62_matrix()
 blosum=delete(blosum,0,axis=0)
 blosum=delete(blosum,0,axis=1)
-maxi, mini=npmax((blosum)),npmin(blosum)
-
+maxi, mini=npmax(blosum),npmin(blosum)
+print(maxi, mini)
 # normalize between zero an -1 and then flip the signs, also check distribution of blosum scores
 # low + (high-low)*(x-minimum)/(maximum-minimmum)
-normalize = lambda x: (-1+2*(x-mini)/(maxi-mini))
+normalize = lambda x: (-1+1*(x-mini)/(maxi-mini))
 blosum=[list(normalize(y) for y in x) for x in blosum]
 # 1 if both contact, 0 if no contact, -1 if only one contact
 
@@ -76,13 +76,13 @@ def ContactOverlap(alignment_file, comparison, reference='6VSB_B'):
     reference_sequence,comparison_sequence=sequence_dictionary[reference],sequence_dictionary[comparison]
     #CP is Comparison Protein and RP is Reference Protein
     cp_updated_contact_map=correct_residue_position_for_alignment(f'3mer{comparison}.pdb','B',comparison_sequence)
+    print(comparison_sequence)
+    print(cp_updated_contact_map)
     rp_updated_contact_map = correct_residue_position_for_alignment(f'{reference}.pdb',"B", reference_sequence)
     rp_contact_map,cp_contact_map=[],[]
     j=0
     residue_comparison=[blosum[where(blosum_62_matrix()[:, 0] == res_ref)[0][0]-1][where(blosum_62_matrix()[0, :] == res_com)[0][0]-1]
                         for res_ref, res_com in zip(reference_sequence,comparison_sequence)]
-    print(blosum[0][19],list(zip(reference_sequence,comparison_sequence)))
-    print(residue_comparison)
     for residue in reference_sequence:
         if residue.isalpha():
             rp_contact_map.append(rp_updated_contact_map[j])

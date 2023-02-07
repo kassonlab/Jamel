@@ -58,7 +58,8 @@ def blosum_62_matrix():
 def create_dictionary_from_alignment(alignment_file):
     """Takes a fasta style alignment and makes a dictionary where the key is whatever signifier follows '>'
     and the value is the sequence with no spaces"""
-    alignment = open(alignment_file, "r").read().split('>')
+    with open(alignment_file, "r") as alignment:
+        alignment = alignment.read().split('>')
     sequence_dictionary = {sequence.split('\n')[0]: sequence.split('\n')[1].strip() for sequence in alignment if
                            len(sequence) != 0}
     return sequence_dictionary
