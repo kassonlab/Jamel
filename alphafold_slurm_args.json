@@ -1,0 +1,12 @@
+{
+    "arguments": {
+        "character_to_replace": "*",
+        "proteins_per_slurm": 12,
+        "template_slurm": ["#","/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/HA_Alphafold_Template.slurm"],
+        "alphafold_shell_script": ["","/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/MultimerAlphaFold.sh"],
+        "output_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/HA_Output/",
+        "slurm_naming": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/*HA_MultimerAlphaFold.slurm",
+        "slurm_output": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/*HA.out",
+        "slurm_error": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/*HA.err"
+    }
+}
