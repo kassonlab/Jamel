@@ -1,9 +1,9 @@
 from sys import argv
 from os import system
 from json import load
+argument_json = argv[1]
+fastas_to_run = argv[2]
 
-fastas_to_run = argv[1]
-argument_json = argv[2]
 with open(fastas_to_run, 'r') as fasta_list:
     fasta_list = fasta_list.readlines()
     fasta_list = [x.split()[0] for x in fasta_list]

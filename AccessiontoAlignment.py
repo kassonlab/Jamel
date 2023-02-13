@@ -59,9 +59,9 @@ def alignment_finder(alignment_file, sequence_of_interest, comparison_protein,
     no_gap_reference_sequence = ''.join([x for ind, x in enumerate(reference_sequence) if x != '-'])
     # Boundaries are given in python index
     reference_start = reference_sequence_indexing[no_gap_reference_sequence.find(sequence_of_interest)]
-    reference_end = reference_sequence_indexing[no_gap_reference_sequence.find(sequence_of_interest) + len(sequence_of_interest)]
+    reference_end = reference_sequence_indexing[no_gap_reference_sequence.find(sequence_of_interest) + len(sequence_of_interest)-1]
     # Pulling the section of the comparison_sequence that overlaps with the sequence_of_interest
-    found_alignment = comparison_sequence[reference_start:reference_end].replace('-', '')
+    found_alignment = comparison_sequence[reference_start:(reference_end+1)].replace('-', '')
     no_gap_reference_start = no_gap_reference_sequence.find(sequence_of_interest)
     no_gap_reference_end = no_gap_reference_start + len(sequence_of_interest)
     # Recording the indexes of the found_alignment

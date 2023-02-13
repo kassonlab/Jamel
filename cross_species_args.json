@@ -1,18 +1,20 @@
 {
     "arguments": {
         "character_to_replace": "*",
-        "fasta_file_list_name": ["","/scratch/jws6pq/BridNotebook/Fastas/test"],
-        "reference_protein": ["/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/FullSARS2.fasta","/gpfs/gpfs0/scratch/jws6pq/BridNotebook/HA_Fastas/Reference_HA.fasta"],
-        "msa_file_name": "/scratch/jws6pq/BridNotebook/Fastas/CoronavirusMSA.aln",
+        "fasta_file_list_name": ["","/scratch/jws6pq/BridNotebook/NTD-HA_Fastas/NTDHA2_chi_list"],
+        "constant_protein": ["#","/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/FullSARS2.fasta"],
+        "variant_protein": ["","/gpfs/gpfs0/scratch/jws6pq/BridNotebook/HA_Fastas/Reference_HA.fasta"],
+        "msa_file_name": "/gpfs/gpfs0/scratch/jws6pq/BridNotebook/NTD-HA_Fastas/HA_MSAforNTD.aln",
         "muscle_command_for_msa": ["","module load gcc/9.2.0 && module load muscle/3.8.31 && muscle"],
         "number_of_subunits": 3,
         "email_for_accession": "example@outlook.com",
-        "chimera_fastas": "/scratch/jws6pq/BridNotebook/Fastas/3merNTDw*HA2.fasta",
-        "msa_fasta": "/scratch/jws6pq/BridNotebook/Fastas/CoronavirusMSA.fasta",
-        "reference_protein_fasta_identifier": ["FullSARS2","A_Arizona_USAFSAM-13657_2022"],
-        "sequence_of_interest": ["/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/SARS2_NTD.fasta","/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/H3N2_HA2.fasta"],
-        "monomer_fastas": "/gpfs/gpfs0/scratch/jws6pq/BridNotebook/HA_Fastas/*.fasta",
-        "multimer_fastas": ["","/scratch/jws6pq/BridNotebook/Fastas/3mer*.fasta"],
-        "chimera_fastas": "/scratch/jws6pq/BridNotebook/Fastas/3merSARS2w*S1.fasta"
+        "chimera_fastas": "/gpfs/gpfs0/scratch/jws6pq/BridNotebook/NTD-HA_Fastas/3merNTDw*HA2.fasta",
+        "msa_fasta": "/scratch/jws6pq/BridNotebook/NTD-HA_Fastas/HA_MSAforNTD.fasta",
+        "constant_fasta_identifier": "FullSARS2",
+        "variant_fasta_identifier": "A_Arizona_USAFSAM-13657_2022_H3N2",
+        "constant_sequence_of_interest": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/SARS2_NTD.fasta",
+        "variant_sequence_of_interest": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/H3N2_HA2.fasta",
+        "monomer_fastas": ["#","/gpfs/gpfs0/scratch/jws6pq/BridNotebook/NTD-HA_Fastas/*.fasta"],
+        "multimer_fastas": ["#","/scratch/jws6pq/BridNotebook/NTD-HA_Fastas/3mer*.fasta"]
     }
 }
