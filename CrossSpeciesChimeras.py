@@ -38,7 +38,6 @@ if subunits[0]==1 and argument_dict['monomer_fastas'][0]=='':
 elif subunits[0]>1 and argument_dict['multimer_fastas'][0]=='':
     list(map(AccessiontoAlignment.accession_to_fasta,monomer_fastas, accession_number, email,subunits, multimer_fastas))
 
-reference_one_boundary=AccessiontoAlignment.alignment_finder(constant_fasta, constant_sequence_of_interest[0], constant_fasta_identifier, constant_fasta_identifier)[1]
 if argument_dict['muscle_command_for_msa'][0]=='':
     AccessiontoAlignment.multiple_sequence_alignment(monomer_fastas, argument_dict['msa_fasta'], msa[0],
                                                      variant_fasta, argument_dict['muscle_command_for_msa'][1])

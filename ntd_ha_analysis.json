@@ -1,0 +1,25 @@
+{
+    "arguments": {
+        "character_to_replace": "*",
+        "alphafold_outputs_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD_HA_Output/",
+        "emboss_command": ["#","/scratch/jws6pq/EMBOSS-6.6.0/emboss/needle"],
+        "emboss_names": ["#","/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/OmicronNTDvs*HA2.emboss"],
+        "msa_file_name": "/gpfs/gpfs0/scratch/jws6pq/BridNotebook/NTD-HA_Fastas/HA_MSAforNTD.aln",
+        "number_of_subunits": 3,
+        "native_plddt": ["#","/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/3mer*.plddt"],
+        "averaged_native_plddt": ["#","/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/Avg3mer*.plddt"],
+        "chimera_plddt": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/3merNTDw*HA2.plddt",
+        "averaged_chimera_plddt": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/Avg3merNTDw*HA2.plddt",
+        "constant_alphafold_folder_name": "3merOmicron",
+        "constant_plddt": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/3merOmicron.plddt",
+        "averaged_constant": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/Avg3merOmicron.plddt",
+        "analysis_output_csv": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/ntd-ha_analysis.csv",
+        "analysis_column_names": [["","Protein"],["","Sequence Similarity (%)"],["","Overall Native Score"],["","Overall Chimera Score"],["","Relative Stability"]],
+        "constant_protein": ["#","/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/Omicron.fasta"],
+        "variant_protein": ["","/gpfs/gpfs0/scratch/jws6pq/BridNotebook/HA_Fastas/constant_HA.fasta"],
+        "constant_fasta_identifier": "Omicron",
+        "variant_fasta_identifier": "A_Arizona_USAFSAM-13657_2022_H3N2",
+        "constant_sequence_of_interest": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/Omicron_NTD.fasta",
+        "variant_sequence_of_interest": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/H3N2_HA2.fasta"
+    }
+}
