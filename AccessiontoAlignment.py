@@ -54,9 +54,9 @@ def alignment_finder(alignment_file, sequence_of_interest, comparison_protein,
     reference_sequence = sequence_dictionary[reference_protein]
     comparison_sequence = sequence_dictionary[comparison_protein]
     # Matching python indexing for the indexing from the alignment with some amount of '-' and indexing in the regular sequence
-    reference_sequence_indexing = [ind for ind, x in enumerate(reference_sequence) if x != '-']
+    reference_sequence_indexing = [ind for ind, x in enumerate(reference_sequence) if x.isalpha()]
     # Creating a regular sequence without '-'
-    no_gap_reference_sequence = ''.join([x for ind, x in enumerate(reference_sequence) if x != '-'])
+    no_gap_reference_sequence = ''.join([x for ind, x in enumerate(reference_sequence) if x.isalpha()])
     # Boundaries are given in python index
     reference_start = reference_sequence_indexing[no_gap_reference_sequence.find(sequence_of_interest)]
     reference_end = reference_sequence_indexing[no_gap_reference_sequence.find(sequence_of_interest) + len(sequence_of_interest)-1]
