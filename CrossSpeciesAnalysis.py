@@ -7,6 +7,7 @@ from AccessiontoAlignment import alignment_finder
 
 argument_json = argv[1]
 protein_info = argv[2]
+
 with open(argument_json, 'rb') as jfile:
     argument_dict = load(jfile)["arguments"]
 with open(protein_info, 'r') as info_list:
@@ -19,6 +20,7 @@ with open(constant_sequence_of_interest, 'r') as fasta:
     constant_sequence_of_interest = ''.join([x for x in fasta if x[0] != '>' if x != '']).strip().replace('\n', '')
 with open(variant_sequence_of_interest, 'r') as fasta:
     variant_sequence_of_interest = ''.join([x for x in fasta if x[0] != '>' if x != '']).strip().replace('\n', '')
+
 constant_fasta=argument_dict['constant_protein'][1]
 variant_fasta=argument_dict['variant_protein'][1]
 character_to_replace = argument_dict['character_to_replace']
@@ -33,13 +35,14 @@ constant_protein_name=[argument_dict['constant_fasta_identifier'] for x in compa
 variant_protein_name=[argument_dict['variant_fasta_identifier'] for x in comparison_proteins]
 constant_plddt = [argument_dict['constant_plddt'] for x in chimera_plddt]
 emboss_files=[argument_dict['emboss_names'][1].replace(character_to_replace,protein) for protein in comparison_proteins]
+
 if argument_dict['native_plddt'][0]=='':
     alphafold_folders=[argument_dict['alphafold_outputs_directory']+Path(file).stem+'/' for file in plddt_files]
     list(map(Analysis.generate_alphafold_files,alphafold_folders,plddt_files))
     Analysis.generate_alphafold_files(argument_dict['alphafold_outputs_directory'] + argument_dict['constant_alphafold_folder_name'] + '/',
                                       argument_dict['constant_plddt'])
-if number_of_subunits!=1 and argument_dict['averaged_native_plddt'][0]=="":
-    averaged_native_plddt = [argument_dict['averaged_native_plddt'][1].replace(character_to_replace,protein) for protein in comparison_proteins]
+if number_of_subunits!=1:
+    averaged_native_plddt = [argument_dict['averaged_native_plddt'].replace(character_to_replace,protein) for protein in comparison_proteins]
     averaged_chimera_plddt = [argument_dict['averaged_chimera_plddt'].replace(character_to_replace,protein) for protein in comparison_proteins]
     list(map(Analysis.averaging_multimer_plddt,native_plddts,averaged_native_plddt,number_of_subunits))
     list(map(Analysis.averaging_multimer_plddt, chimera_plddt, averaged_chimera_plddt, number_of_subunits))
@@ -65,6 +68,7 @@ if number_of_subunits==1:
             constant_stability = Analysis.relative_stability(constant_plddt[index],constant_boundary,chimera_plddt[index],chimera_boundary[0])
             variant_stability=Analysis.relative_stability(native_plddts[index],variant_splice_info[index],chimera_plddt[index],chimera_boundary[1])
             average_relative_stability.append((constant_stability[0]+variant_stability[0])/(constant_stability[1]+variant_stability[1]))
+
         if argument_dict['variant_protein'][0]=='#' and argument_dict['constant_protein'][0]=='':
             chimera_boundary = [(0, len(constant_sequence_of_interest[0])),
                                 (len(constant_sequence_of_interest[0]), None)]
@@ -80,16 +84,16 @@ else:
         if argument_dict['constant_protein'][0] == '#' and argument_dict['variant_protein'][0] == '':
             chimera_boundary = [(0, len(constant_sequence_of_interest[0])),
                                 (len(constant_sequence_of_interest[0]), None)]
-            print(averaged_constant_plddt[index], constant_boundary, averaged_chimera_plddt[index],
-                                                             chimera_boundary[0])
-            print(averaged_native_plddt[index], variant_splice_info[index],
-                                                            averaged_chimera_plddt[index], chimera_boundary[1])
             constant_stability = Analysis.relative_stability(averaged_constant_plddt[index], constant_boundary, averaged_chimera_plddt[index],
                                                              chimera_boundary[0])
             variant_stability = Analysis.relative_stability(averaged_native_plddt[index], variant_splice_info[index],
                                                             averaged_chimera_plddt[index], chimera_boundary[1])
             average_relative_stability.append(
                 (constant_stability[0] + variant_stability[0]) / (constant_stability[1] + variant_stability[1]))
+            print(averaged_constant_plddt[index], constant_boundary, averaged_chimera_plddt[index],
+                  chimera_boundary[0])
+            print(averaged_native_plddt[index], variant_splice_info[index],
+                  averaged_chimera_plddt[index], chimera_boundary[1])
         if argument_dict['variant_protein'][0] == '#' and argument_dict['constant_protein'][0] == '':
             chimera_boundary = [(0, len(constant_sequence_of_interest[0])),
                                 (len(constant_sequence_of_interest[0]), None)]
@@ -99,6 +103,7 @@ else:
                                                              chimera_boundary[1])
             average_relative_stability.append(
                 (constant_stability[0] + variant_stability[0]) / (constant_stability[1] + variant_stability[1]))
+
 # Absolute stability which averages plddt scores across all residue positions will be calculated for the native splice partners
 # and their chimeras
 overall_stability = list(map(Analysis.overall_confidence, native_plddts))
