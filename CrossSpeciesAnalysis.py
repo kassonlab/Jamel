@@ -41,7 +41,7 @@ if argument_dict['native_plddt'][0]=='':
     list(map(Analysis.generate_alphafold_files,alphafold_folders,plddt_files))
     Analysis.generate_alphafold_files(argument_dict['alphafold_outputs_directory'] + argument_dict['constant_alphafold_folder_name'] + '/',
                                       argument_dict['constant_plddt'])
-if number_of_subunits!=1:
+if number_of_subunits[0]!=1:
     averaged_native_plddt = [argument_dict['averaged_native_plddt'].replace(character_to_replace,protein) for protein in comparison_proteins]
     averaged_chimera_plddt = [argument_dict['averaged_chimera_plddt'].replace(character_to_replace,protein) for protein in comparison_proteins]
     list(map(Analysis.averaging_multimer_plddt,native_plddts,averaged_native_plddt,number_of_subunits))
