@@ -1,7 +1,7 @@
 {
     "arguments": {
         "character_to_replace": "*",
-        "proteins_per_slurm": 12,
+        "proteins_per_slurm": 10,
         "template_slurm": ["#","/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/HA_Alphafold_Template.slurm"],
         "alphafold_shell_script": ["","/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/MultimerAlphaFold.sh"],
         "output_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/HA_Output/",

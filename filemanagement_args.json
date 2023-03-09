@@ -1,7 +1,7 @@
 {
     "arguments": {
         "alphafold_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/HA_Output/",
-        "fasta_list": "/gpfs/gpfs0/scratch/jws6pq/BridNotebook/HA_Fastas/HA_fasta_list",
+        "fasta_list": ["","/gpfs/gpfs0/scratch/jws6pq/BridNotebook/HA_Fastas/HA_fasta_list"],
         "list_of_stragglers": "/gpfs/gpfs0/scratch/jws6pq/BridNotebook/HA_Fastas/HA_fasta_stragglers"
     }
 }
