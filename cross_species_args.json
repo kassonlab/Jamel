@@ -1,20 +1,51 @@
 {
     "arguments": {
-        "character_to_replace": "*",
-        "fasta_file_list_name": ["","/scratch/jws6pq/BridNotebook/NTD-HA_Fastas/NTDHA2_chi_list"],
-        "constant_protein": ["#","/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/FullSARS2.fasta"],
-        "variant_protein": ["","/gpfs/gpfs0/scratch/jws6pq/BridNotebook/HA_Fastas/Reference_HA.fasta"],
-        "msa_file_name": "/gpfs/gpfs0/scratch/jws6pq/BridNotebook/NTD-HA_Fastas/HA_MSAforNTD.aln",
-        "muscle_command_for_msa": ["","module load gcc/9.2.0 && module load muscle/3.8.31 && muscle"],
-        "number_of_subunits": 3,
-        "email_for_accession": "example@outlook.com",
-        "chimera_fastas": "/gpfs/gpfs0/scratch/jws6pq/BridNotebook/NTD-HA_Fastas/3merNTDw*HA2.fasta",
-        "msa_fasta": "/scratch/jws6pq/BridNotebook/NTD-HA_Fastas/HA_MSAforNTD.fasta",
-        "constant_fasta_identifier": "FullSARS2",
-        "variant_fasta_identifier": "A_Arizona_USAFSAM-13657_2022_H3N2",
-        "constant_sequence_of_interest": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/SARS2_NTD.fasta",
-        "variant_sequence_of_interest": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/H3N2_HA2.fasta",
-        "monomer_fastas": ["#","/gpfs/gpfs0/scratch/jws6pq/BridNotebook/NTD-HA_Fastas/*.fasta"],
-        "multimer_fastas": ["#","/scratch/jws6pq/BridNotebook/NTD-HA_Fastas/3mer*.fasta"]
+        "operation_toggles": {
+            "run_fasta_operation?": "#", "slurm_job_submission":"#","file_management_operation": "#","run_analysis_operation?": "#"
+        },
+        "Which protein is first, constant or variant?": "constant",
+        "naming_arguments": {"placeholder": "*",
+            "monomer_naming_convention": "*",
+            "multimer_naming_convention": "3mer*",
+            "chimera_naming_convention": "3merNTDw*HA2",
+            "averaged_multimer_naming_convention": "Avg3mer*",
+            "averaged_chimera_naming_convention": "3merNTDw*HA2",
+            "fasta_directory": "/gpfs/gpfs0/scratch/jws6pq/BridNotebook/ShiftedSpikeFasta/",
+            "fasta_file_extension": ".fasta",
+            "plddt_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/",
+            "plddt_file_extension": ".plddt",
+            "emboss_names": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/OmicronNTDvs*HA2.emboss",
+            "pdb_directory": "",
+            "pdb_extension": ".pdb"
+        },
+        "fasta_arguments": {
+            "fasta_toggles": {"Make a list of created fasta files?": "#",
+                "Create an alignment?": ""},
+            "constant_fasta_identifier": "Omicron",
+            "variant_fasta_identifier": "A_Arizona_USAFSAM-13657_2022_H3N2",
+            "alignment_file_name": "/gpfs/gpfs0/scratch/jws6pq/BridNotebook/ShiftedSpikeFasta/Omicron_Coronavirus_MSA.aln",
+            "muscle_command_for_msa": ["#","module load gcc/9.2.0 && module load muscle/3.8.31 && muscle"],
+            "number_of_subunits": 3,
+            "constant_sequence_of_interest": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/Omicron_NTD.fasta",
+            "variant_sequence_of_interest": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/H3N2_HA2.fasta",
+            "fasta_list_file_name": "/scratch/jws6pq/BridNotebook/NTD-HA_Fastas/NTDHA2_chi_list",
+            "constant_fasta": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/FullSARS2.fasta",
+            "variant_fasta": "/gpfs/gpfs0/scratch/jws6pq/BridNotebook/HA_Fastas/Reference_HA.fasta",
+            "msa_file_name": "/gpfs/gpfs0/scratch/jws6pq/BridNotebook/NTD-HA_Fastas/HA_MSAforNTD.aln",
+            "email_for_accession": "example@outlook.com",
+            "msa_fasta": "/scratch/jws6pq/BridNotebook/NTD-HA_Fastas/HA_MSAforNTD.fasta",
+            "constant_fasta_for_alphafold": ""
+        },
+        "analysis_arguments": {
+            "analysis_toggles": {"make_plddts?": "#","make_pdbs?": "#","make_emboss_files?": "#"},
+            "analysis_output_file": "",
+            "alphafold_outputs_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD_HA_Output/",
+            "emboss_command": "/scratch/jws6pq/EMBOSS-6.6.0/emboss/needle",
+            "constant_alphafold_folder_name": "3merOmicron",
+            "constant_plddt": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/3merOmicron.plddt",
+            "averaged_constant": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/Avg3merOmicron.plddt",
+            "analysis_output_csv": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/ntd-ha_analysis.csv",
+            "column_names": {"protein_names": ["#","Protein"],"similarity": ["#","Sequence Similarity (%)"], "average_relative_stability": ["#","Relative Stability (%)"], "overall_native_stability": ["#","Native Stability"], "overall_chimera_stability": ["#","Chimera Stability"]}
+        }
     }
 }

@@ -21,6 +21,7 @@
             "fasta_file_list_name": "/gpfs/gpfs0/scratch/jws6pq/BridNotebook/ShiftedSpikeFasta/minio_shifted_fastas",
             "reference_identifier": "Omicron",
             "partner_identifier": "Minio2006",
+
             "scanner_start": 0,
             "scanner_length": 60,
             "scanner_movement_size": 30,
@@ -28,6 +29,9 @@
             "alignment_file_name": "/gpfs/gpfs0/scratch/jws6pq/BridNotebook/ShiftedSpikeFasta/Omicron_Coronavirus_MSA.aln",
             "muscle_command_for_alignment": ["#","module load gcc/9.2.0 && module load muscle/3.8.31 && muscle"],
             "number_of_subunits": 3
+        },
+        "alphafold_submission": {"reference_submission": "",
+            "partner_submission": ""
         },
         "analysis_arguments": {
             "analysis_toggles": {"make_plddts?": "#"},
