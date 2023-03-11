@@ -13,7 +13,6 @@ with open(argument_json, 'rb') as jfile:
     analysis_arguments = argument_dict['analysis_arguments']
 with open(fasta_arguments['alignment_file_name'], "r") as alignment:
     alignment = alignment.read().split('>')
-    # Splitting up the sequences names and sequences into a dictionary
     sequence_dictionary = {sequence.split('\n')[0]: ''.join(sequence.split('\n')[1:]) for sequence in alignment if
                            len(sequence) != 0}
 scanner_length = fasta_arguments['scanner_length']
@@ -22,7 +21,6 @@ if scanner_length < 15:
 naming_settings = argument_dict['naming_arguments']
 naming_convention = naming_settings['naming_convention']
 fasta_toggles = fasta_arguments['fasta_toggles']
-# define number of movements
 ref_identifier = fasta_arguments['reference_identifier']
 par_identifier = fasta_arguments['partner_identifier']
 scanner_start = fasta_arguments['scanner_start']
@@ -33,12 +31,9 @@ num_of_movements = fasta_arguments['num_of_movements'][1]
 no_gap_reference_sequence = ''.join(x for ind, x in enumerate(reference_sequence) if x.isalpha())
 reference_length = len(no_gap_reference_sequence)
 number_of_subunits = fasta_arguments['number_of_subunits']
-filename_stems = []
-reference_boundaries = []
-averaged_file_stems = []
-reference_cuts = []
-partner_cuts = []
-partner_boundaries = []  # you need to use aceession alignment
+filename_stems,reference_boundaries,averaged_file_stems,reference_cuts,partner_cuts,partner_boundaries = [],[],[],[],[],[]
+# TODO you need to use aceession alignment
+# TODO tuples instead of list where possbile
 if fasta_toggles['Manually control number of scanner movements?'] == '':
     while scanner_end < reference_length:
         file_stem = naming_convention.replace(fasta_arguments['reference_placeholder'],

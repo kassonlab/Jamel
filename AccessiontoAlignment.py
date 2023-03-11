@@ -13,7 +13,7 @@ def accession_to_fasta(monomer_file_name, accession, email_for_Bio,subunits, mul
     # Pulling the sequence corresponding with accession numer specified
     handle = Entrez.efetch(db='protein', id=accession, retmode='text', rettype='fasta').readlines()
     # Turning the retrieved sequence into a single string with no breaks
-    sequence = ''.join([x for x in handle if x[0] != '>' if x != '']).strip().replace('\n', '')
+    sequence = ''.join(x for x in handle if x[0] != '>' if x != '').strip().replace('\n', '')
     # Creating a monomer file by default for alignment purposes, if a multimer is requested it's made later
     fasta_creation(monomer_file_name, sequence, 1)
     if subunits != 1:
@@ -54,9 +54,9 @@ def alignment_finder(alignment_file, sequence_of_interest, comparison_protein,
     reference_sequence = sequence_dictionary[reference_protein]
     comparison_sequence = sequence_dictionary[comparison_protein]
     # Matching python indexing for the indexing from the alignment with some amount of '-' and indexing in the regular sequence
-    reference_sequence_indexing = [ind for ind, x in enumerate(reference_sequence) if x.isalpha()]
+    reference_sequence_indexing = tuple((ind for ind, x in enumerate(reference_sequence) if x.isalpha()))
     # Creating a regular sequence without '-'
-    no_gap_reference_sequence = ''.join([x for ind, x in enumerate(reference_sequence) if x.isalpha()])
+    no_gap_reference_sequence = ''.join(x for ind, x in enumerate(reference_sequence) if x.isalpha())
     # Boundaries are given in python index
     reference_start = reference_sequence_indexing[no_gap_reference_sequence.find(sequence_of_interest)]
     reference_end = reference_sequence_indexing[no_gap_reference_sequence.find(sequence_of_interest) + len(sequence_of_interest)-1]

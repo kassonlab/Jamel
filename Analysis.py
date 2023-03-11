@@ -54,7 +54,7 @@ def get_sequence_similarity(emboss_file):
 def overall_confidence(plddt_file):
     """Returns the average confidence score from a protein's plddt file."""
     with open(plddt_file, 'r') as infile:
-        plddt = [float(score) for score in infile.readlines()]
+        plddt = tuple(float(score) for score in infile.readlines())
     average_plddt = sum(plddt)/len(plddt)
     return average_plddt
 
@@ -68,15 +68,15 @@ def get_reference_boundaries(sequence_of_interest, msa, fasta_identifier):
         alignment = alignment.read().split('>')
         sequence_dictionary = {sequence.split('\n')[0]: ''.join(sequence.split('\n')[1:]) for sequence in alignment if
                                len(sequence) != 0}
-    reference_sequence = ''.join([x for x in sequence_dictionary[fasta_identifier] if x != '-'])
+    reference_sequence = ''.join(x for x in sequence_dictionary[fasta_identifier] if x != '-')
     # This is recording the 'NS' boundaries that indicate the boundaries of the sequence_of_interest
     splice_start = reference_sequence.find(sequence_of_interest)
     splice_end = splice_start + len(sequence_of_interest)
     # Then those boundaries are compared against the very beginning and end of the proteins, by introducing them into a set
     # to get of redundancy if the sequence_of_interest boundaries contain the beginning or end
-    boundaries = list({0, splice_start, splice_end, len(reference_sequence)})
+    boundaries = tuple({0, splice_start, splice_end, len(reference_sequence)})
     # They are sorted into ascending order
-    boundaries.sort()
+    boundaries=sorted(boundaries)
     spliced_out = (splice_start, splice_end)
     list_of_boundary_tuples = []
     # Then the loop checks if they're the sequence_of_interest boundaries and marks them accordingly
@@ -94,14 +94,14 @@ def relative_stability(native_plddt, native_boundary_tuple, chimera_plddt, chime
     # Pulling the plddt values as floats that start at native_boundary_tuple[0] and chimera_boundary_tuple[0], and end at
     # native_boundary_tuple[1] and chimera_boundary_tuple[1] but dont include index [1] scores.
     with open(native_plddt, 'r') as infile:
-        native_score = [float(score) for
-                        score in infile.readlines()][native_boundary_tuple[0]:native_boundary_tuple[1]]
+        native_score = tuple(float(score) for
+                        score in infile.readlines())[native_boundary_tuple[0]:native_boundary_tuple[1]]
     with open(chimera_plddt, 'r') as infile:
-        chimera_score = [float(score) for
-                         score in infile.readlines()][chimera_boundary_tuple[0]:chimera_boundary_tuple[1]]
+        chimera_score = tuple(float(score) for
+                         score in infile.readlines())[chimera_boundary_tuple[0]:chimera_boundary_tuple[1]]
     # Recording the length of the residue scores for averaging purposes later
     splice_length = len(chimera_score)
-    relative_difference = sum([(chimera-native) / native*100 for native, chimera in zip(native_score, chimera_score)])
+    relative_difference = sum((chimera-native) / native*100 for native, chimera in zip(native_score, chimera_score))
     return relative_difference, splice_length
 
 def average_relative_stability_full_chimera(native_plddt, native_boundary_tuple,
@@ -140,15 +140,15 @@ def averaging_multimer_plddt(plddt_file, new_plddt_file,subunits):
     for each residue position across the number of subunints specified"""
     # Using list comprehension to turn the plddt file into a list of floats
     with open(plddt_file, 'r') as infile:
-        multimer_plddt = [float(score) for score in infile.readlines()]
+        multimer_plddt = tuple(float(score) for score in infile.readlines())
     # Calculating the length a subunits to have for step size when iterating through the list later
     monomer_length = int(len(multimer_plddt) / int(subunits))
     # creating a file to input the averaged scores
     with open(new_plddt_file, 'w') as new_plddt:
         # using list comprehension to step through each the residue position of each subunit and
         # collect their scores, average them and return them to the new list
-        averaged_scores = [sum(multimer_plddt[residue_index::monomer_length])/subunits
-                           for residue_index in range(monomer_length)]
+        averaged_scores = tuple(sum(multimer_plddt[residue_index::monomer_length])/subunits
+                           for residue_index in range(monomer_length))
         # Looping through the new list and inputting the averaged scores into the new file that was created
         for score in averaged_scores:
             new_plddt.write(f'{score}\n')

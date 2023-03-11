@@ -17,7 +17,7 @@ def sequence_splice(fasta_file, boundary_tuple, python_index='Yes'):
         boundary_one = boundary_tuple[0]
         boundary_two = boundary_tuple[1]
     with open(fasta_file, "r") as fasta:
-        sequence = ''.join([x for x in fasta if x[0] != '>' if x != '']).strip().replace('\n', '')
+        sequence = ''.join(x for x in fasta if x[0] != '>' if x != '').strip().replace('\n', '')
     # The spliced region between the 2 specified boundaries is the first sequence
     # in the list followed by the sequence with the spliced region replace by a '-'
     spliced_region = ''.join(sequence[boundary_one:boundary_two])
