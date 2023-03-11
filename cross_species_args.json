@@ -2,7 +2,7 @@
     "arguments": {
         "protein_list": "/gpfs/gpfs0/scratch/jws6pq/BridNotebook/NTD-HA_Fastas/corrected_NTD_HA2_list.txt",
         "operation_toggles": {
-            "run_fasta_operation": "", "slurm_job_submission":"","file_management_operation": "","run_analysis_operation": "#","run_gromacs_operation": ""
+            "run_fasta_operation": "#", "slurm_job_submission":"","file_management_operation": "","run_analysis_operation": "","run_gromacs_operation": ""
         },
         "Which protein is first, constant or variant?": "constant",
         "naming_arguments": {"placeholder": "*",
@@ -20,8 +20,8 @@
             "pdb_extension": ".pdb"
         },
         "fasta_arguments": {
-            "fasta_toggles": {"Make a list of created fasta files?": "#",
-                "Create an alignment?": "#"},
+            "fasta_toggles": {"Make a list of created fasta files?": "",
+                "Create an alignment?": ""},
             "constant_fasta_identifier": "Omicron",
             "variant_fasta_identifier": "A_Arizona_USAFSAM-13657_2022_H3N2",
             "alignment_file_name": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/NTD_HA2.aln",
