@@ -4,7 +4,8 @@
 """Routines to generate chimeric sequences."""
 
 from pathlib import Path
-
+class chimeracls():
+    pass
 def sequence_splice(fasta_file, boundary_tuple, python_index='Yes'):
     """Takes a fasta sequence and returns the section of the sequence between indexes specified by the boundary one and two,
     as well as the sequence with the specified section replaced with a '-'.

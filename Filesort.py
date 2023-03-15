@@ -1,9 +1,7 @@
 #allow for pdb creation
-from os import listdir,path
+from os import path
 from json import load
 from sys import  argv
-from concurrent.futures import ProcessPoolExecutor
-from pickleopener import generate_alphafold_files, limited_alphafold_transfer
 from pathlib import Path
 argument_json = argv[1]
 with open(argument_json, 'rb') as jfile:

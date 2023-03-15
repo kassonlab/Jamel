@@ -2,7 +2,7 @@
     "arguments": {
         "protein_list": "/gpfs/gpfs0/scratch/jws6pq/BridNotebook/NTD-HA_Fastas/corrected_NTD_HA2_list.txt",
         "operation_toggles": {
-            "run_fasta_operation": "#", "slurm_job_submission":"","file_management_operation": "","run_analysis_operation": "","run_gromacs_operation": ""
+            "run_fasta_operation": "", "slurm_job_submission":"","file_management_operation": "","run_analysis_operation": "","run_gromacs_operation": "#"
         },
         "Which protein is first, constant or variant?": "constant",
         "naming_arguments": {"placeholder": "*",
@@ -12,11 +12,14 @@
             "averaged_multimer_naming_convention": "Avg3mer*",
             "averaged_chimera_naming_convention": "3merNTDw*HA2",
             "fasta_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/",
+            "pdb_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/",
+            "plddt_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/",
+            "gromacs_slurm_dir": "/gpfs/gpfs0/scratch/jws6pq/Gromacs/",
+            "emboss_names": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/H3N2vs*HA2.emboss",
             "fasta_file_extension": ".fasta",
-            "plddt_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/",
             "plddt_file_extension": ".plddt",
-            "emboss_names": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/H3N2vs*HA2.emboss",
-            "pdb_directory": "",
+            "setup_extension": ".setup",
+            "production_extension": ".prod",
             "pdb_extension": ".pdb"
         },
         "fasta_arguments": {
@@ -38,21 +41,24 @@
             "constant_fasta_for_alphafold": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/3merOmicron.fasta"
         },
         "analysis_arguments": {
-            "analysis_toggles": {"make_plddts?": "#","make_pdbs?": "#","make_emboss_files?": ""},
+            "analysis_toggles": {"make_plddts?": "","make_pdbs?": "#","make_emboss_files?": ""},
             "analysis_output_file": "",
             "alphafold_outputs_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD_HA_Output/",
             "emboss_command": "/scratch/jws6pq/EMBOSS-6.6.0/emboss/needle",
             "constant_alphafold_folder_name": "3merOmicron",
             "constant_plddt": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/3merOmicron.plddt",
             "averaged_constant": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/Avg3merOmicron.plddt",
-            "analysis_output_csv": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/ntd-ha_analysis.csv",
-            "column_names": {"protein_names": ["#","Protein"],"similarity": ["#","Sequence Similarity (%)"], "average_relative_stability": ["#","Relative Stability (%)"], "overall_native_stability": ["#","Native Stability"], "overall_chimera_stability": ["#","Chimera Stability"]}
+            "analysis_output_csv": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/ntd-ha_analysis.csv",
+            "column_names": {"nickname": ["#","Protein"],"similarity": ["#","Sequence Similarity (%)"], "average_relative_stability": ["#","Relative Stability (%)"], "overall_native_stability": ["#","Native Stability"], "overall_chimera_stability": ["#","Chimera Stability"]}
         },
         "gromacs_arguments": {
-            "gromacs_toggles": {"create setup slurms": "#", "sbatch setup slurms": "","create mdrun slurms": "#", "sbatch mdrun slurms": "#"},
-            "pdbs_to_run": "",
-            "gmxbin": "$HOME/gromacs/build-2022/bin/gmx",
-            "pdb2gmx": "pdb2gmx -ff charmm36-jul2022 -water tip3p -ignh"
+            "gromacs_toggles": {"create new pdb list": "","create setup slurms": "", "sbatch setup slurms": "","create mdrun slurms": "", "sbatch mdrun slurms": "#"},
+            "pdbs_to_run": "/gpfs/gpfs0/scratch/jws6pq/Gromacs/NTD_HA_pdbs",
+            "gmxbin": "gmx_mpi",
+            "pdb2gmx": "pdb2gmx -ff charmm36-jul2022 -chain_sep ter -water tip3p -ignh",
+            "slurm_template": "/gpfs/gpfs0/scratch/jws6pq/Gromacs/Production.slurm",
+            "slurm_output": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/*gromacs.out",
+            "slurm_error": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/*gromacs.err"
         }
     }
 }
