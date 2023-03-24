@@ -20,7 +20,7 @@
         },
         "fasta_arguments": {
             "fasta_toggles": {"Make a list of created fasta files?": "#", "Manually control number of scanner movements?": "",
-                "Create an alignment?": ""},
+                "Create an alignment?": "","Make pair or combo heteromers": "combo"},
             "fasta_file_list_name": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/minio_shifted_fastas",
             "reference_identifier": "Omicron",
             "partner_identifier": "Minio2006",
@@ -39,7 +39,7 @@
             "list_of_stragglers": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/minio_shifted_stragglers"
     },
         "alphafold_submission_args": {
-            "submission_toggles": {"use all fasta": "","create_slurms":"","sbatch slurms": "#"},
+            "submission_toggles": {"create_slurms":"","sbatch slurms": "#"},
             "proteins_per_slurm": 8,
             "template_slurm": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/Omicron_Alphafold_Template.slurm",
             "alphafold_shell_script": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/MultimerAlphaFold.sh",

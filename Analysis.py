@@ -5,9 +5,10 @@
 
 from pickle import load as p_load
 from json import load as j_load
-from os import system, path
+from os import system, path,strerror
 from shutil import copy
 from numpy import savetxt
+from errno import ENOENT
 
 def run_Foldx(foldx_file,pdb_file,foldx_command):
     """Call FoldX.  This is optional functionality."""
@@ -22,25 +23,26 @@ def get_Foldx_results(foldx_file):
     with open(foldx_file, 'r') as foldx_score:
         return foldx_score.read().split()[1]
 
-def generate_alphafold_files(output_folder, new_plddt='NA', new_pdb='NA'):
+def generate_alphafold_files(output_folder, new_plddt='', new_pdb=''):
     """Creates a text file containing the plddt values of the highest_rank_model extracted from alphafold's result pkl file
     and renames the ranked_0.pdb file and places it in the desired directory."""
     # Checking to see if ranking_debug.json exists. This file is the last to be output by alphafold and is a check that
     # the pkl file you want to extract from exists, as well as to avoid errors
-    if path.exists(output_folder + 'ranking_debug.json'):
-        if new_pdb != 'NA':
+    ranking_file=path.join(output_folder,'ranking_debug.json')
+    try:
+        if new_pdb:
             # The highest ranked structure is copied with a new name and directory
-            copy(output_folder + 'ranked_0.pdb', new_pdb)
-        if new_plddt != 'NA':
+            copy(path.join(output_folder,'ranked_0.pdb'), new_pdb)
+        if new_plddt:
             # ranking_debug is also useful for determining which result pkl file is the highest ranked. The model result pkl files are
             # numbered by the order they are created and not their overall confidence score. The information about their rank by
             # confidence score is found in ranking_debug.json
-            with open(output_folder + 'ranking_debug.json', 'r') as jfile:
+            with open(ranking_file, 'r') as jfile:
                 highest_rank_model = j_load(jfile)['order'][0]
-                with open(f'{output_folder}result_{highest_rank_model}.pkl', 'rb') as pfile:
-                    data = p_load(pfile)
-                    # The plddt scores are put into a column in a text file named by new_plddt
-                    savetxt(new_plddt, data['plddt'], fmt='%s', delimiter=' ')
+            with open(path.join(output_folder,f'result_{highest_rank_model}.pkl'), 'rb') as pfile:
+                # The plddt scores are put into a column in a text file named by new_plddt
+                savetxt(new_plddt, p_load(pfile)['plddt'], fmt='%s', delimiter=' ')
+    except FileNotFoundError: raise FileNotFoundError(ENOENT, strerror(ENOENT), ranking_file)
 
 def get_sequence_similarity(emboss_file):
     """Returns sequence similarity from an emboss needle file."""
@@ -143,12 +145,10 @@ def averaging_multimer_plddt(plddt_file, new_plddt_file,subunits):
         multimer_plddt = tuple(float(score) for score in infile.readlines())
     # Calculating the length a subunits to have for step size when iterating through the list later
     monomer_length = int(len(multimer_plddt) / int(subunits))
+    # using list comprehension to step through each the residue position of each subunit and
+    # collect their scores, average them and return them to the new list
+    averaged_scores = tuple(sum(multimer_plddt[residue_index::monomer_length]) / subunits
+                            for residue_index in range(monomer_length))
     # creating a file to input the averaged scores
     with open(new_plddt_file, 'w') as new_plddt:
-        # using list comprehension to step through each the residue position of each subunit and
-        # collect their scores, average them and return them to the new list
-        averaged_scores = tuple(sum(multimer_plddt[residue_index::monomer_length])/subunits
-                           for residue_index in range(monomer_length))
-        # Looping through the new list and inputting the averaged scores into the new file that was created
-        for score in averaged_scores:
-            new_plddt.write(f'{score}\n')
+        new_plddt.write('\n'.join(str(score) for score in averaged_scores))

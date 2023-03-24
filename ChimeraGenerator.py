@@ -6,6 +6,7 @@
 from pathlib import Path
 class chimeracls():
     pass
+
 def sequence_splice(fasta_file, boundary_tuple, python_index='Yes'):
     """Takes a fasta sequence and returns the section of the sequence between indexes specified by the boundary one and two,
     as well as the sequence with the specified section replaced with a '-'.
@@ -32,9 +33,12 @@ def chimera_sequence_creation(section_being_spliced_in, marked_sequence, mark_in
     return chimera_sequence
 
 
-def fasta_creation(file_name, sequence, subunits):
+def fasta_creation(file_name, sequence_subunits_tuple):
     """Creates a fasta file with the given file_name, and replicates the sequence within it the specified number of times
     to create a homo multimer if subunits is greater than 1."""
+    print('helo')
     with open(file_name, 'w') as outfile:
-        for _unused_x in range(subunits):
-            outfile.write('>{0}\n{1}\n'.format(Path(file_name).stem, sequence))
+        for sequence,subunits in sequence_subunits_tuple:
+            print(sequence)
+            for replicates in range(subunits):
+                outfile.write(f'>{Path(file_name).stem,}\n{sequence}\n')

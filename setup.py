@@ -46,7 +46,7 @@ def create_prod_slurm(pdb,gmxbin,slurm_template,slurm_file_name,output_file,erro
         slurm.write(f'{interpreter}\n#SBATCH -o {output_file}\n#SBATCH -e {error_file}\n')
         with open(slurm_template, "r") as template:
             slurm.write(template.read())
-        slurm.write(f'{gmxbin} mdrun -v -deffnm {shortname}_prod\n')
+        slurm.write(f'{gmxbin} mdrun -cpi {shortname}_prod.cpt -v -deffnm {shortname}_prod\n')
 # TODO srun and ntomp for mdrun
 # TODO sbatch roduction run from inside setup
 
