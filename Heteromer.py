@@ -99,72 +99,71 @@ if prime_container.fasta_toggles["Make pair or combo heteromers"]=="combo":
     groupings=tuple(product(*(container.chimeras for container in container_of_containers)))
 else:
     groupings=zip(*(container.chimeras for container in container_of_containers))
-for chimera_groups in groupings:
-    joined_boundary='_'.join(chimera.no_gap_boundaries for chimera in chimera_groups if hasattr(chimera,'no_gap_boundaries'))
-    chimera_groups[0].file_stem = prime_container.naming_convention.replace(
+for chimera_group in groupings:
+    joined_boundary='_'.join(chimera.no_gap_boundaries for chimera in chimera_group if hasattr(chimera, 'no_gap_boundaries'))
+    chimera_group[0].file_stem = prime_container.naming_convention.replace(
         prime_container.naming_arguments['reference_placeholder'],
         prime_container.ref_identifier).replace(
         prime_container.naming_arguments['partner_placeholder'], prime_container.par_identifier).replace(
         prime_container.naming_arguments['boundary_placeholder'], joined_boundary)
-    chimera_groups[0].averaged_stem = prime_container.naming_arguments['averaged_plddt_naming_convention'].replace(
+    chimera_group[0].averaged_stem = prime_container.naming_arguments['averaged_plddt_naming_convention'].replace(
                 prime_container.naming_arguments['reference_placeholder'],
                 prime_container.ref_identifier).replace(
                 prime_container.naming_arguments['partner_placeholder'], prime_container.par_identifier).replace(
                 prime_container.naming_arguments['boundary_placeholder'], joined_boundary)
-    chimera_groups[0].fasta_name = path.join(prime_container.naming_arguments["fasta_directory"],
-                                   f'{chimera_groups[0].file_stem}{prime_container.naming_arguments["fasta_file_extension"]}')
+    chimera_group[0].fasta_name = path.join(prime_container.naming_arguments["fasta_directory"],
+                                   f'{chimera_group[0].file_stem}{prime_container.naming_arguments["fasta_file_extension"]}')
+# TODO make the fasta labels more accurate???
 if prime_container.operation_toggles['run_fasta_operation?'] == '#':
     for chimera_group in groupings:
-        spliced_sequences=()
+        spliced_sequences=[]
         for chimera in chimera_group:
-            spliced_sequences += (chimera.container_id.no_gap_reference_sequence.replace(chimera.reference_cuts, chimera.partner_cuts),chimera.container_id.number_of_subunits)
-            print(spliced_sequences)
-        fasta_creation(chimera_groups[0].fasta_name, spliced_sequences)
-        # if prime_container.fasta_toggles['Make a list of created fasta files?'] == '#':
-        #     with open(prime_container.fasta_arguments['fasta_file_list_name'], 'w') as list_file:
-        #         for chimera in chimera_container:
-        #             list_file.write(f'{chimera.fasta_name}\n')
-        #         list_file.write(prime_container.fasta_arguments['reference_submission'])
-        #         list_file.write(prime_container.fasta_arguments['partner_submission'])
-# if operation_toggles['alphafold_submission'] == '#' or operation_toggles['check_submission'] == '#':
-#     submission_toggles = alphafold_submission_args['submission_toggles']
-#     check_toggles = check_arguments['check_toggles']
-#     output_directory = naming_arguments['alphafold_outputs_directory']
-#     fastas= [chimera.fasta_name for chimera in chimera_container] + [
-#         fasta_arguments['reference_submission']] + [fasta_arguments['partner_submission']]
-#     fasta_to_run = ()
-#     if operation_toggles['check_submission'] == '#':
-#         count=0
-#         for fasta in fastas:
-#             count+=1
-#             if not path.exists(output_directory + Path(fasta).stem + '/ranking_debug.json'):
-#                 fasta_to_run+=(fasta,)
-#         if check_toggles['create file of stragglers'] == '#':
-#             with open(argument_dict['list_of_stragglers'], 'w') as run_list:
-#                 for fasta in fasta_to_run:
-#                     run_list.write(f'{fasta}')
-#         if not fasta_to_run:
-#             operation_toggles['alphafold_submission'] = ''
-#     if operation_toggles['alphafold_submission'] == '#':
-#         proteins_per_slurm = alphafold_submission_args['proteins_per_slurm']
-#         template_slurm = alphafold_submission_args['template_slurm']
-#         alphafold_shell_script = alphafold_submission_args['alphafold_shell_script']
-#         naming_convention = naming_arguments['slurm_naming']
-#         placeholder = naming_arguments['slurm_placeholder']
-#         if not fasta_to_run:
-#             fasta_to_run=fastas
-#         for slurm_index, file_index in enumerate(range(0, len(fasta_to_run),proteins_per_slurm)):
-#             current_slurm = naming_convention.replace(placeholder, str(slurm_index))
-#             if submission_toggles['create_slurms'] == '#':
-#                 system(f'cp {template_slurm} {current_slurm}')
-#                 with open(current_slurm, 'a') as slurm_file:
-#                     slurm_file.write(
-#                         f'\n#SBATCH -o {alphafold_submission_args["slurm_output"].replace(placeholder, str(slurm_index))}\n'
-#                         f'#SBATCH -e {alphafold_submission_args["slurm_error"].replace(placeholder, str(slurm_index))}\n#Run program\n')
-#                     proteins_to_run = ','.join(fasta_to_run[file_index:file_index + proteins_per_slurm])
-#                     slurm_file.write(f'{alphafold_shell_script} {proteins_to_run} {output_directory}')
-#             if submission_toggles['sbatch slurms'] == '#':
-#                 system(f'sbatch {current_slurm}')
+            spliced_sequences.append((chimera.container_id.no_gap_reference_sequence.replace(chimera.reference_cuts, chimera.partner_cuts),chimera.container_id.number_of_subunits))
+        fasta_creation(chimera_group[0].fasta_name, spliced_sequences)
+if prime_container.fasta_toggles['Make a list of created fasta files?'] == '#':
+    with open(prime_container.fasta_arguments['fasta_file_list_name'], 'w') as list_file:
+        for chimera_group in groupings:
+            print()
+            list_file.write(f'{chimera_group[0].fasta_name}\n')
+        list_file.write(prime_container.fasta_arguments['reference_submission'])
+        list_file.write(prime_container.fasta_arguments['partner_submission'])
+if prime_container.operation_toggles['alphafold_submission'] == '#' or prime_container.operation_toggles['check_submission'] == '#':
+    submission_toggles = prime_container.alphafold_submission_args['submission_toggles']
+    check_toggles = prime_container.check_arguments['check_toggles']
+    output_directory = prime_container.naming_arguments['alphafold_outputs_directory']
+    fastas= [chimera_group[0].fasta_name for chimera_group in groupings] + [
+        prime_container.fasta_arguments['reference_submission']] + [prime_container.fasta_arguments['partner_submission']]
+    fasta_to_run = ()
+    if prime_container.operation_toggles['check_submission'] == '#':
+        for fasta in fastas:
+            if not path.exists(output_directory + Path(fasta).stem + '/ranking_debug.json'):
+                fasta_to_run+=(fasta,)
+        if check_toggles['create file of stragglers'] == '#':
+            with open(prime_container.check_arguments['list_of_stragglers'], 'w') as run_list:
+                for fasta in fasta_to_run:
+                    run_list.write(f'{fasta}')
+        if not fasta_to_run:
+            prime_container.operation_toggles['alphafold_submission'] = ''
+    if prime_container.operation_toggles['alphafold_submission'] == '#':
+        proteins_per_slurm = prime_container.alphafold_submission_args['proteins_per_slurm']
+        template_slurm = prime_container.alphafold_submission_args['template_slurm']
+        alphafold_shell_script = prime_container.alphafold_submission_args['alphafold_shell_script']
+        naming_convention = prime_container.naming_arguments['slurm_naming']
+        placeholder = prime_container.naming_arguments['slurm_placeholder']
+        if not fasta_to_run:
+            fasta_to_run=fastas
+        for slurm_index, file_index in enumerate(range(0, len(fasta_to_run),proteins_per_slurm)):
+            current_slurm = naming_convention.replace(placeholder, str(slurm_index))
+            if submission_toggles['create_slurms'] == '#':
+                system(f'cp {template_slurm} {current_slurm}')
+                with open(current_slurm, 'a') as slurm_file:
+                    slurm_file.write(
+                        f'\n#SBATCH -o {prime_container.alphafold_submission_args["slurm_output"].replace(placeholder, str(slurm_index))}\n'
+                        f'#SBATCH -e {prime_container.alphafold_submission_args["slurm_error"].replace(placeholder, str(slurm_index))}\n#Run program\n')
+                    proteins_to_run = ','.join(fasta_to_run[file_index:file_index + proteins_per_slurm])
+                    slurm_file.write(f'{alphafold_shell_script} {proteins_to_run} {output_directory}')
+            if submission_toggles['sbatch slurms'] == '#':
+                system(f'sbatch {current_slurm}')
 # if operation_toggles['run_analysis_operation?'] == '#':
 #     analysis_toggles = analysis_arguments['analysis_toggles']
 #     reference_plddt = f"{naming_arguments['plddt_directory']}" \

@@ -1,7 +1,7 @@
 {
     "arguments": {
         "operation_toggles": {
-            "run_fasta_operation?": "#", "alphafold_submission":"#","check_submission":"","run_analysis_operation?": ""
+            "run_fasta_operation?": "", "alphafold_submission":"#","check_submission":"#","run_analysis_operation?": ""
         },
         "naming_arguments": {"reference_placeholder": "*",
             "partner_placeholder": "+",
@@ -39,7 +39,7 @@
             "list_of_stragglers": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/minio_shifted_stragglers"
     },
         "alphafold_submission_args": {
-            "submission_toggles": {"create_slurms":"","sbatch slurms": "#"},
+            "submission_toggles": {"create_slurms":"#","sbatch slurms": ""},
             "proteins_per_slurm": 8,
             "template_slurm": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/Omicron_Alphafold_Template.slurm",
             "alphafold_shell_script": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/MultimerAlphaFold.sh",
