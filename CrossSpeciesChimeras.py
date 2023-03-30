@@ -186,6 +186,7 @@ if operation_toggles['run_gromacs_operation']=='#':
     gromacs_data_dict['setup_slurms'] = tuple(
         naming_arguments['gromacs_slurm_dir'] + Path(pdb).stem + naming_arguments['setup_extension'] for pdb in
         pdbs_to_run)
+    # TODO make folders for gromacs
     if gromacs_toggles['create setup slurms']=='#':
         for index,(pdb,slurm) in enumerate(zip(pdbs_to_run,gromacs_data_dict['setup_slurms'])):
             create_setup_slurm(pdb,gromacs_arguments['gmxbin'],gromacs_arguments['pdb2gmx'],gromacs_arguments['slurm_template'],slurm,gromacs_arguments['slurm_output'].replace(placeholder,Path(pdb).stem),gromacs_arguments['slurm_error'].replace(placeholder,Path(pdb).stem))

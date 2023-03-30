@@ -33,10 +33,10 @@ def chimera_sequence_creation(section_being_spliced_in, marked_sequence, mark_in
     return chimera_sequence
 
 
-def fasta_creation(file_name, sequence_subunits_tuple):
+def fasta_creation(file_name, list_of_sequence_subunits_tuples):
     """Creates a fasta file with the given file_name, and replicates the sequence within it the specified number of times
     to create a homo multimer if subunits is greater than 1."""
     with open(file_name, 'w') as outfile:
-        for (sequence,subunits) in sequence_subunits_tuple:
+        for (sequence,subunits) in list_of_sequence_subunits_tuples:
             for replicates in range(subunits):
                 outfile.write(f'>{Path(file_name).stem}\n{sequence}\n')

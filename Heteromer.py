@@ -16,16 +16,18 @@ from sys import argv
 from time import perf_counter
 from numpy import empty, savetxt
 import Analysis
+from setup import create_alphafold_slurm
 from AccessiontoAlignment import alignment_finder
-from ChimeraGenerator import fasta_creation,chimeracls
+from ChimeraGenerator import fasta_creation, chimeracls
 from itertools import product
 
+
 class ShiftedChimeraContainer:
-    def __init__(self,shifted_json_file):
+    def __init__(self, shifted_json_file):
         with open(shifted_json_file, 'rb') as jfile:
-            self.argument_dict=load(jfile)["arguments"]
-        self.operation_toggles=self.argument_dict['operation_toggles']
-        self.fasta_arguments=self.argument_dict['fasta_arguments']
+            self.argument_dict = load(jfile)["arguments"]
+        self.operation_toggles = self.argument_dict['operation_toggles']
+        self.fasta_arguments = self.argument_dict['fasta_arguments']
         self.scanner_length = self.fasta_arguments['scanner_length']
         if self.scanner_length < 10:
             raise RuntimeError("scanner_length must be at 10 units")
@@ -50,17 +52,18 @@ class ShiftedChimeraContainer:
         self.no_gap_reference_sequence = ''.join(x for ind, x in enumerate(self.reference_sequence) if x.isalpha())
         self.reference_length = len(self.no_gap_reference_sequence)
         self.number_of_subunits = self.fasta_arguments['number_of_subunits']
-        self.chimeras=()
-    def add_chimera(self,chimera):
-        self.chimeras+=(chimera,)
+        self.chimeras = ()
+
+    def add_chimera(self, chimera):
+        self.chimeras += (chimera,)
 
 
-one=perf_counter()
-arg_jsons=argv[1:]
-container_of_containers=()
-for index,jsn in enumerate(arg_jsons):
-    container_of_containers+=(ShiftedChimeraContainer(jsn),)
-prime_container=container_of_containers[0]
+one = perf_counter()
+arg_jsons = argv[1:]
+container_of_containers = ()
+for index, jsn in enumerate(arg_jsons):
+    container_of_containers += (ShiftedChimeraContainer(jsn),)
+prime_container = container_of_containers[0]
 # TODO make a settings file taht saves settings for print
 for container in container_of_containers:
     if container.fasta_toggles['Manually control number of scanner movements?'] != '#':
@@ -78,16 +81,19 @@ for container in container_of_containers:
             container.chimeras[index].reference_cuts = spliced_out
             container.chimeras[index].partner_cuts = boundary_info[0]
             container.chimeras[index].partner_boundaries = boundary_info[1]
-            container.chimeras[index].container_id= container
+            container.chimeras[index].container_id = container
     else:
         for index, end in enumerate(
-                range(container.scanner_end, container.scanner_end + container.scanner_movement_size * container.num_of_movements, container.scanner_movement_size)):
+                range(container.scanner_end,
+                      container.scanner_end + container.scanner_movement_size * container.num_of_movements,
+                      container.scanner_movement_size)):
             scanner_start = end - container.scanner_length
             container.add_chimera(chimeracls())
             spliced_out = container.no_gap_reference_sequence[scanner_start:end]
             if container.naming_arguments['boundary_placeholder']:
-                container.chimeras[index].no_gap_boundaries=f'{scanner_start + 1}to{end}'
-            boundary_info = alignment_finder(container.fasta_arguments['alignment_file_name'], spliced_out, container.par_identifier,
+                container.chimeras[index].no_gap_boundaries = f'{scanner_start + 1}to{end}'
+            boundary_info = alignment_finder(container.fasta_arguments['alignment_file_name'], spliced_out,
+                                             container.par_identifier,
                                              container.ref_identifier)
             container.chimeras[index].reference_boundaries = boundary_info[2]
             container.chimeras[index].reference_cuts = spliced_out
@@ -95,53 +101,57 @@ for container in container_of_containers:
             container.chimeras[index].partner_boundaries = boundary_info[1]
             container.chimeras[index].container_id = container
     num_of_chis = len(container.chimeras)
-if prime_container.fasta_toggles["Make pair or combo heteromers"]=="combo":
-    groupings=tuple(product(*(container.chimeras for container in container_of_containers)))
+if prime_container.fasta_toggles["Make pair or combo heteromers"] == "combo":
+    groupings = tuple(product(*(container.chimeras for container in container_of_containers)))
 else:
-    groupings=zip(*(container.chimeras for container in container_of_containers))
+    groupings = zip(*(container.chimeras for container in container_of_containers))
 for chimera_group in groupings:
-    joined_boundary='_'.join(chimera.no_gap_boundaries for chimera in chimera_group if hasattr(chimera, 'no_gap_boundaries'))
+    joined_boundary = '_'.join(
+        chimera.no_gap_boundaries for chimera in chimera_group if hasattr(chimera, 'no_gap_boundaries'))
     chimera_group[0].file_stem = prime_container.naming_convention.replace(
         prime_container.naming_arguments['reference_placeholder'],
         prime_container.ref_identifier).replace(
         prime_container.naming_arguments['partner_placeholder'], prime_container.par_identifier).replace(
         prime_container.naming_arguments['boundary_placeholder'], joined_boundary)
     chimera_group[0].averaged_stem = prime_container.naming_arguments['averaged_plddt_naming_convention'].replace(
-                prime_container.naming_arguments['reference_placeholder'],
-                prime_container.ref_identifier).replace(
-                prime_container.naming_arguments['partner_placeholder'], prime_container.par_identifier).replace(
-                prime_container.naming_arguments['boundary_placeholder'], joined_boundary)
+        prime_container.naming_arguments['reference_placeholder'],
+        prime_container.ref_identifier).replace(
+        prime_container.naming_arguments['partner_placeholder'], prime_container.par_identifier).replace(
+        prime_container.naming_arguments['boundary_placeholder'], joined_boundary)
     chimera_group[0].fasta_name = path.join(prime_container.naming_arguments["fasta_directory"],
-                                   f'{chimera_group[0].file_stem}{prime_container.naming_arguments["fasta_file_extension"]}')
+                                            f'{chimera_group[0].file_stem}{prime_container.naming_arguments["fasta_file_extension"]}')
 # TODO make the fasta labels more accurate???
 if prime_container.operation_toggles['run_fasta_operation?'] == '#':
     for chimera_group in groupings:
-        spliced_sequences=[]
+        spliced_sequences = []
         for chimera in chimera_group:
-            spliced_sequences.append((chimera.container_id.no_gap_reference_sequence.replace(chimera.reference_cuts, chimera.partner_cuts),chimera.container_id.number_of_subunits))
+            spliced_sequences.append((chimera.container_id.no_gap_reference_sequence.replace(chimera.reference_cuts,
+                                                                                             chimera.partner_cuts),
+                                      chimera.container_id.number_of_subunits))
         fasta_creation(chimera_group[0].fasta_name, spliced_sequences)
 if prime_container.fasta_toggles['Make a list of created fasta files?'] == '#':
     with open(prime_container.fasta_arguments['fasta_file_list_name'], 'w') as list_file:
-        for chimera_group in groupings:
-            print()
-            list_file.write(f'{chimera_group[0].fasta_name}\n')
-        list_file.write(prime_container.fasta_arguments['reference_submission'])
-        list_file.write(prime_container.fasta_arguments['partner_submission'])
+        list_file.write('\n'.join(chimera_group[0].fasta_name for chimera_group in groupings))
+        list_file.write(
+            '\n' + prime_container.fasta_arguments['reference_submission'] + '\n' + prime_container.fasta_arguments[
+                'partner_submission'])
 if prime_container.operation_toggles['alphafold_submission'] == '#' or prime_container.operation_toggles['check_submission'] == '#':
     submission_toggles = prime_container.alphafold_submission_args['submission_toggles']
     check_toggles = prime_container.check_arguments['check_toggles']
     output_directory = prime_container.naming_arguments['alphafold_outputs_directory']
-    fastas= [chimera_group[0].fasta_name for chimera_group in groupings] + [
-        prime_container.fasta_arguments['reference_submission']] + [prime_container.fasta_arguments['partner_submission']]
+    fastas = [chimera_group[0].fasta_name for chimera_group in groupings] + [
+        prime_container.fasta_arguments['reference_submission']] + [
+                 prime_container.fasta_arguments['partner_submission']]
     fasta_to_run = ()
     if prime_container.operation_toggles['check_submission'] == '#':
         for fasta in fastas:
             if not path.exists(output_directory + Path(fasta).stem + '/ranking_debug.json'):
-                fasta_to_run+=(fasta,)
+                print(Path(fasta).stem)
+                fasta_to_run += (fasta,)
         if check_toggles['create file of stragglers'] == '#':
             with open(prime_container.check_arguments['list_of_stragglers'], 'w') as run_list:
                 for fasta in fasta_to_run:
-                    run_list.write(f'{fasta}')
+                    run_list.write('\n'.join(fasta for fasta in fasta_to_run))
         if not fasta_to_run:
             prime_container.operation_toggles['alphafold_submission'] = ''
     if prime_container.operation_toggles['alphafold_submission'] == '#':
@@ -151,17 +161,17 @@ if prime_container.operation_toggles['alphafold_submission'] == '#' or prime_con
         naming_convention = prime_container.naming_arguments['slurm_naming']
         placeholder = prime_container.naming_arguments['slurm_placeholder']
         if not fasta_to_run:
-            fasta_to_run=fastas
-        for slurm_index, file_index in enumerate(range(0, len(fasta_to_run),proteins_per_slurm)):
+            fasta_to_run = fastas
+        for slurm_index, file_index in enumerate(range(0, len(fasta_to_run), proteins_per_slurm)):
             current_slurm = naming_convention.replace(placeholder, str(slurm_index))
             if submission_toggles['create_slurms'] == '#':
-                system(f'cp {template_slurm} {current_slurm}')
-                with open(current_slurm, 'a') as slurm_file:
-                    slurm_file.write(
-                        f'\n#SBATCH -o {prime_container.alphafold_submission_args["slurm_output"].replace(placeholder, str(slurm_index))}\n'
-                        f'#SBATCH -e {prime_container.alphafold_submission_args["slurm_error"].replace(placeholder, str(slurm_index))}\n#Run program\n')
-                    proteins_to_run = ','.join(fasta_to_run[file_index:file_index + proteins_per_slurm])
-                    slurm_file.write(f'{alphafold_shell_script} {proteins_to_run} {output_directory}')
+                create_alphafold_slurm(fasta_to_run[file_index:file_index + proteins_per_slurm], current_slurm,
+                                       template_slurm,
+                                       prime_container.alphafold_submission_args["slurm_output"].replace(placeholder,
+                                                                                                         str(slurm_index)),
+                                       prime_container.alphafold_submission_args["slurm_error"].replace(placeholder,
+                                                                                                        str(slurm_index)),
+                                       alphafold_shell_script, output_directory)
             if submission_toggles['sbatch slurms'] == '#':
                 system(f'sbatch {current_slurm}')
 # if operation_toggles['run_analysis_operation?'] == '#':
@@ -225,5 +235,5 @@ if prime_container.operation_toggles['alphafold_submission'] == '#' or prime_con
 #         data_array[0, column_count], data_array[1:, column_count] = column_name, data_dict[corresponding_data]
 #     savetxt(analysis_arguments['analysis_output_file'], data_array, fmt=','.join('%s' for x in column_names), delimiter=",")
 #     del data_dict
-two=perf_counter()
-print(two-one)
+two = perf_counter()
+print(two - one)

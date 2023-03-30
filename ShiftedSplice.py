@@ -89,11 +89,11 @@ num_of_chis = len(chimera_container)
 # TODO use path.join where possible
 # TODO be able to make alignment??? seems like no the best idea
 for chimera in chimera_container:
-    chimera.fasta_name = path.join({naming_arguments["fasta_directory"]},f'{chimera.file_stem}{naming_arguments["fasta_file_extension"]}')
+    chimera.fasta_name = path.join(naming_arguments["fasta_directory"],f'{chimera.file_stem}{naming_arguments["fasta_file_extension"]}')
 if operation_toggles['run_fasta_operation?'] == '#':
     for chimera in chimera_container:
         spliced_sequence = no_gap_reference_sequence.replace(chimera.reference_cuts, chimera.partner_cuts)
-        fasta_creation(chimera.fasta_name, spliced_sequence, number_of_subunits)
+        fasta_creation(chimera.fasta_name, [tuple((spliced_sequence, number_of_subunits))])
     if fasta_toggles['Make a list of created fasta files?'] == '#':
         with open(fasta_arguments['fasta_file_list_name'], 'w') as list_file:
             for chimera in chimera_container:
