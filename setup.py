@@ -21,7 +21,7 @@ def prep(pdb,gmxbin,pdb2gmx):
     system(f'{gmxbin} grompp -p {shortname} -c {shortname}_em -f startup.mdp -o {shortname}_start -maxwarn 1')
     system(f'{gmxbin} mdrun -v -deffnm {shortname}_start')
     system(f'{gmxbin} grompp -p {shortname} -c {shortname}_start -f prod.mdp -o {shortname}_prod -maxwarn 1')
-def create_setup_slurm(pdb,gmxbin,pdb2gmx,slurm_template,slurm_file_name,output_file,error_file,interpreter='#!/bin/bash'):
+def create_gmx_setup_slurm(pdb,gmxbin,pdb2gmx,slurm_template,slurm_file_name,output_file,error_file,interpreter='#!/bin/bash'):
     shortname = Path(pdb).stem
     with open(slurm_file_name,'w') as slurm:
         slurm.write(f'{interpreter}\n#SBATCH -o {output_file}\n#SBATCH -e {error_file}\n')
@@ -40,7 +40,7 @@ def create_setup_slurm(pdb,gmxbin,pdb2gmx,slurm_template,slurm_file_name,output_
         slurm.write(f'{gmxbin} grompp -p {shortname} -c {shortname}_em -f startup.mdp -o {shortname}_start -maxwarn 1\n')
         slurm.write(f'{gmxbin} mdrun -v -deffnm {shortname}_start\n')
         slurm.write(f'{gmxbin} grompp -p {shortname} -c {shortname}_start -f prod.mdp -o {shortname}_prod -maxwarn 1')
-def create_prod_slurm(pdb,gmxbin,slurm_template,slurm_file_name,output_file,error_file,interpreter='#!/bin/bash'):
+def create_gmx_prod_slurm(pdb,gmxbin,slurm_template,slurm_file_name,output_file,error_file,interpreter='#!/bin/bash'):
     shortname = Path(pdb).stem
     with open(slurm_file_name, 'w') as slurm:
         slurm.write(f'{interpreter}\n#SBATCH -o {output_file}\n#SBATCH -e {error_file}\n')
@@ -50,8 +50,16 @@ def create_prod_slurm(pdb,gmxbin,slurm_template,slurm_file_name,output_file,erro
 # TODO srun and ntomp for mdrun
 # TODO sbatch roduction run from inside setup
 
+def create_alphafold_slurm(iter_of_fastas,slurm_filename,template_slurm,output_file,error_file,alphafold_shell_script,output_directory):
+    system(f'cp {template_slurm} {slurm_filename}')
+    with open(slurm_filename, 'a') as slurm_file:
+        slurm_file.write(
+            f'\n#SBATCH -o {output_file}\n'
+            f'#SBATCH -e {error_file}\n#Run program\n')
+        proteins_to_run = ','.join(iter_of_fastas)
+        slurm_file.write(f'{alphafold_shell_script} {proteins_to_run} {output_directory}')
 
-    # with open()
-if __name__ == '__main__':
-  for pdbfile in glob.glob('3mer*pdb'):
-      prep(pdbfile)
+# with open()
+# if __name__ == '__main__':
+#   for pdbfile in glob.glob('3mer*pdb'):
+#       prep(pdbfile)

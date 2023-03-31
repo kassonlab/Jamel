@@ -4,7 +4,28 @@
 
 from os import system
 from pathlib import Path
-from Bio import Entrez
+from Bio import Entrez,Phylo
+from random import choice
+
+def all_parents(newick_file):
+    tree = Phylo.read(newick_file, 'newick')
+    parents = dict()
+    for node in tree.get_terminals():
+        parents[tree.get_path(node)[-2]] = ()
+    for node in tree.get_terminals():
+        parents[tree.get_path(node)[-2]] += (node,)
+    return parents
+def parents_of_branch(newick_file,branch_clade):
+    tree = Phylo.read(newick_file, 'newick')
+    parents = dict()
+    for node in tree.get_terminals():
+        if branch_clade in tree.get_path(node):
+            parents[tree.get_path(node)[-2]]=()
+    for node in tree.get_terminals():
+        if branch_clade in tree.get_path(node):
+            parents[tree.get_path(node)[-2]] += (node,)
+    return parents
+
 
 def accession_to_fasta(monomer_file_name, accession, email_for_Bio,subunits, multimer_name='NA'):
     """Takes an accession number and creates a fasta file with the sequence that corresponds with the accession given.

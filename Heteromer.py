@@ -164,6 +164,7 @@ if prime_container.operation_toggles['alphafold_submission'] == '#' or prime_con
             fasta_to_run = fastas
         for slurm_index, file_index in enumerate(range(0, len(fasta_to_run), proteins_per_slurm)):
             current_slurm = naming_convention.replace(placeholder, str(slurm_index))
+
             if submission_toggles['create_slurms'] == '#':
                 create_alphafold_slurm(fasta_to_run[file_index:file_index + proteins_per_slurm], current_slurm,
                                        template_slurm,
