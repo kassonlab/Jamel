@@ -9,6 +9,24 @@ from os import system, path,strerror
 from shutil import copy
 from numpy import savetxt
 from errno import ENOENT
+from Bio import PDB
+from collections import defaultdict
+
+
+def get_plddt_from_pdb(pdb_file):
+    pdb = PDB.PDBParser().get_structure('pdb', pdb_file)[0]
+    chains = tuple(chain for chain in pdb)
+    for chain in chains:
+        chain.sequence=''.join(PDB.Polypeptide.three_to_one(resi.get_resname()) for resi in chain)
+        chain.plddt = tuple(resi['CA'].bfactor for resi in chain)
+    homomeric = defaultdict(tuple)
+    for chain in chains:
+        homomeric[chain.sequence] += (chain,)
+    homomeric = {sequence: tuple(zip(*(chain.plddt for chain in homomers))) for sequence, homomers in homomeric.items()}
+    for sequence, plddts in homomeric.items():
+        homomeric[sequence] = tuple(sum(plddt) / len(plddt) for plddt in plddts)
+    return homomeric
+
 
 def run_Foldx(foldx_file,pdb_file,foldx_command):
     """Call FoldX.  This is optional functionality."""
@@ -95,12 +113,8 @@ def relative_stability(native_plddt, native_boundary_tuple, chimera_plddt, chime
     Native scores are assumed to be the reference value in this formula for relative difference"""
     # Pulling the plddt values as floats that start at native_boundary_tuple[0] and chimera_boundary_tuple[0], and end at
     # native_boundary_tuple[1] and chimera_boundary_tuple[1] but dont include index [1] scores.
-    with open(native_plddt, 'r') as infile:
-        native_score = tuple(float(score) for
-                        score in infile.readlines())[native_boundary_tuple[0]:native_boundary_tuple[1]]
-    with open(chimera_plddt, 'r') as infile:
-        chimera_score = tuple(float(score) for
-                         score in infile.readlines())[chimera_boundary_tuple[0]:chimera_boundary_tuple[1]]
+    native_score = native_plddt[native_boundary_tuple[0]:native_boundary_tuple[1]]
+    chimera_score = chimera_plddt[chimera_boundary_tuple[0]:chimera_boundary_tuple[1]]
     # Recording the length of the residue scores for averaging purposes later
     splice_length = len(chimera_score)
     relative_difference = sum((chimera-native) / native*100 for native, chimera in zip(native_score, chimera_score))
