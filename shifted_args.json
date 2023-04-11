@@ -8,11 +8,13 @@
             "boundary_placeholder": "$",
             "slurm_placeholder": "*",
             "naming_convention": "*$from+",
-            "fasta_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/",
-            "plddt_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/",
+            "fasta_directory": "",
+            "plddt_directory": "",
+            "pdb_directory": "",
             "alphafold_outputs_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/ShiftedOmicron/",
             "fasta_file_extension": ".fasta",
             "plddt_file_extension": ".plddt",
+            "pdb_file_extension": ".pdb",
             "averaged_plddt_naming_convention": "Avg*$from+",
             "averaged_reference_plddt": "Avg*",
             "averaged_partner_plddt": "Avg+",
@@ -47,7 +49,8 @@
             "slurm_error": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/*P_M.err"
         },
         "analysis_arguments": {
-            "analysis_toggles": {"make_plddts?": "#"},
+            "analysis_toggles": {"make_plddts?": "#",
+                "make_pdbs?": "#"},
             "analysis_output_file": "",
             "column_names": {"filename_stems": ["#","Protein"], "relative_stability": ["#","Relative Stability (%)"], "overall_chimera_stability": ["#","Chimera Stability"]}
         }
