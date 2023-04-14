@@ -4,9 +4,9 @@
 
 from os import system
 from pathlib import Path
-from Bio import Entrez,Phylo
+from Bio import Entrez,Phylo,AlignIO
 from random import choice
-
+from Bio.Phylo.TreeConstruction import DistanceCalculator,DistanceTreeConstructor
 def all_parents(newick_file):
     tree = Phylo.read(newick_file, 'newick')
     parents = dict()
@@ -26,6 +26,13 @@ def parents_of_branch(newick_file,branch_clade):
             parents[tree.get_path(node)[-2]] += (node,)
     return parents
 
+def create_tree_from_aln(msa_file):
+    aln = AlignIO.read(msa_file, 'fasta')
+    calculator = DistanceCalculator('identity')
+    calculator.get_distance(aln)
+    constructor = DistanceTreeConstructor(calculator, 'nj')
+    tree = constructor.build_tree(aln)
+    return tree
 
 def accession_to_fasta(monomer_file_name, accession, email_for_Bio,subunits, multimer_name='NA'):
     """Takes an accession number and creates a fasta file with the sequence that corresponds with the accession given.
