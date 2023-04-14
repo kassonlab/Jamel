@@ -13,19 +13,28 @@ from Bio import PDB
 from collections import defaultdict
 
 
-def get_plddt_from_pdb(pdb_file):
+def get_plddt_tuple_from_pdb(pdb_file):
     pdb = PDB.PDBParser().get_structure('pdb', pdb_file)[0]
+    homomeric = defaultdict(tuple)
     chains = tuple(chain for chain in pdb)
     for chain in chains:
-        chain.sequence=''.join(PDB.Polypeptide.three_to_one(resi.get_resname()) for resi in chain)
-        chain.plddt = tuple(resi['CA'].bfactor for resi in chain)
-    homomeric = defaultdict(tuple)
-    for chain in chains:
-        homomeric[chain.sequence] += (chain,)
-    homomeric = {sequence: tuple(zip(*(chain.plddt for chain in homomers))) for sequence, homomers in homomeric.items()}
-    for sequence, plddts in homomeric.items():
-        homomeric[sequence] = tuple(sum(plddt) / len(plddt) for plddt in plddts)
+        sequence=''.join(PDB.Polypeptide.three_to_one(resi.get_resname()) for resi in chain)
+        plddt = tuple(resi['CA'].bfactor for resi in chain)
+        homomeric[sequence] += (plddt,)
+    homomeric = {sequence: tuple(sum(scores) / len(scores) for scores in zip(*homomers)) for sequence, homomers in homomeric.items()}
     return homomeric
+
+def get_plddt_file_from_pdb(pdb_file,new_plddt_file):
+    pdb = PDB.PDBParser().get_structure('pdb', pdb_file)[0]
+    homomeric = defaultdict(tuple)
+    chains = tuple(chain for chain in pdb)
+    for chain in chains:
+        sequence=''.join(PDB.Polypeptide.three_to_one(resi.get_resname()) for resi in chain)
+        plddt = tuple(resi['CA'].bfactor for resi in chain)
+        homomeric[sequence] += (plddt,)
+    homomeric = {sequence: tuple(str(round(sum(scores) / len(scores),2)) for scores in zip(*homomers)) for sequence, homomers in homomeric.items()}
+    with open(new_plddt_file, 'w') as new_plddt:
+        new_plddt.write('\n'.join('>{0}\n{1}'.format(sequence,"\n".join(plddt)) for sequence, plddt in homomeric.items()))
 
 
 def run_Foldx(foldx_file,pdb_file,foldx_command):
@@ -41,23 +50,23 @@ def get_Foldx_results(foldx_file):
     with open(foldx_file, 'r') as foldx_score:
         return foldx_score.read().split()[1]
 
-def generate_alphafold_files(output_folder, new_plddt='', new_pdb=''):
+def generate_alphafold_files(alphafold_folder, new_plddt='', new_pdb=''):
     """Creates a text file containing the plddt values of the highest_rank_model extracted from alphafold's result pkl file
     and renames the ranked_0.pdb file and places it in the desired directory."""
     # Checking to see if ranking_debug.json exists. This file is the last to be output by alphafold and is a check that
     # the pkl file you want to extract from exists, as well as to avoid errors
-    ranking_file=path.join(output_folder,'ranking_debug.json')
+    ranking_file=path.join(alphafold_folder,'ranking_debug.json')
     try:
         if new_pdb:
             # The highest ranked structure is copied with a new name and directory
-            copy(path.join(output_folder,'ranked_0.pdb'), new_pdb)
+            copy(path.join(alphafold_folder,'ranked_0.pdb'), new_pdb)
         if new_plddt:
             # ranking_debug is also useful for determining which result pkl file is the highest ranked. The model result pkl files are
             # numbered by the order they are created and not their overall confidence score. The information about their rank by
             # confidence score is found in ranking_debug.json
             with open(ranking_file, 'r') as jfile:
                 highest_rank_model = j_load(jfile)['order'][0]
-            with open(path.join(output_folder,f'result_{highest_rank_model}.pkl'), 'rb') as pfile:
+            with open(path.join(alphafold_folder,f'result_{highest_rank_model}.pkl'), 'rb') as pfile:
                 # The plddt scores are put into a column in a text file named by new_plddt
                 savetxt(new_plddt, p_load(pfile)['plddt'], fmt='%s', delimiter=' ')
     except FileNotFoundError: raise FileNotFoundError(ENOENT, strerror(ENOENT), ranking_file)

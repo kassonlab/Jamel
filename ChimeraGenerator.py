@@ -36,7 +36,31 @@ def chimera_sequence_creation(section_being_spliced_in, marked_sequence, mark_in
 def fasta_creation(file_name, list_of_sequence_subunits_tuples):
     """Creates a fasta file with the given file_name, and replicates the sequence within it the specified number of times
     to create a homo multimer if subunits is greater than 1."""
+    # TODO make each sequence label malleable
     with open(file_name, 'w') as outfile:
         for (sequence,subunits) in list_of_sequence_subunits_tuples:
             for replicates in range(subunits):
                 outfile.write(f'>{Path(file_name).stem}\n{sequence}\n')
+
+
+def update_json(default_json,dilapidated_json):
+    import json
+    try:
+        with open(default_json, 'r') as f:
+            default = json.load(f)
+        with open(dilapidated_json, 'r') as f:
+            dilapidated = json.load(f)
+    except FileNotFoundError:
+        pass
+    # TODO allow keys not in default to be deleted
+    def merge_dict(default_dict, dilapidated_dict):
+        for key, value in default_dict.items():
+            if isinstance(value, dict) and key in dilapidated_dict and isinstance(dilapidated_dict[key], dict):
+                merge_dict(value,dilapidated_dict[key] )
+            else:
+                if key not in dilapidated_dict:
+                    dilapidated_dict[key] = value
+
+    merge_dict(default,dilapidated)
+    with open(dilapidated_json, 'w') as f:
+        json.dump(dilapidated, f, indent=4)
