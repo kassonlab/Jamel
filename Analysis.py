@@ -80,11 +80,16 @@ def get_sequence_similarity(emboss_file):
                 emboss_score = line.split()[-1].replace('(','').replace(')','').replace('%','')
     return emboss_score
 
-def overall_confidence(plddt_file):
+def overall_confidence_from_file(plddt_file):
     """Returns the average confidence score from a protein's plddt file."""
     with open(plddt_file, 'r') as infile:
         plddt = tuple(float(score) for score in infile.readlines())
     average_plddt = sum(plddt)/len(plddt)
+    return average_plddt
+
+def overall_confidence(plddt_tuple):
+    """Returns the average confidence score from a protein's plddt file."""
+    average_plddt = sum(plddt_tuple)/len(plddt_tuple)
     return average_plddt
 
 def get_reference_boundaries(sequence_of_interest, msa, fasta_identifier):

@@ -4,9 +4,9 @@
 
 from os import system
 from pathlib import Path
-from Bio import Entrez,Phylo
+from Bio import Entrez,Phylo,AlignIO
 from random import choice
-
+from Bio.Phylo.TreeConstruction import DistanceCalculator,DistanceTreeConstructor
 def all_parents(newick_file):
     tree = Phylo.read(newick_file, 'newick')
     parents = dict()
@@ -26,7 +26,13 @@ def parents_of_branch(newick_file,branch_clade):
             parents[tree.get_path(node)[-2]] += (node,)
     return parents
 
-
+def create_tree_from_aln(msa_file):
+    aln = AlignIO.read(msa_file, 'fasta')
+    calculator = DistanceCalculator('identity')
+    calculator.get_distance(aln)
+    constructor = DistanceTreeConstructor(calculator, 'nj')
+    tree = constructor.build_tree(aln)
+    return tree
 def accession_to_fasta(monomer_file_name, accession, email_for_Bio,subunits, multimer_name='NA'):
     """Takes an accession number and creates a fasta file with the sequence that corresponds with the accession given.
     A monomeric file is always created by default for alignment purposes even if a multimer file is requested"""
@@ -101,3 +107,39 @@ def fasta_creation(file_name, sequence, subunits):
     with open(file_name, 'w') as outfile:
         for _unused_x in range(subunits):
           outfile.write('>{0}\n{1}\n'.format(Path(file_name).stem, sequence))
+
+from fuzzywuzzy import fuzz
+import Levenshtein
+from time import perf_counter
+# make checking fo rmutations a
+with open(r'exclusive_flu_sequence.mafft', "r") as alignment:
+    alignment = alignment.read().split('>')
+    sequence_dictionary = {sequence.split('\n')[0]: ''.join(sequence.split('\n')[1:]) for sequence in alignment
+                       if
+                       len(sequence) != 0}
+more_exclusive = {'A_Victoria_2023_2017':sequence_dictionary['A_Victoria_2023_2017']}
+exclude={}
+excluded=0
+for strain, sequence in sequence_dictionary.items():
+    break_count=0
+    for accepted_sequence in more_exclusive.copy().values():
+        difference_count=0
+        for Res1,Res2 in zip(sequence,accepted_sequence):
+            if Res1!=Res2:
+                difference_count+=1
+            if difference_count>=12:
+                break_count+=1
+                break
+                # use list comprehension and all()
+    if break_count==len(list(more_exclusive.copy().values())):
+        more_exclusive[strain]=sequence
+    else:
+        excluded+=1
+        exclude[strain]=sequence
+print(excluded)
+with open('second_inclusion_flu.aln', 'w') as outfile:
+    for strain,sequence in more_exclusive.items():
+        outfile.write(f'>{strain}\n{sequence}\n')
+with open('excluded_flu.aln', 'w') as outfile:
+    for strain,sequence in exclude.items():
+        outfile.write(f'>{strain}\n{sequence}\n')

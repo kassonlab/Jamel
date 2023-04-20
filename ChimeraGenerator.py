@@ -4,6 +4,7 @@
 """Routines to generate chimeric sequences."""
 
 from pathlib import Path
+import json
 class chimeracls():
     pass
 
@@ -44,7 +45,7 @@ def fasta_creation(file_name, list_of_sequence_subunits_tuples):
 
 
 def update_json(default_json,dilapidated_json):
-    import json
+
     try:
         with open(default_json, 'r') as f:
             default = json.load(f)
@@ -56,11 +57,17 @@ def update_json(default_json,dilapidated_json):
     def merge_dict(default_dict, dilapidated_dict):
         for key, value in default_dict.items():
             if isinstance(value, dict) and key in dilapidated_dict and isinstance(dilapidated_dict[key], dict):
-                merge_dict(value,dilapidated_dict[key] )
-            else:
-                if key not in dilapidated_dict:
-                    dilapidated_dict[key] = value
+                merge_dict(value,dilapidated_dict[key])
+            if key not in dilapidated_dict:
+                dilapidated_dict[key] = value
+    def reduce_dict(default_dict, dilapidated_dict):
+        for key, value in dilapidated_dict.copy().items():
+            if key not in default_dict:
+                del dilapidated_dict[key]
+            if isinstance(value, dict) and key in default_dict and isinstance(default_dict[key], dict):
+                reduce_dict(default_dict[key],value)
 
     merge_dict(default,dilapidated)
-    with open(dilapidated_json, 'w') as f:
+    reduce_dict(default,dilapidated)
+    with open(str(Path(dilapidated_json).parent)+'/new'+str(Path(dilapidated_json).name), 'w') as f:
         json.dump(dilapidated, f, indent=4)
