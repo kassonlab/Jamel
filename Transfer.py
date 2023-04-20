@@ -3,19 +3,21 @@
 #SBATCH --gres=gpu:a100:1
 #SBATCH -N 1           # number of nodes
 #SBATCH --ntasks-per-node=7
-#SBATCH --mail-user=jws6pq@virginia.edu
+#SBATCH
 #SBATCH --mail-type=ALL
 #SBATCH -t 72:00:00     # time
-#SBATCH -A kas_dev
+#SBATCH -A
 #SBATCH -o /scratch/jws6pq/BridCMfiles/transferpy.out
 #SBATCH -e /scratch/jws6pq/BridCMfiles/transferpy.err
 #Run program
 import os
-from concurrent.futures import ProcessPoolExecutor
+import argparse
 import sys
-
 sys.path.append('/gpfs/gpfs0/scratch/jws6pq/Storage/')
-from pickleopener import generate_alphafold_files, limited_alphafold_transfer
+from Analysis import limited_alphafold_transfer
+parser = argparse.ArgumentParser(description='')
+parser.add_argument('-t', '--transfer', type=str, required=True, help='')
+args = parser.parse_args()
 
 # Filestotransfer=['zip -m -r /gpfs/gpfs0/scratch/jws6pq/December2022/'+x+'.zip /gpfs/gpfs0/scratch/jws6pq/Notebook/Finished/'+x for x in os.listdir('/gpfs/gpfs0/scratch/jws6pq/Notebook/Finished/')]
 # with ProcessPoolExecutor() as exe:
@@ -25,8 +27,6 @@ from pickleopener import generate_alphafold_files, limited_alphafold_transfer
 files = [file.replace('.zip', '') for file in os.listdir('/gpfs/gpfs0/scratch/jws6pq/December2022/') if
          file.endswith('zip') if file.startswith('3')]
 Filestotransfer = ['unzip -j  /gpfs/gpfs0/scratch/jws6pq/from_old_scratch/OldAlphaOutput/{0}.zip -d /gpfs/gpfs0/scratch/jws6pq/Notebook/Finished/{0}'.format(x) for x in files]
-with ProcessPoolExecutor(max_workers=5) as exe:
-    exe.map(os.system, Filestotransfer)
 
 Files = [x for x in os.listdir('/scratch/jws6pq/Notebook/Finished/')]
 FolderDir = ['/scratch/jws6pq/Notebook/Finished/' for x in Files]

@@ -1,6 +1,6 @@
 {
     "operation_toggles": {
-        "run_fasta_operation?": "", "alphafold_submission":"#","run_analysis_operation?": ""
+        "run_fasta_operation?": "", "alphafold_submission":"True","run_analysis_operation?": ""
     },
     "naming_arguments": {"reference_placeholder": "*",
         "partner_placeholder": "+",
@@ -17,7 +17,7 @@
         "slurm_naming": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/*P_M_ShiftedAlphaFold.slurm"
     },
     "fasta_arguments": {
-        "fasta_toggles": {"Make a list of created fasta files?": "#", "Manually control number of scanner movements?": "",
+        "fasta_toggles": {"Make a list of created fasta files?": "True", "Manually control number of scanner movements?": "",
             "Create an alignment?": "","Make pair or combo heteromers": "combo"},
         "fasta_file_list_name": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/minio_shifted_fastas",
         "reference_identifier": "Omicron",
@@ -33,7 +33,7 @@
         "partner_submission": "/gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/3merMinio2006.fasta"
     },
     "alphafold_submission_args": {
-        "submission_toggles": {"create_slurms":"#","sbatch slurms": "","check_submission": "#","create file of stragglers": ""},
+        "submission_toggles": {"create_slurms":"","sbatch slurms": "","check_submission": "True","create file of stragglers": ""},
         "proteins_per_slurm": 8,
         "template_slurm": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/Omicron_Alphafold_Template.slurm",
         "alphafold_shell_script": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/MultimerAlphaFold.sh",
@@ -41,9 +41,9 @@
         "slurm_error": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/*P_M.err"
     },
     "analysis_arguments": {
-        "analysis_toggles": {"make_plddts?": "#",
-            "make_pdbs?": "#"},
+        "analysis_toggles": {"make_plddts?": "True",
+            "make_pdbs?": "True"},
         "analysis_output_file": "",
-        "column_names": {"filename_stems": ["#","Protein"], "relative_stability": ["#","Relative Stability (%)"], "overall_chimera_stability": ["#","Chimera Stability"]}
+        "column_names": {"filename_stems": ["True","Protein"], "relative_stability": ["True","Relative Stability (%)"], "overall_chimera_stability": ["True","Chimera Stability"]}
     }
 }

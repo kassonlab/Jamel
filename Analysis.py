@@ -5,12 +5,13 @@
 
 from pickle import load as p_load
 from json import load as j_load
-from os import system, path,strerror
+from os import system, path,strerror,listdir,makedirs
 from shutil import copy
 from numpy import savetxt
 from errno import ENOENT
 from Bio import PDB
 from collections import defaultdict
+from pathlib import Path
 
 
 def get_plddt_tuple_from_pdb(pdb_file):
@@ -35,6 +36,19 @@ def get_plddt_file_from_pdb(pdb_file,new_plddt_file):
     homomeric = {sequence: tuple(str(round(sum(scores) / len(scores),2)) for scores in zip(*homomers)) for sequence, homomers in homomeric.items()}
     with open(new_plddt_file, 'w') as new_plddt:
         new_plddt.write('\n'.join('>{0}\n{1}'.format(sequence,"\n".join(plddt)) for sequence, plddt in homomeric.items()))
+
+
+def limited_alphafold_transfer(alphafold_dir, storage_dir):
+    rank_file=path.join(alphafold_dir,'ranking_debug.json')
+    makedirs(storage_dir,exist_ok=True)
+    try:
+        copy(rank_file, path.join(storage_dir, 'ranking_debug.json'))
+        for pdb_file in [file for file in listdir(alphafold_dir) if file.startswith('ranked')]:
+            copy(path.join(alphafold_dir,pdb_file), path.join(storage_dir,pdb_file))
+            get_plddt_file_from_pdb(pdb_file,path.join(storage_dir,str(Path(pdb_file))+'.plddt'))
+    except FileNotFoundError:
+        return False
+
 
 
 def run_Foldx(foldx_file,pdb_file,foldx_command):

@@ -108,8 +108,14 @@ def fasta_creation(file_name, sequence, subunits):
         for _unused_x in range(subunits):
           outfile.write('>{0}\n{1}\n'.format(Path(file_name).stem, sequence))
 
-from fuzzywuzzy import fuzz
-import Levenshtein
+
+def check_mutation_cutoff(cutoff,seq_1,seq_2):
+    difference_count=0
+    for res1,res2 in zip(seq_1,seq_2):
+        difference_count+=int(res1!=res2)
+        if difference_count>=cutoff:
+            return True
+    return False
 from time import perf_counter
 # make checking fo rmutations a
 with open(r'exclusive_flu_sequence.mafft', "r") as alignment:
@@ -121,18 +127,13 @@ more_exclusive = {'A_Victoria_2023_2017':sequence_dictionary['A_Victoria_2023_20
 exclude={}
 excluded=0
 for strain, sequence in sequence_dictionary.items():
-    break_count=0
+    sufficiently_distant=0
     for accepted_sequence in more_exclusive.copy().values():
-        difference_count=0
-        for Res1,Res2 in zip(sequence,accepted_sequence):
-            if Res1!=Res2:
-                difference_count+=1
-            if difference_count>=12:
-                break_count+=1
-                break
-                # use list comprehension and all()
-    if break_count==len(list(more_exclusive.copy().values())):
-        more_exclusive[strain]=sequence
+        if not check_mutation_cutoff(12,sequence,accepted_sequence):
+            break
+        sufficiently_distant+=1
+    if sufficiently_distant==len(more_exclusive.keys()):
+        more_exclusive[strain] = sequence
     else:
         excluded+=1
         exclude[strain]=sequence

@@ -24,8 +24,8 @@ def generate_alphafold_files(output_folder, new_plddt='NA', new_pdb='NA'):
                     # The plddt scores are put into a column in a text file named by new_plddt
                     savetxt(new_plddt, data['plddt'], fmt='%s', delimiter=' ')
 
-def limited_alphafold_transfer(folder_direc,alphafold_folder,pdb_destin,plddt_destin):
-    full_path=folder_direc+alphafold_folder+'/'
+def limited_alphafold_transfer(alphafold_dir,storage_dir):
+
     if path.exists(full_path+'ranking_debug.json'):
         copy(full_path+'ranking_debug.json',plddt_destin+alphafold_folder+'ranking_debug.json')
         for file in [file for file in listdir(full_path) if file.startswith('ranked')]:

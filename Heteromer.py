@@ -50,7 +50,7 @@ class ShiftedNamingArguments:
 # \[\s*'(\w+)'\s*\ $1
 class ShiftedFastaArguments:
     fasta_toggles: dict
-    '''A dictionary that holds optional operations within the fasta operation, they are generally turned on by placing a #
+    '''A dictionary that holds optional operations within the fasta operation, they are generally turned on by placing True
     within the quotes of their value'''
     Make_a_lst_of_created_fasta_files: str
     Manually_control_number_of_scanner_movements: str
@@ -97,12 +97,12 @@ class ShiftedFastaArguments:
 
 class ShiftedSubmissionArguments:
     submission_toggles : dict
-    '''A dictionary that holds optional operations within the submission operation, they are generally turned on by placing a #
+    '''A dictionary that holds optional operations within the submission operation, they are generally turned on by placing True
         within the quotes of their value'''
     create_slurms : str
     sbatch_slurms : str
     check_submission : str
-    '''If a # is placed in the quotes it will check to see if an alphafold prediction is done for all created chimeras 
+    '''If True is placed in the quotes it will check to see if an alphafold prediction is done for all created chimeras 
     and making a new the list of incomplete predictions or 'stragglers' to either create a file with their fastas
      or put them into a slurm to be submitted again. If toggled off, all chimeras will be submitted as slurm jobs'''
     create_file_of_stragglers :  str
@@ -129,7 +129,7 @@ class ShiftedAnalysisArguments:
     column_names : dict
     '''A dictionary containing a multiple keys and their list value that each correspond with a type of data that is output by the script, a user-selected title for the data column and whether that data is included in the final output'''
     filename_stems: list
-    '''A list ["#","Protein"] that contains quotes that when filled with a #, include a data column in the final output that contains the nicknames created from the naming convention previously established. The second index controls the column name in the final output'''
+    '''A list ["True","Protein"] that contains quotes that when filled with True, include a data column in the final output that contains the nicknames created from the naming convention previously established. The second index controls the column name in the final output'''
     relative_stability : list
     overall_chimera_stability : list
     def __init__(self,fasta_dict):
@@ -174,7 +174,7 @@ for container in container_of_containers:
         container.chimeras[0].partner_boundaries = boundary_info[1]
         container.chimeras[0].container_id = container
         container.not_chimera='yes'
-    elif container.fasta_args.fasta_toggles['Manually control number of scanner movements?'] != '#':
+    elif container.fasta_args.fasta_toggles['Manually control number of scanner movements?'] != 'True':
         for index, end in enumerate(
                 range(container.fasta_args.scanner_end, container.fasta_args.reference_length, container.fasta_args.scanner_movement_size)):
             scanner_start = end - container.fasta_args.scanner_length
@@ -242,7 +242,7 @@ for chimera_group in groupings:
                                             f'{chimera_group[0].file_stem}{prime_container.name_args.fasta_extension}')
 
 # TODO make the fasta labels more accurate???
-if prime_container.operation_toggles['run_fasta_operation?'] == '#':
+if prime_container.operation_toggles['run_fasta_operation?'] == 'True':
     for chimera_group in groupings:
         spliced_sequences = []
         for chimera in chimera_group:
@@ -250,14 +250,14 @@ if prime_container.operation_toggles['run_fasta_operation?'] == '#':
                                       chimera.container_id.fasta_args.number_of_subunits))
         fasta_creation(chimera_group[0].fasta_name, spliced_sequences)
 
-if prime_container.fasta_args.fasta_toggles['Make a list of created fasta files?'] == '#':
+if prime_container.fasta_args.fasta_toggles['Make a list of created fasta files?'] == 'True':
     with open(prime_container.fasta_args.fasta_file_list_name, 'w') as list_file:
         list_file.write('\n'.join(chimera_group[0].fasta_name for chimera_group in groupings))
         for container in container_of_containers:
             list_file.write(
                 '\n' + container.fasta_args.reference_submission + '\n' + container.fasta_args.partner_submission)
 
-if prime_container.operation_toggles['alphafold_submission'] == '#':
+if prime_container.operation_toggles['alphafold_submission'] == 'True':
     prime_container.get_dict_args(ShiftedSubmissionArguments,'submission_args','alphafold_submission_args')
     submission_toggles = prime_container.submission_args.submission_toggles
     output_directory = prime_container.name_args.alphafold_outputs_directory
@@ -267,11 +267,11 @@ if prime_container.operation_toggles['alphafold_submission'] == '#':
     fasta_to_run = ()
     # This operation will check the completion of an alphafold prediction and return a tuple with the fastas with incomplete predictions,
     # this tuple can either be turn into list in a file or ran by the next alphafold_submission operation
-    if submission_toggles['check_submission'] == '#':
+    if submission_toggles['check_submission'] == 'True':
         for fasta in fastas:
             if not path.exists(output_directory + Path(fasta).stem + '/ranking_debug.json'):
                 fasta_to_run += (fasta,)
-        if submission_toggles['create file of stragglers'] == '#':
+        if submission_toggles['create file of stragglers'] == 'True':
             with open(submission_toggles['list_of_stragglers'], 'w') as run_list:
                 for fasta in fasta_to_run:
                     run_list.write('\n'.join(fasta for fasta in fasta_to_run))
@@ -279,7 +279,7 @@ if prime_container.operation_toggles['alphafold_submission'] == '#':
             prime_container.operation_toggles['alphafold_submission'] = ''
     # If check_submission operation isn't run
     # TODO allow list of stragglers to be run, as an option along with check submission
-    if prime_container.operation_toggles['alphafold_submission'] == '#':
+    if prime_container.operation_toggles['alphafold_submission'] == 'True':
         proteins_per_slurm = prime_container.submission_args.proteins_per_slurm
         template_slurm = prime_container.submission_args.template_slurm
         alphafold_shell_script = prime_container.submission_args.alphafold_shell_script
@@ -290,7 +290,7 @@ if prime_container.operation_toggles['alphafold_submission'] == '#':
         for slurm_index, file_index in enumerate(range(0, len(fasta_to_run), proteins_per_slurm)):
             current_slurm = naming_convention.replace(placeholder, str(slurm_index))
 
-            if submission_toggles['create_slurms'] == '#':
+            if submission_toggles['create_slurms'] == 'True':
                 create_alphafold_slurm(fasta_to_run[file_index:file_index + proteins_per_slurm], current_slurm,
                                        template_slurm,
                                        prime_container.submission_args.slurm_output.replace(placeholder,
@@ -298,10 +298,10 @@ if prime_container.operation_toggles['alphafold_submission'] == '#':
                                        prime_container.submission_args.slurm_error.replace(placeholder,
                                                                                                         str(slurm_index)),
                                        alphafold_shell_script, output_directory)
-            if submission_toggles['sbatch slurms'] == '#':
+            if submission_toggles['sbatch slurms'] == 'True':
                 system(f'sbatch {current_slurm}')
 
-if prime_container.operation_toggles['run_analysis_operation?'] == '#':
+if prime_container.operation_toggles['run_analysis_operation?'] == 'True':
     for container in container_of_containers:
         container.get_dict_args(ShiftedSubmissionArguments, 'analysis_args', 'analysis_arguments')
     alphafold_directory = prime_container.name_args.alphafold_outputs_directory
@@ -324,14 +324,14 @@ if prime_container.operation_toggles['run_analysis_operation?'] == '#':
             if chimera.chi_sequence in plddt_dict:
                 chimera.plddt = plddt_dict[chimera.chi_sequence]
 
-    if analysis_toggles['make_plddts?'] == '#':
+    if analysis_toggles['make_plddts?'] == 'True':
         for chimera_group in groupings:
             Analysis.get_plddt_file_from_pdb(chimera_group[0].pdb,
                                              path.join(plddt_direc, chimera_group[0].file_stem + plddt_ext))
         Analysis.get_plddt_file_from_pdb(reference_pdb, path.join(plddt_direc, reference_stem + plddt_ext))
         Analysis.get_plddt_file_from_pdb(partner_pdb, path.join(plddt_direc, partner_stem + plddt_ext))
 
-    if analysis_toggles["make_pdbs?"] == '#':
+    if analysis_toggles["make_pdbs?"] == 'True':
         for chimera_group in groupings:
             Analysis.generate_alphafold_files(f'{alphafold_directory}{chimera_group[0].file_stem}',
                                               new_pdb=path.join(pdb_direc, chimera_group[0].file_stem + pdb_ext))
@@ -368,11 +368,11 @@ if prime_container.operation_toggles['run_analysis_operation?'] == '#':
     data_columns={}
     for container in container_of_containers:
         column_choices= container.analysis_args.column_names
-        if column_choices['filename_stems'][0]== '#':
+        if column_choices['filename_stems'][0]== 'True':
             data_columns[column_choices['filename_stems'][1]]=tuple(chimera.file_stem for chimera in container.chimeras)
-        if column_choices['relative_stability'][0]== '#':
+        if column_choices['relative_stability'][0]== 'True':
             data_columns[column_choices['relative_stability'][1]]=tuple(chimera.rel_stability for chimera in container.chimeras)
-        if column_choices['overall_chimera_stability'][0]== '#':
+        if column_choices['overall_chimera_stability'][0]== 'True':
             data_columns[column_choices['overall_chimera_stability'][1]]=tuple(Analysis.overall_confidence(chimera.plddt) for chimera in container.chimeras)
 
     data_array = empty(((num_of_chis + 1), len(data_columns)), dtype=object)
