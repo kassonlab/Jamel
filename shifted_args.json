@@ -1,6 +1,6 @@
-{ "arguments": {
+{
     "operation_toggles": {
-        "run_fasta_operation?": "", "alphafold_submission":"#","check_submission":"#","run_analysis_operation?": ""
+        "run_fasta_operation?": "", "alphafold_submission":"#","run_analysis_operation?": ""
     },
     "naming_arguments": {"reference_placeholder": "*",
         "partner_placeholder": "+",
@@ -11,12 +11,9 @@
         "plddt_directory": "",
         "pdb_directory": "",
         "alphafold_outputs_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/ShiftedOmicron/",
-        "fasta_file_extension": ".fasta",
-        "plddt_file_extension": ".plddt",
-        "pdb_file_extension": ".pdb",
-        "averaged_plddt_naming_convention": "Avg*$from+",
-        "averaged_reference_plddt": "Avg*",
-        "averaged_partner_plddt": "Avg+",
+        "fasta_extension": ".fasta",
+        "plddt_extension": ".plddt",
+        "pdb_extension": ".pdb",
         "slurm_naming": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/*P_M_ShiftedAlphaFold.slurm"
     },
     "fasta_arguments": {
@@ -35,12 +32,8 @@
         "reference_submission": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/3merOmicron.fasta",
         "partner_submission": "/gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/3merMinio2006.fasta"
     },
-    "check_arguments": {
-        "check_toggles": {"create file of stragglers": ""},
-        "list_of_stragglers": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/minio_shifted_stragglers"
-},
     "alphafold_submission_args": {
-        "submission_toggles": {"create_slurms":"#","sbatch slurms": ""},
+        "submission_toggles": {"create_slurms":"#","sbatch slurms": "","check_submission": "#","create file of stragglers": ""},
         "proteins_per_slurm": 8,
         "template_slurm": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/Omicron_Alphafold_Template.slurm",
         "alphafold_shell_script": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/MultimerAlphaFold.sh",
@@ -53,5 +46,4 @@
         "analysis_output_file": "",
         "column_names": {"filename_stems": ["#","Protein"], "relative_stability": ["#","Relative Stability (%)"], "overall_chimera_stability": ["#","Chimera Stability"]}
     }
-}
 }
