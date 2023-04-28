@@ -5,8 +5,11 @@
 
 from pathlib import Path
 import json
+
+
 class chimeracls():
     pass
+
 
 def sequence_splice(fasta_file, boundary_tuple, python_index='Yes'):
     """Takes a fasta sequence and returns the section of the sequence between indexes specified by the boundary one and two,
@@ -34,18 +37,17 @@ def chimera_sequence_creation(section_being_spliced_in, marked_sequence, mark_in
     return chimera_sequence
 
 
-def fasta_creation(file_name, list_of_sequence_subunits_tuples):
+def fasta_creation(file_name, list_of_sequence_subunits_label_tuples):
     """Creates a fasta file with the given file_name, and replicates the sequence within it the specified number of times
     to create a homo multimer if subunits is greater than 1."""
     # TODO make each sequence label malleable
     with open(file_name, 'w') as outfile:
-        for (sequence,subunits) in list_of_sequence_subunits_tuples:
+        for (sequence, subunits, fasta_id) in list_of_sequence_subunits_label_tuples:
             for replicates in range(subunits):
-                outfile.write(f'>{Path(file_name).stem}\n{sequence}\n')
+                outfile.write(f'>{fasta_id}\n{sequence}\n')
 
 
-def update_json(default_json,dilapidated_json):
-
+def update_json(default_json, dilapidated_json):
     try:
         with open(default_json, 'r') as f:
             default = json.load(f)
@@ -53,21 +55,22 @@ def update_json(default_json,dilapidated_json):
             dilapidated = json.load(f)
     except FileNotFoundError:
         pass
-    # TODO allow keys not in default to be deleted
+
     def merge_dict(default_dict, dilapidated_dict):
         for key, value in default_dict.items():
             if isinstance(value, dict) and key in dilapidated_dict and isinstance(dilapidated_dict[key], dict):
-                merge_dict(value,dilapidated_dict[key])
+                merge_dict(value, dilapidated_dict[key])
             if key not in dilapidated_dict:
                 dilapidated_dict[key] = value
+
     def reduce_dict(default_dict, dilapidated_dict):
         for key, value in dilapidated_dict.copy().items():
             if key not in default_dict:
                 del dilapidated_dict[key]
             if isinstance(value, dict) and key in default_dict and isinstance(default_dict[key], dict):
-                reduce_dict(default_dict[key],value)
+                reduce_dict(default_dict[key], value)
 
-    merge_dict(default,dilapidated)
-    reduce_dict(default,dilapidated)
-    with open(str(Path(dilapidated_json).parent)+'/new'+str(Path(dilapidated_json).name), 'w') as f:
+    merge_dict(default, dilapidated)
+    reduce_dict(default, dilapidated)
+    with open(str(Path(dilapidated_json).parent) + '/new' + str(Path(dilapidated_json).name), 'w') as f:
         json.dump(dilapidated, f, indent=4)

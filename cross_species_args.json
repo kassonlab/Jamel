@@ -1,64 +1,63 @@
 {
-    "arguments": {
-        "protein_list": "/gpfs/gpfs0/scratch/jws6pq/BridNotebook/NTD-HA_Fastas/corrected_NTD_HA2_list.txt",
-        "operation_toggles": {
-            "run_fasta_operation": "", "slurm_job_submission":"","file_management_operation": "","run_analysis_operation": "","run_gromacs_operation": "#"
-        },
-        "Which protein is first, constant or variant?": "constant",
-        "naming_arguments": {"placeholder": "*",
-            "monomer_naming_convention": "*",
-            "multimer_naming_convention": "3mer*",
-            "chimera_naming_convention": "3merNTDw*HA2",
-            "averaged_multimer_naming_convention": "Avg3mer*",
-            "averaged_chimera_naming_convention": "3merNTDw*HA2",
-            "fasta_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/",
-            "pdb_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/",
-            "plddt_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/",
-            "gromacs_slurm_dir": "/gpfs/gpfs0/scratch/jws6pq/Gromacs/",
-            "emboss_names": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/H3N2vs*HA2.emboss",
-            "fasta_file_extension": ".fasta",
-            "plddt_file_extension": ".plddt",
-            "setup_extension": ".setup",
-            "production_extension": ".prod",
-            "pdb_extension": ".pdb"
-        },
-        "fasta_arguments": {
-            "fasta_toggles": {"Make a list of created fasta files?": "",
-                "Create an alignment?": ""},
-            "constant_fasta_identifier": "Omicron",
-            "variant_fasta_identifier": "A_Arizona_USAFSAM-13657_2022_H3N2",
-            "alignment_file_name": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/NTD_HA2.aln",
-            "muscle_command_for_msa": "module load gcc/9.2.0 && module load muscle/3.8.31 && muscle",
-            "number_of_subunits": 3,
-            "constant_sequence_of_interest": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/Omicron_NTD.fasta",
-            "variant_sequence_of_interest": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/H3N2_HA2.fasta",
-            "fasta_list_file_name": "/scratch/jws6pq/BridNotebook/NTD-HA_Fastas/NTDHA2_fastas_to_run",
-            "constant_fasta": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/Omicron.fasta",
-            "variant_fasta": "/gpfs/gpfs0/scratch/jws6pq/BridNotebook/HA_Fastas/Reference_HA.fasta",
-            "msa_file_name": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/HA_MSAforNTD.aln",
-            "email_for_accession": "example@outlook.com",
-            "msa_fasta": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/HA_MSAforNTD.fasta",
-            "constant_fasta_for_alphafold": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/3merOmicron.fasta"
-        },
-        "analysis_arguments": {
-            "analysis_toggles": {"make_plddts?": "","make_pdbs?": "#","make_emboss_files?": ""},
-            "analysis_output_file": "",
-            "alphafold_outputs_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD_HA_Output/",
-            "emboss_command": "/scratch/jws6pq/EMBOSS-6.6.0/emboss/needle",
-            "constant_alphafold_folder_name": "3merOmicron",
-            "constant_plddt": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/3merOmicron.plddt",
-            "averaged_constant": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/Avg3merOmicron.plddt",
-            "analysis_output_csv": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/ntd-ha_analysis.csv",
-            "column_names": {"nickname": ["#","Protein"],"similarity": ["#","Sequence Similarity (%)"], "average_relative_stability": ["#","Relative Stability (%)"], "overall_native_stability": ["#","Native Stability"], "overall_chimera_stability": ["#","Chimera Stability"]}
-        },
-        "gromacs_arguments": {
-            "gromacs_toggles": {"create new pdb list": "","create setup slurms": "", "sbatch setup slurms": "","create mdrun slurms": "", "sbatch mdrun slurms": "#"},
-            "pdbs_to_run": "/gpfs/gpfs0/scratch/jws6pq/Gromacs/NTD_HA_pdbs",
-            "gmxbin": "gmx_mpi",
-            "pdb2gmx": "pdb2gmx -ff charmm36-jul2022 -chain_sep ter -water tip3p -ignh",
-            "slurm_template": "/gpfs/gpfs0/scratch/jws6pq/Gromacs/Production.slurm",
-            "slurm_output": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/*gromacs.out",
-            "slurm_error": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/*gromacs.err"
-        }
+    "operation_toggles": {
+        "run_fasta_operation": true, "alphafold_submission":false,"run_analysis_operation": false,"run_gromacs_operation": false
+    },
+    "naming_arguments": {"placeholder": "*",
+        "monomer_naming_convention": "*",
+        "multimer_naming_convention": "3mer*",
+        "chimera_naming_convention": "3merNTDw*HA2",
+        "fasta_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Fastas/NTD-HA_Fastas/",
+        "pdb_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Analysis_Folders/NTD_HA/",
+        "plddt_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Analysis_Folders/NTD_HA/",
+        "alphafold_outputs_dir": "/gpfs/gpfs0/scratch/jws6pq/Notebook/AlphaFold_Outputs/NTD_HA/",
+        "gromacs_slurm_dir": "/gpfs/gpfs0/scratch/jws6pq/Gromacs/",
+        "emboss_names": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/H3N2vs*HA2.emboss",
+        "fasta_extension": ".fasta",
+        "plddt_extension": ".plddt",
+        "setup_extension": ".setup",
+        "production_extension": ".prod",
+        "pdb_extension": ".pdb"
+    },
+    "fasta_arguments": {
+        "fasta_toggles": {"Make_a_list_of_created_fasta_files": true,
+            "Create_an_alignment": false,"constant_or_variant": "variant", "make_native_fastas": true},
+        "protein_list": "",
+        "fasta_identifier": "A_Victoria_2023_2017",
+        "muscle_command_for_msa": "module load gcc/9.2.0 && module load muscle/3.8.31 && muscle",
+        "number_of_subunits": 3,
+        "sequence_of_interest": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Analysis_Folders/NTD_HA/H3N2_partial_HA1.fasta",
+        "fasta_list_file_name": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Fastas/NTD-HA_Fastas/NTDs_to_run",
+        "full_reference_fasta": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Analysis_Folders/NTD_HA/A_Victoria_H3N2.fasta",
+        "msa_file_name": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Analysis_Folders/NTD_HA/second_inclusion_flu.aln",
+        "email_for_accession": "example@outlook.com",
+        "msa_fasta": "",
+        "constant_fasta_for_alphafold": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/3merOmicron.fasta"
+    },
+    "alphafold_submission_args": {
+        "submission_toggles": {"create_slurms":false,"sbatch slurms": false,"stragglers_or_custom_or_all": "stragglers","create file of stragglers": false},
+        "custom_list_to_run": false,
+        "proteins_per_slurm": 8,
+        "template_slurm": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/Omicron_Alphafold_Template.slurm",
+        "alphafold_shell_script": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/MultimerAlphaFold.sh",
+        "slurm_output": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/*P_M.out",
+        "slurm_error": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/*P_M.err"
+    },
+    "analysis_arguments": {
+        "analysis_toggles": {"make_plddts": false,"make_pdbs": true,"make_emboss_files": false},
+        "analysis_output_file": false,
+        "emboss_command": "/scratch/jws6pq/EMBOSS-6.6.0/emboss/needle",
+        "constant_alphafold_folder_name": "3merOmicron",
+        "constant_plddt": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/3merOmicron.plddt",
+        "analysis_output_csv": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/ntd-ha_analysis.csv",
+        "column_names": {"nickname": [true,"Protein"],"similarity": [true,"Sequence Similarity (%)"], "average_relative_stability": [true,"Relative Stability (%)"], "overall_native_stability": [true,"Native Stability"], "overall_chimera_stability": [true,"Chimera Stability"]}
+    },
+    "gromacs_arguments": {
+        "gromacs_toggles": {"create_new_pdb_list": false,"create_setup_slurms": false, "sbatch_setup_slurms": false,"create_mdrun_slurms": false, "sbatch_mdrun_slurms": true},
+        "pdbs_to_run": "/gpfs/gpfs0/scratch/jws6pq/Gromacs/NTD_HA_pdbs",
+        "gmxbin": "gmx_mpi",
+        "pdb2gmx": "pdb2gmx -ff charmm36-jul2022 -chain_sep ter -water tip3p -ignh",
+        "slurm_template": "/gpfs/gpfs0/scratch/jws6pq/Gromacs/Production.slurm",
+        "slurm_output": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/*gromacs.out",
+        "slurm_error": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/*gromacs.err"
     }
 }

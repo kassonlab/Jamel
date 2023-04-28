@@ -7,16 +7,17 @@ from pathlib import Path
 from Bio import Entrez,Phylo,AlignIO
 from random import choice
 from Bio.Phylo.TreeConstruction import DistanceCalculator,DistanceTreeConstructor
-def all_parents(newick_file):
-    tree = Phylo.read(newick_file, 'newick')
+from ChimeraGenerator import fasta_creation
+def all_parents(tree):
     parents = dict()
     for node in tree.get_terminals():
         parents[tree.get_path(node)[-2]] = ()
     for node in tree.get_terminals():
         parents[tree.get_path(node)[-2]] += (node,)
     return parents
-def parents_of_branch(newick_file,branch_clade):
-    tree = Phylo.read(newick_file, 'newick')
+
+
+def parents_of_branch_terminals(tree,branch_clade):
     parents = dict()
     for node in tree.get_terminals():
         if branch_clade in tree.get_path(node):
@@ -26,13 +27,35 @@ def parents_of_branch(newick_file,branch_clade):
             parents[tree.get_path(node)[-2]] += (node,)
     return parents
 
-def create_tree_from_aln(msa_file):
+
+def random_root_branch_children(newick_file,undesired_identifier=''):
+    tree = Phylo.read(newick_file, 'newick')
+    root_branches=[tree.get_path(node)[0] for node in tree.get_nonterminals() if len(tree.get_path(node))==1 ]
+    terminal_parents={}
+    if undesired_identifier:
+        for branch in root_branches.copy():
+            for terminal in branch.get_terminals():
+                if terminal.name==undesired_identifier:
+                    root_branches.remove(branch)
+    for branch in root_branches:
+        terminal_parents.update(parents_of_branch_terminals(tree,branch))
+    diverse_selection=tuple(choice(children).name for parent,children in terminal_parents.items())
+    return diverse_selection
+
+def create_tree_from_aln(msa_file,new_tree_file='',new_tree_type='newick',new_ascii_file_representation=''):
     aln = AlignIO.read(msa_file, 'fasta')
     calculator = DistanceCalculator('identity')
     calculator.get_distance(aln)
     constructor = DistanceTreeConstructor(calculator, 'nj')
     tree = constructor.build_tree(aln)
+    if new_tree_file:
+        Phylo.write(tree,new_tree_file,new_tree_type)
+    if new_ascii_file_representation:
+        with open(new_ascii_file_representation, 'w') as handle:
+            Phylo.draw_ascii(tree, file=handle)
     return tree
+
+
 def accession_to_fasta(monomer_file_name, accession, email_for_Bio,subunits, multimer_name='NA'):
     """Takes an accession number and creates a fasta file with the sequence that corresponds with the accession given.
     A monomeric file is always created by default for alignment purposes even if a multimer file is requested"""
@@ -42,15 +65,16 @@ def accession_to_fasta(monomer_file_name, accession, email_for_Bio,subunits, mul
     # Turning the retrieved sequence into a single string with no breaks
     sequence = ''.join(x for x in handle if x[0] != '>' if x != '').strip().replace('\n', '')
     # Creating a monomer file by default for alignment purposes, if a multimer is requested it's made later
-    fasta_creation(monomer_file_name, sequence, 1)
+    fasta_creation(monomer_file_name, (sequence, 1,Path(monomer_file_name).stem))
     if subunits != 1:
-        fasta_creation(multimer_name, sequence, subunits)
+        fasta_creation(multimer_name, (sequence, subunits,Path(multimer_name).stem))
 
 
 def multiple_sequence_alignment(list_of_fastas, fasta_for_alignment, new_alignment_file, reference_protein_fasta,muscle_command):
     """Creates a multiple sequence alignment using muscle and a concatenated fasta file with a reference fasta as the base,
      joined with all fastas specified in list_of_fastas."""
     # Creating a copy of the fasta file of a reference_protein_fasta to be added into
+    # TODO use fasta creation formchimeragenerato
     system(f'cp  {reference_protein_fasta} {fasta_for_alignment}')
     # Concatenating the fasta files found in list_of_fasta
     for fasta in list_of_fastas:
@@ -101,14 +125,6 @@ def alignment_finder(alignment_file, sequence_of_interest, comparison_protein,
     return found_alignment, (splice_start, splice_end), (no_gap_reference_start, no_gap_reference_end)
 
 
-def fasta_creation(file_name, sequence, subunits):
-    """Creates a fasta file with the given file_name, and replicates the sequence within it the specified number of times
-    to create a homo multimer if subunits is greater than 1."""
-    with open(file_name, 'w') as outfile:
-        for _unused_x in range(subunits):
-          outfile.write('>{0}\n{1}\n'.format(Path(file_name).stem, sequence))
-
-
 def check_mutation_cutoff(cutoff,seq_1,seq_2):
     difference_count=0
     for res1,res2 in zip(seq_1,seq_2):
@@ -116,31 +132,32 @@ def check_mutation_cutoff(cutoff,seq_1,seq_2):
         if difference_count>=cutoff:
             return True
     return False
-from time import perf_counter
-# make checking fo rmutations a
-with open(r'exclusive_flu_sequence.mafft', "r") as alignment:
-    alignment = alignment.read().split('>')
-    sequence_dictionary = {sequence.split('\n')[0]: ''.join(sequence.split('\n')[1:]) for sequence in alignment
-                       if
-                       len(sequence) != 0}
-more_exclusive = {'A_Victoria_2023_2017':sequence_dictionary['A_Victoria_2023_2017']}
-exclude={}
-excluded=0
-for strain, sequence in sequence_dictionary.items():
-    sufficiently_distant=0
-    for accepted_sequence in more_exclusive.copy().values():
-        if not check_mutation_cutoff(12,sequence,accepted_sequence):
-            break
-        sufficiently_distant+=1
-    if sufficiently_distant==len(more_exclusive.keys()):
-        more_exclusive[strain] = sequence
-    else:
-        excluded+=1
-        exclude[strain]=sequence
-print(excluded)
-with open('second_inclusion_flu.aln', 'w') as outfile:
-    for strain,sequence in more_exclusive.items():
-        outfile.write(f'>{strain}\n{sequence}\n')
-with open('excluded_flu.aln', 'w') as outfile:
-    for strain,sequence in exclude.items():
-        outfile.write(f'>{strain}\n{sequence}\n')
+
+def exclude_related_sequences(cutoff,alignment_file,starting_sequence,included_file='',excluded_file=''):
+    with open(alignment_file, "r") as alignment:
+        alignment = alignment.read().split('>')
+        sequence_dictionary = {sequence.split('\n')[0]: ''.join(sequence.split('\n')[1:]) for sequence in alignment
+                           if
+                           len(sequence) != 0}
+    included = {starting_sequence:sequence_dictionary[starting_sequence]}
+    excluded={}
+    for strain, sequence in sequence_dictionary.items():
+        sufficiently_distant=0
+        for accepted_sequence in included.copy().values():
+            if not check_mutation_cutoff(cutoff,sequence,accepted_sequence):
+                break
+            sufficiently_distant+=1
+        if sufficiently_distant==len(included.keys()):
+            included[strain] = sequence
+        else:
+            excluded[strain]=sequence
+    print('excluded:',len(excluded))
+    print('included:', len(included))
+    if included_file:
+        with open(included_file, 'w') as outfile:
+            for strain,sequence in included.items():
+                outfile.write(f'>{strain}\n{sequence}\n')
+    if excluded_file:
+        with open(excluded_file, 'w') as outfile:
+            for strain,sequence in excluded.items():
+                outfile.write(f'>{strain}\n{sequence}\n')

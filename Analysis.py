@@ -38,15 +38,24 @@ def get_plddt_file_from_pdb(pdb_file,new_plddt_file):
         new_plddt.write('\n'.join('>{0}\n{1}'.format(sequence,"\n".join(plddt)) for sequence, plddt in homomeric.items()))
 
 
-def limited_alphafold_transfer(alphafold_dir, storage_dir):
+def skeletonize_alphafold_folder(alphafold_dir, storage_dir):
     rank_file=path.join(alphafold_dir,'ranking_debug.json')
     makedirs(storage_dir,exist_ok=True)
+    new_files=[]
+    dir_files=[file for file in listdir(alphafold_dir) if file.startswith('ranked')]
     try:
         copy(rank_file, path.join(storage_dir, 'ranking_debug.json'))
-        for pdb_file in [file for file in listdir(alphafold_dir) if file.startswith('ranked')]:
-            copy(path.join(alphafold_dir,pdb_file), path.join(storage_dir,pdb_file))
-            get_plddt_file_from_pdb(pdb_file,path.join(storage_dir,str(Path(pdb_file))+'.plddt'))
+        for pdb_file in dir_files:
+            new_pdb=path.join(storage_dir,pdb_file)
+            new_plddt=path.join(storage_dir,str(Path(pdb_file).stem)+'.plddt')
+            new_files.append(new_pdb)
+            new_files.append(new_plddt)
+            copy(path.join(alphafold_dir,pdb_file), new_pdb)
+            get_plddt_file_from_pdb(path.join(alphafold_dir,pdb_file), new_plddt)
+        if all(path.exists(file) for file in new_files):
+            return True
     except FileNotFoundError:
+        print('False')
         return False
 
 
