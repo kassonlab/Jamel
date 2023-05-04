@@ -47,7 +47,6 @@ class ShiftedNamingArguments:
         for key,value in naming_dict.items():
             setattr(self, key, value)
 
-# \[\s*'(\w+)'\s*\ $1
 class ShiftedFastaArguments:
     fasta_toggles: dict
     '''A dictionary that holds optional operations within the fasta operation, they are generally turned on by placing True

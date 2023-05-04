@@ -16,13 +16,19 @@ import argparse
 parser = argparse.ArgumentParser(
     description='Creating chimeric proteins from one or more json proteins corresponding to each unique protein in '
                 'the structure')
+subparser=parser.add_subparsers(title='cmdline_toggles')
 parser.add_argument('-u', '--updatejson', type=str, required=False,
                     help='updating json configs ex. default_json,old_json')
 parser.add_argument('-i', '--jsoninput', dest='arg_jsons', required=False, type=str,
                     help='Json config file input, comma separated for each unique protein. Make sure initial json has '
                          'naming conventions')
+operations=subparser.add_parser('cmdline_operation')
+operations.add_argument('-fa', '--fasta', required=False, default=True,type=bool,
+                             help='turns on fasta operation')
+operations.add_argument('-s', '--submission', required=False, default=True,type=bool,
+                             help='turns on submission operation')
 args = parser.parse_args()
-
+operation_args=args.cmdline_toggles
 if args.updatejson:
     args.updatejson = args.updatejson.split(',')
     update_json(args.updatejson[0], args.updatejson[1])
@@ -57,10 +63,10 @@ class CrossFastaArguments:
     fasta_toggles: dict
     '''A dictionary that holds optional operations within the fasta operation, they are generally turned on by 
     placing True within the quotes of their value'''
-    Make_a_lst_of_created_fasta_files: str
+    Make_a_lst_of_created_fasta_files: bool
     '''Create a file with line separted list of all fastas created'''
-    Create_an_alignment: str
-    constant_or_variant: str
+    Create_an_alignment: bool
+    constant_or_variant: bool
     '''Distinguishes whether the config json is for the constant part of the chimera or the variant protein that will be swapped with all protein in the protein list'''
 
     protein_list: str
@@ -96,14 +102,15 @@ class CrossSubmissionArguments:
     submission_toggles: dict
     '''A dictionary that holds optional operations within the submission operation, they are generally turned on by 
     placing True within the quotes of their value'''
-    create_slurms: str
-    sbatch_slurms: str
-    stragglers_or_custom_or_all: str
+    create_slurms: bool
+    sbatch_slurms: bool
+    stragglers_or_custom_or_all: bool
     '''If stragglers is placed in the quotes it will check to see if an alphafold prediction is done for all created 
     chimeras and making a new the list of incomplete predictions or 'stragglers' to either create a file with their 
     fastas or put them into a slurm to be submitted again. If custom is placed, all chimeras within the 
     custom_list_to_run file will be submitted as slurm jobs. If all is selected all chimeras will be run 
     indiscriminately'''
+
     custom_list_to_run: str
     '''List that either be created by toggling on create_file_of_stragglers, or user-generated and should contain 
     line separated fastas of proteins you want predicted'''
@@ -124,8 +131,8 @@ class CrossSubmissionArguments:
 
 class CrossAnalysisArguments:
     analysis_toggles: dict
-    make_plddts: str
-    make_pdbs: str
+    make_plddts: bool
+    make_pdbs: bool
 
     analysis_output_file: str
     '''Path of the file you want created that will contain all analysis created.'''
@@ -148,7 +155,10 @@ class CrossAnalysisArguments:
 class CrossChimeraContainer:
     argument_dict: dict
     operation_toggles: dict
-
+    run_fasta_operation: bool
+    alphafold_submission: bool
+    run_analysis_operation: bool
+    run_gromacs_operation: bool
     def __init__(self, shifted_json_file):
         with open(shifted_json_file, 'rb') as jfile:
             self.argument_dict = load(jfile)
@@ -173,14 +183,16 @@ for index, jsn in enumerate(args.arg_jsons.split(',')):
         constant_seq_of_interest = container.fasta_args.sequence_of_interest
         constant_fasta=container.fasta_args.full_reference_fasta
         constant_fasta_identifier = container.fasta_args.fasta_identifier
-
+        constant_submission=container.fasta_args.constant_fasta_for_alphafold
     elif container.fasta_args.fasta_toggles['constant_or_variant']=='variant':
         variant_container=container
         variant_seq_of_interest = container.fasta_args.sequence_of_interest
         variant_fasta=container.fasta_args.full_reference_fasta
         variant_fasta_identifier=container.fasta_args.fasta_identifier
 fasta_toggles = variant_container.fasta_args.fasta_toggles
-
+if any(cmdline_toggles):
+    for key in variant_container.operation_toggles:
+        variant_container.operation_toggles[key]=False
 
 with open(constant_seq_of_interest, 'r') as fasta:
     constant_seq_of_interest = ''.join(x for x in fasta if x[0] != '>' if x != '').strip().replace('\n', '')
@@ -203,9 +215,7 @@ if path.exists(variant_container.fasta_args.msa_file_name):
             chimera = chimeracls()
             variant_container.add_chimera(chimera)
             chimera.nickname=fasta_id
-            chimera.native_seq=sequence
-
-
+            chimera.native_seq=sequence.replace('-','')
 else:
     with open(variant_container.fasta_args.protein_list, 'r') as info_list:
         info_list = info_list.readlines()
@@ -214,12 +224,15 @@ else:
             variant_container.add_chimera(chimera)
             chimera.nickname=line.split()[1]
             chimera.accession = line.split()[0]
+
 list_of_chis=variant_container.chimeras
 num_of_chi=len(list_of_chis)
 for chimera in list_of_chis:
     chimera.monomer_stem=variant_container.naming_args.monomer_naming_convention.replace(placeholder, chimera.nickname)
     chimera.chimera_stem=variant_container.naming_args.chimera_naming_convention.replace(placeholder, chimera.nickname)
     chimera.chi_pdb = path.join(f'{alphafold_dir}{chimera.chimera_stem}', 'ranked_0.pdb')
+    chimera.monomer_fasta = variant_container.naming_args.fasta_directory + chimera.monomer_stem + variant_container.naming_args.fasta_extension
+    chimera.chimera_fasta = variant_container.naming_args.fasta_directory + chimera.chimera_stem + variant_container.naming_args.fasta_extension
     if subunits>1:
         #make multimer = monomer when subunits is greater
         chimera.multimer_stem=variant_container.naming_args.multimer_naming_convention.replace(placeholder, chimera.nickname)
@@ -227,12 +240,10 @@ for chimera in list_of_chis:
         chimera.native_pdb= path.join(f'{alphafold_dir}{chimera.multimer_stem}', 'ranked_0.pdb')
     else:
         chimera.native_pdb = path.join(f'{alphafold_dir}{chimera.monomer_stem}', 'ranked_0.pdb')
+if cmdline_toggles.fasta:
+    variant_container.operation_toggles['run_fasta_operation']=cmdline_toggles.fasta
 if variant_container.operation_toggles['run_fasta_operation']:
 
-    for chimera in list_of_chis:
-        chimera.monomer_fasta = variant_container.naming_args.fasta_directory + chimera.monomer_stem + variant_container.naming_args.fasta_extension
-        chimera.chimera_fasta = variant_container.naming_args.fasta_directory + chimera.chimera_stem + variant_container.naming_args.fasta_extension
-        # use sequences from alignment if user-generated
     if fasta_toggles['Create_an_alignment'] or not path.exists(variant_container.fasta_args.msa_file_name):
         email = variant_container.fasta_args.email_for_accession
         for chimera in list_of_chis:
@@ -247,6 +258,7 @@ if variant_container.operation_toggles['run_fasta_operation']:
         variant_splice=alignment_finder(msa, variant_seq_of_interest, chimera.nickname,
                                                                variant_fasta_identifier)[0]
         chimera.chi_seq=chimera.native_seq.replace(variant_splice,constant_seq_of_interest)
+
         if subunits == 1:
             fasta_creation(chimera.monomer_fasta,[tuple((chimera.native_seq,subunits,chimera.monomer_stem))])
         else:
@@ -254,12 +266,63 @@ if variant_container.operation_toggles['run_fasta_operation']:
         fasta_creation(chimera.chimera_fasta, [tuple((chimera.chi_seq,subunits,chimera.chimera_stem))])
     if fasta_toggles['Make_a_list_of_created_fasta_files']:
         with open(variant_container.fasta_args.fasta_list_file_name, 'w') as fasta_list_file:
+            fasta_list_file.write(constant_submission+'\n')
             fasta_list_file.write("\n".join(chimera.chimera_fasta for chimera in list_of_chis)+'\n')
             if subunits == 1:
                 fasta_list_file.write("\n".join(chimera.monomer_fasta for chimera in list_of_chis)+'\n')
             else:
                 fasta_list_file.write("\n".join(chimera.multimer_fasta for chimera in list_of_chis)+'\n')
-    
+
+if cmdline_toggles.submission:
+    variant_container.operation_toggles['run_fasta_operation']=cmdline_toggles.submission
+if variant_container.operation_toggles['alphafold_submission']:
+    variant_container.get_dict_args(CrossSubmissionArguments, 'submission_args', 'alphafold_submission_args')
+    submission_toggles = variant_container.submission_args.submission_toggles
+    output_directory = variant_container.name_args.alphafold_outputs_directory
+    fastas = [chimera.chimera_fasta for chimera in list_of_chis] + [constant_submission]
+    if subunits==1:
+        fastas+[chimera.monomer_fasta for chimera in list_of_chis]
+    else:
+        fastas + [chimera.multimer_fasta for chimera in list_of_chis]
+    fasta_to_run = ()
+    proteins_per_slurm = variant_container.submission_args.proteins_per_slurm
+    template_slurm = variant_container.submission_args.template_slurm
+    alphafold_shell_script = variant_container.submission_args.alphafold_shell_script
+    naming_convention = variant_container.name_args.slurm_naming
+    placeholder = variant_container.name_args.slurm_placeholder
+    # Loops through all fastas created and checks if they are complete by looking for their ranking_debug file
+    if submission_toggles['stragglers_or_custom_or_all'] == 'stragglers':
+        for fasta in fastas:
+            if not path.exists(output_directory + Path(fasta).stem + '/ranking_debug.json'):
+                fasta_to_run += (fasta,)
+        # Puts all fastas in a line separated file specified by custom_list_to_run
+        if submission_toggles['create file of stragglers'] == 'True':
+            with open(variant_container.submission_args.custom_list_to_run, 'w') as run_list:
+                run_list.write('\n'.join(fasta for fasta in fasta_to_run))
+        # if all of them are complete and fasta_to_run is empty then all slurm actions are toggled off
+        if not fasta_to_run:
+            submission_toggles['create_slurms'] = submission_toggles['sbatch slurms'] = ''
+    elif submission_toggles['stragglers_or_custom_or_all'] == 'custom':
+        with open(variant_container.submission_args.custom_list_to_run, 'r') as run_list:
+            run_list = run_list.readlines()
+            fasta_to_run = [x.split()[0] for x in run_list]
+    elif submission_toggles['stragglers_or_custom_or_all'] == 'all':
+        fasta_to_run = fastas
+    if submission_toggles['create_slurms'] == 'True':
+        for slurm_index, file_index in enumerate(range(0, len(fasta_to_run), proteins_per_slurm)):
+            current_slurm = naming_convention.replace(placeholder, str(slurm_index))
+            create_alphafold_slurm(fasta_to_run[file_index:file_index + proteins_per_slurm], current_slurm,
+                                   template_slurm,
+                                   variant_container.submission_args.slurm_output.replace(placeholder,
+                                                                                        str(slurm_index)),
+                                   variant_container.submission_args.slurm_error.replace(placeholder,
+                                                                                       str(slurm_index)),
+                                   alphafold_shell_script, output_directory)
+    if submission_toggles['sbatch slurms'] == 'True':
+        for slurm_index, file_index in enumerate(range(0, len(fasta_to_run), proteins_per_slurm)):
+            current_slurm = naming_convention.replace(placeholder, str(slurm_index))
+            system(f'sbatch {current_slurm}')
+
 # if operation_toggles['run_analysis_operation']:
 #     plddt_directory,plddt_extension = variant_container.naming_args.plddt_directory,variant_container.naming_args.plddt_extension
 #     analysis_toggles = analysis_arguments.analysis_toggles

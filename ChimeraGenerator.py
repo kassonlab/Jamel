@@ -62,7 +62,7 @@ def update_json(default_json, dilapidated_json):
                 merge_dict(value, dilapidated_dict[key])
             if key not in dilapidated_dict:
                 dilapidated_dict[key] = value
-
+    # TODO question marks ruin this
     def reduce_dict(default_dict, dilapidated_dict):
         for key, value in dilapidated_dict.copy().items():
             if key not in default_dict:

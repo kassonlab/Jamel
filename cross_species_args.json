@@ -35,7 +35,7 @@
     },
     "alphafold_submission_args": {
         "submission_toggles": {"create_slurms":false,"sbatch slurms": false,"stragglers_or_custom_or_all": "stragglers","create file of stragglers": false},
-        "custom_list_to_run": false,
+        "custom_list_to_run": '',
         "proteins_per_slurm": 8,
         "template_slurm": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/Omicron_Alphafold_Template.slurm",
         "alphafold_shell_script": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/MultimerAlphaFold.sh",
