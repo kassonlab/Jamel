@@ -35,8 +35,9 @@
     },
     "alphafold_submission_args": {
         "submission_toggles": {"create_slurms":false,"sbatch slurms": false,"stragglers_or_custom_or_all": "stragglers","create file of stragglers": false},
-        "custom_list_to_run": '',
+        "custom_list_to_run": "",
         "proteins_per_slurm": 8,
+        "slurm_naming": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/*P_M_ShiftedAlphaFold.slurm",
         "template_slurm": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/Omicron_Alphafold_Template.slurm",
         "alphafold_shell_script": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/MultimerAlphaFold.sh",
         "slurm_output": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/*P_M.out",
@@ -44,10 +45,7 @@
     },
     "analysis_arguments": {
         "analysis_toggles": {"make_plddts": false,"make_pdbs": true,"make_emboss_files": false},
-        "analysis_output_file": false,
         "emboss_command": "/scratch/jws6pq/EMBOSS-6.6.0/emboss/needle",
-        "constant_alphafold_folder_name": "3merOmicron",
-        "constant_plddt": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/3merOmicron.plddt",
         "analysis_output_csv": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/ntd-ha_analysis.csv",
         "column_names": {"nickname": [true,"Protein"],"similarity": [true,"Sequence Similarity (%)"], "average_relative_stability": [true,"Relative Stability (%)"], "overall_native_stability": [true,"Native Stability"], "overall_chimera_stability": [true,"Chimera Stability"]}
     },
