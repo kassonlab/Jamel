@@ -105,14 +105,14 @@ def alignment_finder(alignment_file, sequence_of_interest, comparison_protein,
     reference_sequence = sequence_dictionary[reference_protein]
     comparison_sequence = sequence_dictionary[comparison_protein]
     # Matching python indexing for the indexing from the alignment with some amount of '-' and indexing in the regular sequence
-    reference_sequence_indexing = tuple((ind for ind, x in enumerate(reference_sequence) if x.isalpha()))
+    reference_alignment_indexing = tuple((ind for ind, x in enumerate(reference_sequence) if x.isalpha()))
     # Creating a regular sequence without '-'
     no_gap_reference_sequence = ''.join(x for ind, x in enumerate(reference_sequence) if x.isalpha())
     # Boundaries are given in python index
-    reference_start = reference_sequence_indexing[no_gap_reference_sequence.find(sequence_of_interest)]
-    reference_end = reference_sequence_indexing[no_gap_reference_sequence.find(sequence_of_interest) + len(sequence_of_interest)-1]
+    alignment_reference_start = reference_alignment_indexing[no_gap_reference_sequence.find(sequence_of_interest)]
+    alignment_reference_end = reference_alignment_indexing[no_gap_reference_sequence.find(sequence_of_interest) + len(sequence_of_interest)-1]
     # Pulling the section of the comparison_sequence that overlaps with the sequence_of_interest
-    found_alignment = comparison_sequence[reference_start:(reference_end+1)].replace('-', '')
+    found_alignment = comparison_sequence[alignment_reference_start:(alignment_reference_end+1)].replace('-', '')
     no_gap_reference_start = no_gap_reference_sequence.find(sequence_of_interest)
     no_gap_reference_end = no_gap_reference_start + len(sequence_of_interest)
     # Recording the indexes of the found_alignment

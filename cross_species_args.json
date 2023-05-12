@@ -47,7 +47,7 @@
         "analysis_toggles": {"make_plddts": false,"make_pdbs": true,"make_emboss_files": false},
         "emboss_command": "/scratch/jws6pq/EMBOSS-6.6.0/emboss/needle",
         "analysis_output_csv": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/ntd-ha_analysis.csv",
-        "column_names": {"nickname": [true,"Protein"],"similarity": [true,"Sequence Similarity (%)"], "average_relative_stability": [true,"Relative Stability (%)"], "overall_native_stability": [true,"Native Stability"], "overall_chimera_stability": [true,"Chimera Stability"]}
+        "column_names": {"nickname": [true,"Protein"],"similarity": [true,"Sequence Similarity (%)"], "relative_stability": [true,"Relative Stability (%)"], "overall_native_stability": [true,"Native Stability"], "overall_chimera_stability": [true,"Chimera Stability"]}
     },
     "gromacs_arguments": {
         "gromacs_toggles": {"create_new_pdb_list": false,"create_setup_slurms": false, "sbatch_setup_slurms": false,"create_mdrun_slurms": false, "sbatch_mdrun_slurms": true},

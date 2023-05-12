@@ -277,7 +277,7 @@ for chimera_group in groupings:
                                             f'{chimera_group[0].file_stem}{prime_container.name_args.fasta_extension}')
 
 # TODO make the fasta labels more accurate???
-if prime_container.operation_toggles['run_fasta_operation'] == 'True':
+if prime_container.operation_toggles['run_fasta_operation']:
     # Creates a list of tuples that is fed into a fasta generator, the tuples hold sequence and subunit info
     for chimera_group in groupings:
         spliced_sequences = []
@@ -286,14 +286,14 @@ if prime_container.operation_toggles['run_fasta_operation'] == 'True':
                                       chimera.container_id.fasta_args.number_of_subunits))
         fasta_creation(chimera_group[0].fasta_name, spliced_sequences)
 
-if prime_container.fasta_args.fasta_toggles['Make a list of created fasta files'] == 'True':
+if prime_container.fasta_args.fasta_toggles['Make a list of created fasta files']:
     with open(prime_container.fasta_args.fasta_file_list_name, 'w') as list_file:
         list_file.write('\n'.join(chimera_group[0].fasta_name for chimera_group in groupings))
         for container in container_of_containers:
             list_file.write(
                 '\n' + container.fasta_args.reference_submission + '\n' + container.fasta_args.partner_submission)
 
-if prime_container.operation_toggles['alphafold_submission'] == 'True':
+if prime_container.operation_toggles['alphafold_submission']:
     prime_container.get_dict_args(ShiftedSubmissionArguments, 'submission_args', 'alphafold_submission_args')
     submission_toggles = prime_container.submission_args.submission_toggles
     output_directory = prime_container.name_args.alphafold_outputs_directory
@@ -312,7 +312,7 @@ if prime_container.operation_toggles['alphafold_submission'] == 'True':
             if not path.exists(output_directory + Path(fasta).stem + '/ranking_debug.json'):
                 fasta_to_run += (fasta,)
         # Puts all fastas in a line separated file specified by custom_list_to_run
-        if submission_toggles['create file of stragglers'] == 'True':
+        if submission_toggles['create file of stragglers']:
             with open(prime_container.submission_args.custom_list_to_run, 'w') as run_list:
                 run_list.write('\n'.join(fasta for fasta in fasta_to_run))
         # if all of them are complete and fasta_to_run is empty then all slurm actions are toggled off
@@ -324,7 +324,7 @@ if prime_container.operation_toggles['alphafold_submission'] == 'True':
             fasta_to_run = [x.split()[0] for x in run_list]
     elif submission_toggles['stragglers_or_custom_or_all'] == 'all':
         fasta_to_run = fastas
-    if submission_toggles['create_slurms'] == 'True':
+    if submission_toggles['create_slurms']:
         for slurm_index, file_index in enumerate(range(0, len(fasta_to_run), proteins_per_slurm)):
             current_slurm = naming_convention.replace(placeholder, str(slurm_index))
             create_alphafold_slurm(fasta_to_run[file_index:file_index + proteins_per_slurm], current_slurm,
@@ -334,12 +334,12 @@ if prime_container.operation_toggles['alphafold_submission'] == 'True':
                                    prime_container.submission_args.slurm_error.replace(placeholder,
                                                                                        str(slurm_index)),
                                    alphafold_shell_script, output_directory)
-    if submission_toggles['sbatch slurms'] == 'True':
+    if submission_toggles['sbatch slurms']:
         for slurm_index, file_index in enumerate(range(0, len(fasta_to_run), proteins_per_slurm)):
             current_slurm = naming_convention.replace(placeholder, str(slurm_index))
             system(f'sbatch {current_slurm}')
 
-if prime_container.operation_toggles['run_analysis_operation'] == 'True':
+if prime_container.operation_toggles['run_analysis_operation']:
     alphafold_directory = prime_container.name_args.alphafold_outputs_directory
     plddt_direc, plddt_ext, pdb_direc, pdb_ext = prime_container.name_args.plddt_directory, \
         prime_container.name_args.plddt_extension, prime_container.name_args.pdb_directory, \
@@ -360,14 +360,14 @@ if prime_container.operation_toggles['run_analysis_operation'] == 'True':
             if chimera.chi_sequence in plddt_dict:
                 chimera.plddt = plddt_dict[chimera.chi_sequence]
 
-    if analysis_toggles['make_plddts'] == 'True':
+    if analysis_toggles['make_plddts']:
         for chimera_group in groupings:
             Analysis.get_plddt_file_from_pdb(chimera_group[0].pdb,
                                              path.join(plddt_direc, chimera_group[0].file_stem + plddt_ext))
         Analysis.get_plddt_file_from_pdb(reference_pdb, path.join(plddt_direc, reference_stem + plddt_ext))
         Analysis.get_plddt_file_from_pdb(partner_pdb, path.join(plddt_direc, partner_stem + plddt_ext))
 
-    if analysis_toggles["make_pdbs"] == 'True':
+    if analysis_toggles["make_pdbs"]:
         for chimera_group in groupings:
             Analysis.generate_alphafold_files(f'{alphafold_directory}{chimera_group[0].file_stem}',
                                               new_pdb=path.join(pdb_direc, chimera_group[0].file_stem + pdb_ext))
@@ -412,13 +412,13 @@ if prime_container.operation_toggles['run_analysis_operation'] == 'True':
         container.get_dict_args(ShiftedAnalysisArguments, 'analysis_args', 'analysis_arguments')
         column_choices = container.analysis_args.column_names
         # TODO add this functionality as a mehtod
-        if column_choices['filename_stems'][0] == 'True':
+        if column_choices['filename_stems'][0]:
             data_columns[column_choices['filename_stems'][1]] = tuple(
                 chimera.file_stem for chimera in container.chimeras)
-        if column_choices['relative_stability'][0] == 'True':
+        if column_choices['relative_stability'][0]:
             data_columns[column_choices['relative_stability'][1]] = tuple(
                 chimera.rel_stability for chimera in container.chimeras)
-        if column_choices['overall_chimera_stability'][0] == 'True':
+        if column_choices['overall_chimera_stability'][0]:
             data_columns[column_choices['overall_chimera_stability'][1]] = tuple(
                 Analysis.overall_confidence(chimera.plddt) for chimera in container.chimeras)
 

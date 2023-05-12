@@ -4,7 +4,7 @@
 """Routines to generate chimeric sequences."""
 
 from pathlib import Path
-import json
+from json import load,dump
 
 
 class chimeracls():
@@ -50,9 +50,9 @@ def fasta_creation(file_name, list_of_sequence_subunits_label_tuples):
 def update_json(default_json, dilapidated_json):
     try:
         with open(default_json, 'r') as f:
-            default = json.load(f)
+            default = load(f)
         with open(dilapidated_json, 'r') as f:
-            dilapidated = json.load(f)
+            dilapidated = load(f)
     except FileNotFoundError:
         pass
 
@@ -63,6 +63,7 @@ def update_json(default_json, dilapidated_json):
             if key not in dilapidated_dict:
                 dilapidated_dict[key] = value
     # TODO question marks ruin this
+
     def reduce_dict(default_dict, dilapidated_dict):
         for key, value in dilapidated_dict.copy().items():
             if key not in default_dict:
@@ -73,4 +74,20 @@ def update_json(default_json, dilapidated_json):
     merge_dict(default, dilapidated)
     reduce_dict(default, dilapidated)
     with open(str(Path(dilapidated_json).parent) + '/new' + str(Path(dilapidated_json).name), 'w') as f:
-        json.dump(dilapidated, f, indent=4)
+        dump(dilapidated, f, indent=4)
+
+
+def change_value(dictionary,noted_key,new_value):
+    for key,value in dictionary.items():
+        if isinstance(value,dict):
+            change_value(value,noted_key,new_value)
+        elif key==noted_key:
+            dictionary[noted_key]=new_value
+
+
+def print_keys(dictionary):
+    for key,value in dictionary.items():
+        if isinstance(value,dict):
+            print_keys(value)
+        else:
+            print(key)

@@ -1,28 +1,51 @@
-import copy
 from json import load
 from os import system, path
 from pathlib import Path
 from sys import exit
-from time import perf_counter
 from numpy import empty, savetxt
 import Analysis
 from setup import create_alphafold_slurm
 from AccessiontoAlignment import alignment_finder, accession_to_fasta, multiple_sequence_alignment
-from ChimeraGenerator import fasta_creation, chimeracls, update_json
-from itertools import product
+import ChimeraGenerator
 import argparse
+# import readline
+#
+# # Define the list of autocomplete options
+# autocomplete_options = ['apple', 'banana', 'orange']
+#
+# # Define the completer function
+# def completer(text, state):
+#     options = [option for option in autocomplete_options if option.startswith(text)]
+#     if state < len(options):
+#         return options[state]
+#     return None
+#
+# # Set the completer function
+# readline.set_completer(completer)
+# readline.parse_and_bind('tab: complete')
+#
+# # Get user input with autocomplete
+# user_input = input('Enter a fruit name: ')
 
 # TODO add a commandline to change specific keys and replace recurring string through out all keys
+# Be able to print keys as well
 # and be able to request operation from command line that overwrites whats in json
+# and be able to print a value for a specific key
 parser = argparse.ArgumentParser(
     description='Creating chimeric proteins from one or more json proteins corresponding to each unique protein in '
                 'the structure')
-subparser = parser.add_subparsers(dest='cmdline_toggles')
+
 parser.add_argument('-u', '--updatejson', type=str, required=False,
                     help='updating json configs ex. default_json,old_json')
 parser.add_argument('-i', '--jsoninput', dest='arg_jsons', required=False, type=str,
                     help='Json config file input, comma separated for each unique protein. Make sure initial json has '
                          'naming conventions')
+parser.add_argument('-ch', '--change', dest='new_values', required=False, type=str,
+                    help='Json config file input, comma separated for each unique protein. Make sure initial json has '
+                         'naming conventions')
+parser.add_argument('-pr', '--prints', required=False, type=str,
+                    help='print keys of selected json')
+subparser = parser.add_subparsers(dest='cmdline_toggles')
 operations = subparser.add_parser('operations')
 operations.add_argument('-fa', '--fasta', required=False, action='store_true', default=False,
                         help='turns on fasta operation')
@@ -31,11 +54,24 @@ operations.add_argument('-s', '--submission', required=False, action='store_true
 operations.add_argument('-a', '--analysis', required=False, action='store_true', default=False,
                         help='turns on analysis operation')
 args = parser.parse_args()
-operation_args = (args.fasta,args.submission,args.analysis)
+
 if args.updatejson:
     args.updatejson = args.updatejson.split(',')
-    update_json(args.updatejson[0], args.updatejson[1])
+    ChimeraGenerator.update_json(args.updatejson[0], args.updatejson[1])
     exit()
+if args.prints:
+    with open(args.prints, 'rb') as jfile:
+        selected_dict= load(jfile)
+    ChimeraGenerator.print_keys(selected_dict)
+    exit()
+if args.new_values:
+    with open(args.prints, 'rb') as jfile:
+        selected_dict= load(jfile)
+    ChimeraGenerator.print_keys(selected_dict)
+    exit()
+if args.fasta or args.submission or args.analysis:
+    operation_args = (args.fasta,args.submission,args.analysis)
+
 
 
 class CrossNamingArguments:
@@ -186,7 +222,7 @@ class CrossChimeraContainer:
     def add_chimera(self, chimera):
         self.chimeras += (chimera,)
 
-
+# TODO break some of this into functions
 container_of_containers = ()
 for index, jsn in enumerate(args.arg_jsons.split(',')):
     container = CrossChimeraContainer(jsn)
@@ -226,7 +262,7 @@ if path.exists(variant_container.fasta_args.msa_file_name):
                                if
                                len(sequence) != 0}
         for fasta_id, sequence in sequence_dictionary.items():
-            chimera = chimeracls()
+            chimera = ChimeraGenerator.chimeracls()
             variant_container.add_chimera(chimera)
             chimera.nickname = fasta_id
             chimera.native_seq = sequence.replace('-', '')
@@ -234,7 +270,7 @@ else:
     with open(variant_container.fasta_args.protein_list, 'r') as info_list:
         info_list = info_list.readlines()
         for line in info_list:
-            chimera = chimeracls()
+            chimera = ChimeraGenerator.chimeracls()
             variant_container.add_chimera(chimera)
             chimera.nickname = line.split()[1]
             chimera.accession = line.split()[0]
@@ -275,8 +311,8 @@ if variant_container.operation_toggles['run_fasta_operation'] or args.fasta:
         variant_splice = alignment_finder(msa, variant_seq_of_interest, chimera.nickname,
                                           variant_fasta_identifier)[0]
         chimera.chi_seq = chimera.native_seq.replace(variant_splice, constant_seq_of_interest)
-        fasta_creation(chimera.multimer_fasta, [tuple((chimera.native_seq, subunits, chimera.multimer_stem))])
-        fasta_creation(chimera.chimera_fasta, [tuple((chimera.chi_seq, subunits, chimera.chimera_stem))])
+        ChimeraGenerator.fasta_creation(chimera.multimer_fasta, [tuple((chimera.native_seq, subunits, chimera.multimer_stem))])
+        ChimeraGenerator.fasta_creation(chimera.chimera_fasta, [tuple((chimera.chi_seq, subunits, chimera.chimera_stem))])
     if fasta_toggles['Make_a_list_of_created_fasta_files']:
         with open(variant_container.fasta_args.fasta_list_file_name, 'w') as fasta_list_file:
             fasta_list_file.write(constant_submission + '\n')
@@ -375,21 +411,22 @@ if variant_container.operation_toggles['run_analysis_operation'] or args.analysi
     # Checks which data columns are wanted by the user by looking for True in the first index of each array in
     # column_names from the analysis_args, Each container can have its own column preferences and every container
     # will have its own columns of data per data column requested
-    for container in container_of_containers:
-        container.get_dict_args(CrossAnalysisArguments, 'analysis_args', 'analysis_arguments')
-        column_choices = container.analysis_args.column_names
-        # TODO add this functionality as a mehtod
-        if column_choices['filename_stems'][0]:
-            data_columns[column_choices['filename_stems'][1]] = tuple(
-                chimera.file_stem for chimera in container.chimeras)
-        if column_choices['relative_stability'][0]:
-            data_columns[column_choices['relative_stability'][1]] = tuple(
-                chimera.rel_stability for chimera in container.chimeras)
-        if column_choices['overall_chimera_stability'][0]:
-            data_columns[column_choices['overall_chimera_stability'][1]] = tuple(
-                Analysis.overall_confidence(chimera.plddt) for chimera in container.chimeras)
+    column_choices = variant_container.analysis_args.column_names
+    
+    if column_choices['nickname'][0]:
+        data_columns[column_choices['nickname'][1]] = tuple(
+            chimera.file_stem for chimera in list_of_chis)
+    if column_choices['relative_stability'][0]:
+        data_columns[column_choices['relative_stability'][1]] = tuple(
+            chimera.rel_stability for chimera in list_of_chis)
+    if column_choices['overall_native_stability'][0]:
+        data_columns[column_choices['overall_native_stability'][1]] = tuple(
+            Analysis.overall_confidence(chimera.native_plddt) for chimera in list_of_chis)
+    if column_choices['overall_chimera_stability'][0]:
+        data_columns[column_choices['overall_chimera_stability'][1]] = tuple(
+            Analysis.overall_confidence(chimera.chi_plddt) for chimera in list_of_chis)
 
-    data_array = empty(((num_of_chis + 1), len(data_columns)), dtype=object)
+    data_array = empty(((num_of_chi + 1), len(data_columns)), dtype=object)
     for column_count, (column_name, data) in enumerate(data_columns.items()):
         data_array[0, column_count] = column_name
         data_array[1:, column_count] = data
