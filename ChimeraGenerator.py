@@ -5,7 +5,7 @@
 
 from pathlib import Path
 from json import load,dump
-
+from os import path
 
 class chimeracls():
     pass
@@ -46,7 +46,7 @@ def fasta_creation(file_name, list_of_sequence_subunits_label_tuples):
             for replicates in range(subunits):
                 outfile.write(f'>{fasta_id}\n{sequence}\n')
 
-
+# TODO create a separate functionality file???
 def update_json(default_json, dilapidated_json):
     try:
         with open(default_json, 'r') as f:
@@ -91,3 +91,26 @@ def print_keys(dictionary):
             print_keys(value)
         else:
             print(key)
+def assign_file_attrs_to_chimeras(container):
+    for chimera in container.chimeras:
+        placeholder = container.naming_args.placeholder
+        subunits = container.fasta_args.number_of_subunits
+        alphafold_dir = container.naming_args.alphafold_outputs_dir
+        chimera.monomer_stem = container.naming_args.monomer_naming_convention.replace(placeholder,
+                                                                                               chimera.nickname)
+        chimera.chimera_stem = container.naming_args.chimera_naming_convention.replace(placeholder,
+                                                                                               chimera.nickname)
+        chimera.chi_pdb = path.join(f'{alphafold_dir}{chimera.chimera_stem}', 'ranked_0.pdb')
+        chimera.monomer_fasta = container.naming_args.fasta_directory + chimera.monomer_stem + container.naming_args.fasta_extension
+        chimera.chimera_fasta = container.naming_args.fasta_directory + chimera.chimera_stem + container.naming_args.fasta_extension
+        chimera.multimer_stem = container.naming_args.multimer_naming_convention.replace(placeholder,
+                                                                                                 chimera.nickname)
+        chimera.multimer_fasta = container.naming_args.fasta_directory + chimera.multimer_stem + container.naming_args.fasta_extension
+
+        if subunits == 1:
+            chimera.multimer_stem = container.naming_args.monomer_naming_convention.replace(placeholder,
+                                                                                                    chimera.nickname)
+            chimera.multimer_fasta = container.naming_args.fasta_directory + chimera.monomer_stem + container.naming_args.fasta_extension
+
+        chimera.native_pdb = path.join(f'{alphafold_dir}{chimera.multimer_stem}', 'ranked_0.pdb')
+        chimera.chi_pdb = path.join(f'{alphafold_dir}{chimera.chimera_stem}', 'ranked_0.pdb')

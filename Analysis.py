@@ -13,7 +13,17 @@ from Bio import PDB
 from collections import defaultdict
 from pathlib import Path
 
-
+def determine_columns_from_container(container):
+    data_columns = {}
+    # Checks which data columns are wanted by the user by looking for True in the first index of each array in
+    # column_names from the analysis_args, Each container can have its own column preferences and every container
+    # will have its own columns of data per data column requested
+    column_choices = container.analysis_args.column_names
+    list_of_chis=container.chimeras
+    for data_type,[boolean,title] in column_choices:
+        if boolean:
+            data_columns[title] = tuple(getattr(chimera,data_type) for chimera in list_of_chis)
+    return data_columns
 def get_plddt_tuple_from_pdb(pdb_file):
     pdb = PDB.PDBParser().get_structure('pdb', pdb_file)[0]
     homomeric = defaultdict(tuple)

@@ -4,7 +4,7 @@ from pathlib import Path
 from sys import exit
 from numpy import empty, savetxt
 import Analysis
-from setup import create_alphafold_slurm
+from setup import create_alphafold_slurm,alphafold_submission_for_chimera_container
 from AccessiontoAlignment import alignment_finder, accession_to_fasta, multiple_sequence_alignment
 import ChimeraGenerator
 import argparse
@@ -228,17 +228,21 @@ for index, jsn in enumerate(args.arg_jsons.split(',')):
     container = CrossChimeraContainer(jsn)
     container_of_containers += (container,)
     container.get_dict_args(CrossFastaArguments, 'fasta_args', 'fasta_arguments')
-    if container.fasta_args.fasta_toggles['constant_or_variant'] == 'constant':
-        constant_container = container
-        constant_seq_of_interest = container.fasta_args.sequence_of_interest
-        constant_fasta = container.fasta_args.full_reference_fasta
-        constant_fasta_identifier = container.fasta_args.fasta_identifier
-        constant_submission = container.fasta_args.constant_fasta_for_alphafold
-    elif container.fasta_args.fasta_toggles['constant_or_variant'] == 'variant':
-        variant_container = container
-        variant_seq_of_interest = container.fasta_args.sequence_of_interest
-        variant_fasta = container.fasta_args.full_reference_fasta
-        variant_fasta_identifier = container.fasta_args.fasta_identifier
+    try:
+        if container.fasta_args.fasta_toggles['constant_or_variant'] == 'constant':
+            constant_container = container
+            constant_seq_of_interest = container.fasta_args.sequence_of_interest
+            constant_fasta = container.fasta_args.full_reference_fasta
+            constant_fasta_identifier = container.fasta_args.fasta_identifier
+            constant_submission = container.fasta_args.constant_fasta_for_alphafold
+        elif container.fasta_args.fasta_toggles['constant_or_variant'] == 'variant':
+            variant_container = container
+            variant_seq_of_interest = container.fasta_args.sequence_of_interest
+            variant_fasta = container.fasta_args.full_reference_fasta
+            variant_fasta_identifier = container.fasta_args.fasta_identifier
+    except:
+        print('Properly assign "constant_or_variant" setting in json file')
+        exit()
 fasta_toggles = variant_container.fasta_args.fasta_toggles
 if any(operation_args):
     for key in variant_container.operation_toggles:
@@ -277,26 +281,8 @@ else:
 
 list_of_chis = variant_container.chimeras
 num_of_chi = len(list_of_chis)
-for chimera in list_of_chis:
-    chimera.monomer_stem = variant_container.naming_args.monomer_naming_convention.replace(placeholder,
-                                                                                           chimera.nickname)
-    chimera.chimera_stem = variant_container.naming_args.chimera_naming_convention.replace(placeholder,
-                                                                                           chimera.nickname)
-    chimera.chi_pdb = path.join(f'{alphafold_dir}{chimera.chimera_stem}', 'ranked_0.pdb')
-    chimera.monomer_fasta = variant_container.naming_args.fasta_directory + chimera.monomer_stem + variant_container.naming_args.fasta_extension
-    chimera.chimera_fasta = variant_container.naming_args.fasta_directory + chimera.chimera_stem + variant_container.naming_args.fasta_extension
-    # make multimer = monomer when subunits is greater
-    chimera.multimer_stem = variant_container.naming_args.multimer_naming_convention.replace(placeholder,
-                                                                                             chimera.nickname)
-    chimera.multimer_fasta = variant_container.naming_args.fasta_directory + chimera.multimer_stem + variant_container.naming_args.fasta_extension
+ChimeraGenerator.assign_file_attrs_to_chimeras(variant_container)
 
-    if subunits == 1:
-        chimera.multimer_stem = variant_container.naming_args.monomer_naming_convention.replace(placeholder,
-                                                                                                 chimera.nickname)
-        chimera.multimer_fasta = variant_container.naming_args.fasta_directory + chimera.monomer_stem + variant_container.naming_args.fasta_extension
-
-    chimera.native_pdb = path.join(f'{alphafold_dir}{chimera.multimer_stem}', 'ranked_0.pdb')
-    chimera.chi_pdb = path.join(f'{alphafold_dir}{chimera.chimera_stem}', 'ranked_0.pdb')
 
 if variant_container.operation_toggles['run_fasta_operation'] or args.fasta:
     if fasta_toggles['Create_an_alignment'] or not path.exists(variant_container.fasta_args.msa_file_name):
@@ -321,47 +307,7 @@ if variant_container.operation_toggles['run_fasta_operation'] or args.fasta:
 
 if variant_container.operation_toggles['alphafold_submission'] or args.submission:
     variant_container.get_dict_args(CrossSubmissionArguments, 'submission_args', 'alphafold_submission_args')
-    submission_toggles = variant_container.submission_args.submission_toggles
-    output_directory = variant_container.naming_args.alphafold_outputs_dir
-    fastas = [chimera.chimera_fasta for chimera in list_of_chis] + [constant_submission]
-    fastas=fastas + [chimera.multimer_fasta for chimera in list_of_chis]
-    fasta_to_run = ()
-    proteins_per_slurm = variant_container.submission_args.proteins_per_slurm
-    template_slurm = variant_container.submission_args.template_slurm
-    alphafold_shell_script = variant_container.submission_args.alphafold_shell_script
-    naming_convention = variant_container.submission_args.slurm_naming
-    # Loops through all fastas created and checks if they are complete by looking for their ranking_debug file
-    if submission_toggles['stragglers_or_custom_or_all'] == 'stragglers':
-        for fasta in fastas:
-            if not path.exists(output_directory + Path(fasta).stem + '/ranking_debug.json'):
-                fasta_to_run += (fasta,)
-        # Puts all fastas in a line separated file specified by custom_list_to_run
-        if submission_toggles['create file of stragglers']:
-            with open(variant_container.submission_args.custom_list_to_run, 'w') as run_list:
-                run_list.write('\n'.join(fasta for fasta in fasta_to_run))
-        # if all of them are complete and fasta_to_run is empty then all slurm actions are toggled off
-        if not fasta_to_run:
-            submission_toggles['create_slurms'] = submission_toggles['sbatch slurms'] = ''
-    elif submission_toggles['stragglers_or_custom_or_all'] == 'custom':
-        with open(variant_container.submission_args.custom_list_to_run, 'r') as run_list:
-            run_list = run_list.readlines()
-            fasta_to_run = [x.split()[0] for x in run_list]
-    elif submission_toggles['stragglers_or_custom_or_all'] == 'all':
-        fasta_to_run = fastas
-    if submission_toggles['create_slurms']:
-        for slurm_index, file_index in enumerate(range(0, len(fasta_to_run), proteins_per_slurm)):
-            current_slurm = naming_convention.replace(placeholder, str(slurm_index))
-            create_alphafold_slurm(fasta_to_run[file_index:file_index + proteins_per_slurm], current_slurm,
-                                   template_slurm,
-                                   variant_container.submission_args.slurm_output.replace(placeholder,
-                                                                                          str(slurm_index)),
-                                   variant_container.submission_args.slurm_error.replace(placeholder,
-                                                                                         str(slurm_index)),
-                                   alphafold_shell_script, output_directory)
-    if submission_toggles['sbatch slurms']:
-        for slurm_index, file_index in enumerate(range(0, len(fasta_to_run), proteins_per_slurm)):
-            current_slurm = naming_convention.replace(placeholder, str(slurm_index))
-            system(f'sbatch {current_slurm}')
+    alphafold_submission_for_chimera_container(variant_container)
 
 if variant_container.operation_toggles['run_analysis_operation'] or args.analysis:
     alphafold_directory = variant_container.naming_args.alphafold_outputs_dir
@@ -377,6 +323,9 @@ if variant_container.operation_toggles['run_analysis_operation'] or args.analysi
     for chimera in list_of_chis:
         chimera.native_plddt= Analysis.get_plddt_tuple_from_pdb(chimera.native_pdb)[chimera.native_seq]
         chimera.chi_plddt= Analysis.get_plddt_tuple_from_pdb(chimera.native_pdb)[chimera.chi_seq]
+        chimera.overall_native_stability=Analysis.overall_confidence(chimera.native_plddt)
+        chimera.overall_chimera_stability=Analysis.overall_confidence(chimera.chi_plddt)
+
 
     if analysis_toggles['make_plddts']:
         for chimera in list_of_chis:
@@ -407,25 +356,7 @@ if variant_container.operation_toggles['run_analysis_operation'] or args.analysi
                                                                                  constant_submission,
                                                                                  constant_fasta_identifier)
 
-    data_columns = {}
-    # Checks which data columns are wanted by the user by looking for True in the first index of each array in
-    # column_names from the analysis_args, Each container can have its own column preferences and every container
-    # will have its own columns of data per data column requested
-    column_choices = variant_container.analysis_args.column_names
-    
-    if column_choices['nickname'][0]:
-        data_columns[column_choices['nickname'][1]] = tuple(
-            chimera.file_stem for chimera in list_of_chis)
-    if column_choices['relative_stability'][0]:
-        data_columns[column_choices['relative_stability'][1]] = tuple(
-            chimera.rel_stability for chimera in list_of_chis)
-    if column_choices['overall_native_stability'][0]:
-        data_columns[column_choices['overall_native_stability'][1]] = tuple(
-            Analysis.overall_confidence(chimera.native_plddt) for chimera in list_of_chis)
-    if column_choices['overall_chimera_stability'][0]:
-        data_columns[column_choices['overall_chimera_stability'][1]] = tuple(
-            Analysis.overall_confidence(chimera.chi_plddt) for chimera in list_of_chis)
-
+    data_columns=Analysis.determine_columns_from_container(variant_container)
     data_array = empty(((num_of_chi + 1), len(data_columns)), dtype=object)
     for column_count, (column_name, data) in enumerate(data_columns.items()):
         data_array[0, column_count] = column_name
