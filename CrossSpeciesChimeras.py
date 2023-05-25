@@ -7,6 +7,7 @@ from setup import alphafold_submission_for_chimera_container
 from AccessiontoAlignment import alignment_finder, accession_to_fasta, multiple_sequence_alignment
 import ChimeraGenerator
 import argparse
+
 # TODO add autocomplete for changing keys?? readline
 # TODO add a commandline to change specific keys and replace recurring string through out all keys
 # TODO be able to designate multiple seq_of_interest
@@ -14,8 +15,8 @@ import argparse
 # TODO test this between homologous proteins
 # TODO be able tos swap into the constant
 parser = argparse.ArgumentParser(
-    description='Creating chimeric proteins where a region from a constant protein is spliced into a list of homologus regions between a protein family or vice versa')
-
+    description='Creating chimeric proteins where a region from a constant protein is spliced into a list of '
+                'homologus regions between a protein family or vice versa')
 parser.add_argument('-u', '--updatejson', type=str, required=False,
                     help='updating json configs. ex: default_json,old_json')
 parser.add_argument('-i', '--jsoninput', dest='arg_jsons', required=False, type=str,
@@ -23,71 +24,87 @@ parser.add_argument('-i', '--jsoninput', dest='arg_jsons', required=False, type=
 parser.add_argument('-ch', '--change', required=False, type=str,
                     help='input json with options you wish to change. ex: json')
 parser.add_argument('-nv', '--new_values', required=False, type=str,
-                    help='input comma seperated option:new_value pairs, seperate each part of the pair with a colon. ex: option:new_value,option:new_value')
-parser.add_argument('--overwrite',  action='store_true',required=False, default=False,
-                    help='This flag will overwrite the input json files for change,findnreplace, and updatejson, the default without the flag will create a new json named new+input_file_stem.')
+                    help='input comma seperated option:new_value pairs, seperate each part of the pair with a colon. '
+                         'ex: option:new_value,option:new_value')
+parser.add_argument('--overwrite', action='store_true', required=False, default=False,
+                    help='This flag will overwrite the input json files for change,findnreplace, and updatejson, '
+                         'the default without the flag will create a new json named new+input_file_stem.')
 parser.add_argument('-pr', '--prints', required=False, type=str,
-                    help='print all changeable options from inputted json or print current value for inputted option in inputted json. ex: json or json,alphafold_outputs_dir')
+                    help='print all changeable options from inputted json or print current value for inputted option '
+                         'in inputted json. ex: json or json,alphafold_outputs_dir')
 parser.add_argument('-fr', '--findnreplace', required=False, type=str,
-                    help='It is recommended you do not use overwrite flag with this option. Replaces a recurring between a find:replace pair input within the json input in change flag. ex: string_to_find:replacing_string')
+                    help='Warning:It is recommended you do not use overwrite flag with this option. Replaces a '
+                         'recurring between a find:replace pair input within the json input in change flag. ex: '
+                         'string_to_find:replacing_string')
 
 subparser = parser.add_subparsers(dest='cmdline_toggles')
 operations = subparser.add_parser('operations')
 operations.add_argument('-fa', '--fasta', required=False, action='store_true', default=False,
-                        help='turns on fasta operation')
+                        help='turns on fasta operation. Flag must be called at the end of the command and '
+                             'preceded by \'operations\' ex: python file.py -i json1,json2 operations -fa . Can be '
+                             'combined with -s')
 operations.add_argument('-s', '--submission', required=False, action='store_true', default=False,
-                        help='turns on submission operation')
+                        help='turns on submission operation. This flag must be called at the end of the command and '
+                             'preceded by \'operations\' ex: python file.py -i json1,json2 operations -s . Can be '
+                             'combined with -fa or -a')
 operations.add_argument('-a', '--analysis', required=False, action='store_true', default=False,
-                        help='turns on analysis operation')
+                        help='turns on analysis operation. This flag must be called at the end of the command and '
+                             'preceded by \'operations\' ex: python file.py -i json1,json2 operations -a . Can be '
+                             'combined with -s')
 args = parser.parse_args()
-
+# All conditionals to check for flags related to manipulation or clarification of json config files: (u,ch,pr,nv,overwite,fr)
+# If any of them are called the program will cease after completion or error
 if args.updatejson:
     args.updatejson = args.updatejson.split(',')
-    ChimeraGenerator.update_json(args.updatejson[0], args.updatejson[1],args.overwrite)
+    ChimeraGenerator.update_json(args.updatejson[0], args.updatejson[1], args.overwrite)
     exit()
 if args.prints:
-    print_args=args.prints.split(',')
+    print_args = args.prints.split(',')
     with open(print_args[0], 'rb') as jfile:
-        selected_dict= load(jfile)
-    if len(print_args)==1:
-        ChimeraGenerator.print_keys(selected_dict)
+        selected_json = load(jfile)
+    if len(print_args) == 1:
+        ChimeraGenerator.print_keys(selected_json)
     else:
-        ChimeraGenerator.print_keys(selected_dict,print_args[1])
+        ChimeraGenerator.print_keys(selected_json, print_args[1])
     exit()
 if args.new_values and args.change:
     new_key_values = [pair.split(':') for pair in args.new_values.split(',')]
     new_key_values = {key: value for key, value in new_key_values}
-    for key,value in new_key_values.items():
-        ChimeraGenerator.change_json_value(args.change,key,value,args.overwrite)
+    for key, value in new_key_values.items():
+        ChimeraGenerator.change_json_value(args.change, key, value, args.overwrite)
     exit()
 if args.findnreplace and args.change:
-    pair=tuple(args.findnreplace.split(':'))
-    print(pair[0])
-    ChimeraGenerator.change_json_value(args.change,overwrite=args.overwrite,find_n_replace_tuple=pair)
+    pair = tuple(args.findnreplace.split(':'))
+    ChimeraGenerator.change_json_value(args.change, overwrite=args.overwrite, find_n_replace_tuple=pair)
     exit()
+# Allows for commandline operation flags to override selections made in the json config
 if args.fasta or args.submission or args.analysis:
-    operation_args = (args.fasta,args.submission,args.analysis)
+    operation_args = (args.fasta, args.submission, args.analysis)
 
 
 class CrossNamingArguments:
+    placeholder: str = "*"
+    '''a unique character to be replaced by fasta identifiers or provided nicknames for naming convention'''
     monomer_naming_convention: str = "*"
-    '''A combination of words and placeholders to create a naming that will persist through all monomer chimera related data files e.g. (fasta,pdb,plddt)'''
+    '''A combination of words and placeholders to create a naming that will persist through all monomer chimera 
+    related data files e.g. (fasta,pdb,plddt)'''
+    slurm_naming: str
+    '''Slurm naming convention. Placeholders in the convention will be replaced by numbers in ascending order as needed'''
     multimer_naming_convention: str
     chimera_naming_convention: str
     gromacs_slurm_dir: str
-    gmx_setup_extension: str
-    gmx_production_extension: str
-    placeholder: str
-    '''a unique character to be replaced by fasta identifiers for naming convention'''
     fasta_directory: str
     plddt_directory: str
     pdb_directory: str
     alphafold_outputs_dir: str
-    fasta_extension: str
-    plddt_extension: str
-    pdb_extension: str
-    slurm_naming: str
+    fasta_extension: str = '.fasta'
+    '''File extension for fasta files'''
+    plddt_extension: str = '.plddt'
+    pdb_extension: str = '.pdb'
+    gmx_setup_extension: str = '.setup'
+    gmx_production_extension: str = '.prod'
 
+    # All non-nested keys from the json are set as attributes to be called later
     def __init__(self, naming_dict):
         for key, value in naming_dict.items():
             setattr(self, key, value)
@@ -95,8 +112,8 @@ class CrossNamingArguments:
 
 class CrossFastaArguments:
     fasta_toggles: dict
-    '''A dictionary that holds optional operations within the fasta operation, they are generally turned on by 
-    placing true within the quotes of their value'''
+    '''A dictionary that holds optional operations within the fasta operation, they are turned on by 
+    placing true/false'''
     Make_a_lst_of_created_fasta_files: bool
     '''Create a file with line separted list of all fastas created'''
     Create_an_alignment: bool
@@ -167,7 +184,7 @@ class CrossAnalysisArguments:
     analysis_toggles: dict
     make_plddts: bool
     make_pdbs: bool
-    make_emboss_files:bool
+    make_emboss_files: bool
 
     emboss_command: str
     analysis_output_csv: str
@@ -189,7 +206,6 @@ class CrossAnalysisArguments:
             setattr(self, key, value)
 
 
-# TODO add column names either class or method for gathering
 class CrossChimeraContainer:
     argument_dict: dict
     operation_toggles: dict
@@ -215,6 +231,7 @@ class CrossChimeraContainer:
     def add_chimera(self, chimera):
         self.chimeras += (chimera,)
 
+
 # TODO break some of this into functions
 container_of_containers = ()
 for index, jsn in enumerate(args.arg_jsons.split(',')):
@@ -229,7 +246,7 @@ for index, jsn in enumerate(args.arg_jsons.split(',')):
             constant_fasta_identifier = container.fasta_args.fasta_identifier
             constant_submission = container.fasta_args.constant_fasta_for_alphafold
             with open(constant_fasta) as fasta:
-                constant_full_seq= ''.join(x for x in fasta if x[0] != '>' if x != '').strip().replace('\n', '')
+                constant_full_seq = ''.join(x for x in fasta if x[0] != '>' if x != '').strip().replace('\n', '')
         elif container.fasta_args.fasta_toggles['constant_or_variant'] == 'variant':
             variant_container = container
             variant_seq_of_interest = container.fasta_args.sequence_of_interest
@@ -293,8 +310,10 @@ if variant_container.operation_toggles['run_fasta_operation'] or args.fasta:
                                     variant_container.fasta_args.msa_fasta, msa,
                                     variant_fasta, variant_container.fasta_args.muscle_command_for_msa)
     for chimera in list_of_chis:
-        ChimeraGenerator.fasta_creation(chimera.multimer_fasta, [tuple((chimera.native_seq, subunits, chimera.multimer_stem))])
-        ChimeraGenerator.fasta_creation(chimera.chimera_fasta, [tuple((chimera.chi_seq, subunits, chimera.chimera_stem))])
+        ChimeraGenerator.fasta_creation(chimera.multimer_fasta,
+                                        [tuple((chimera.native_seq, subunits, chimera.multimer_stem))])
+        ChimeraGenerator.fasta_creation(chimera.chimera_fasta,
+                                        [tuple((chimera.chi_seq, subunits, chimera.chimera_stem))])
     if fasta_toggles['Make_a_list_of_created_fasta_files']:
         with open(variant_container.fasta_args.fasta_list_file_name, 'w') as fasta_list_file:
             fasta_list_file.write(constant_submission + '\n')
@@ -303,52 +322,11 @@ if variant_container.operation_toggles['run_fasta_operation'] or args.fasta:
 
 if variant_container.operation_toggles['alphafold_submission'] or args.submission:
     variant_container.get_dict_args(CrossSubmissionArguments, 'submission_args', 'alphafold_submission_args')
-    fastas = [chimera.chimera_fasta for chimera in list_of_chis] + [variant_container.fasta_args.constant_fasta_for_alphafold]+ [chimera.multimer_fasta for chimera in list_of_chis]
-    alphafold_submission_for_chimera_container(variant_container,fastas)
+    fastas = [chimera.chimera_fasta for chimera in list_of_chis] + [
+        variant_container.fasta_args.constant_fasta_for_alphafold] + [chimera.multimer_fasta for chimera in
+                                                                      list_of_chis]
+    alphafold_submission_for_chimera_container(variant_container, fastas)
 
-# if variant_container.operation_toggles['run_analysis_operation'] or args.analysis:
-#     alphafold_directory = variant_container.naming_args.alphafold_outputs_dir
-#     plddt_direc, plddt_ext, pdb_direc, pdb_ext = variant_container.naming_args.plddt_directory, \
-#         variant_container.naming_args.plddt_extension, variant_container.naming_args.pdb_directory, \
-#         variant_container.naming_args.pdb_extension
-#     constant_stem = Path(constant_submission).stem
-#     variant_container.get_dict_args(CrossAnalysisArguments, 'analysis_args', 'analysis_arguments')
-#     analysis_toggles = variant_container.analysis_args.analysis_toggles
-#     constant_pdb = path.join(f'{alphafold_directory}{constant_stem}', 'ranked_0.pdb')
-#     constant_plddt = Analysis.get_plddt_dict_from_pdb(constant_pdb)[constant_full_seq]
-#     constant_boundaries=alignment_finder(constant_fasta,constant_seq_of_interest,constant_fasta_identifier,constant_fasta_identifier)[1]
-#     for chimera in list_of_chis:
-#         chimera.native_plddt= Analysis.get_plddt_dict_from_pdb(chimera.native_pdb)[chimera.native_seq]
-#         chimera.chi_plddt= Analysis.get_plddt_dict_from_pdb(chimera.chi_pdb)[chimera.chi_seq]
-#         chimera.overall_native_stability=Analysis.overall_confidence(chimera.native_plddt)
-#         chimera.overall_chimera_stability=Analysis.overall_confidence(chimera.chi_plddt)
-#
-#
-#     if analysis_toggles['make_plddts']:
-#         for chimera in list_of_chis:
-#             Analysis.get_plddt_file_from_pdb(chimera.native_pdb,
-#                                              path.join(plddt_direc, chimera.multimer_stem + plddt_ext))
-#             Analysis.get_plddt_file_from_pdb(chimera.chi_pdb,
-#                                              path.join(plddt_direc, chimera.chimera_stem + plddt_ext))
-#         Analysis.get_plddt_file_from_pdb(constant_pdb, path.join(plddt_direc, constant_stem + plddt_ext))
-#
-#     if analysis_toggles["make_pdbs"]:
-#         for chimera in list_of_chis:
-#             Analysis.generate_alphafold_files(f'{alphafold_directory}{chimera.multimer_stem}',
-#                                               new_pdb=path.join(pdb_direc, chimera.multimer_stem + pdb_ext))
-#             Analysis.generate_alphafold_files(f'{alphafold_directory}{chimera.chimera_stem}',
-#                                               new_pdb=path.join(pdb_direc, chimera.chimera_stem + pdb_ext))
-#         Analysis.generate_alphafold_files(
-#             f'{alphafold_directory}{constant_stem}',
-#             new_pdb=path.join(pdb_direc,
-#                               constant_stem + pdb_ext))
-#
-#     for chimera in list_of_chis:
-#         #relative stability for constant versus variant
-#         chimera.rel_stability = Analysis.average_relative_stability_full_chimera(constant_plddt,constant_boundaries,chimera.chi_plddt,chimera.native_plddt,variant_seq_of_interest,msa,chimera.file_stem)
-#
-#     data_columns=Analysis.determine_columns_from_container(variant_container)
-#     Analysis.convert_data_dict_to_csv(data_columns,variant_container)
 if variant_container.operation_toggles['run_analysis_operation'] or args.analysis:
     alphafold_directory = variant_container.naming_args.alphafold_outputs_dir
     plddt_direc, plddt_ext, pdb_direc, pdb_ext = variant_container.naming_args.plddt_directory, \
@@ -358,13 +336,13 @@ if variant_container.operation_toggles['run_analysis_operation'] or args.analysi
     variant_container.get_dict_args(CrossAnalysisArguments, 'analysis_args', 'analysis_arguments')
     analysis_toggles = variant_container.analysis_args.analysis_toggles
     constant_pdb = path.join(f'{alphafold_directory}{constant_stem}', 'ranked_0.pdb')
-    constant_plddt = {constant_full_seq:Analysis.get_plddt_dict_from_pdb(constant_pdb)[constant_full_seq]}
+    constant_plddt = {constant_full_seq: Analysis.get_plddt_dict_from_pdb(constant_pdb)[constant_full_seq]}
     for chimera in list_of_chis:
-        chimera.native_plddt = {chimera.native_seq:Analysis.get_plddt_dict_from_pdb(chimera.native_pdb)[chimera.native_seq]}
-        chimera.chi_plddt= {chimera.chi_seq:Analysis.get_plddt_dict_from_pdb(chimera.chi_pdb)[chimera.chi_seq]}
-        chimera.overall_native_stability=Analysis.overall_confidence(chimera.native_plddt[chimera.native_seq])
-        chimera.overall_chimera_stability=Analysis.overall_confidence(chimera.chi_plddt[chimera.chi_seq])
-
+        chimera.native_plddt = {
+            chimera.native_seq: Analysis.get_plddt_dict_from_pdb(chimera.native_pdb)[chimera.native_seq]}
+        chimera.chi_plddt = {chimera.chi_seq: Analysis.get_plddt_dict_from_pdb(chimera.chi_pdb)[chimera.chi_seq]}
+        chimera.overall_native_stability = Analysis.overall_confidence(chimera.native_plddt[chimera.native_seq])
+        chimera.overall_chimera_stability = Analysis.overall_confidence(chimera.chi_plddt[chimera.chi_seq])
 
     if analysis_toggles['make_plddts']:
         for chimera in list_of_chis:
@@ -386,12 +364,11 @@ if variant_container.operation_toggles['run_analysis_operation'] or args.analysi
                               constant_stem + pdb_ext))
 
     for chimera in list_of_chis:
-        #relative stability for constant versus variant
-        print(chimera.file_stem)
-        chimera.rel_stability = Analysis.revamped_rs(constant_plddt,chimera.chi_plddt,chimera.native_plddt,constant_seq_of_interest)
+        chimera.rel_stability = Analysis.revamped_rs(constant_plddt, chimera.chi_plddt, chimera.native_plddt,
+                                                     constant_seq_of_interest)
 
-    data_columns=Analysis.determine_columns_from_container(variant_container)
-    Analysis.convert_data_dict_to_csv(data_columns,variant_container)
+    data_columns = Analysis.determine_columns_from_container(variant_container)
+    Analysis.convert_data_dict_to_csv(data_columns, variant_container)
 
 #     # TODO have a functiuon to proint pdbs and make pdbs for reference
 #     # TODO make it to be able to simulate native pdb
