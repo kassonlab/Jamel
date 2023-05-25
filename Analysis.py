@@ -7,11 +7,12 @@ from pickle import load as p_load
 from json import load as j_load
 from os import system, path,strerror,listdir,makedirs
 from shutil import copy
-from numpy import savetxt
+from numpy import savetxt,empty
 from errno import ENOENT
 from Bio import PDB
 from collections import defaultdict
 from pathlib import Path
+
 
 def determine_columns_from_container(container):
     data_columns = {}
@@ -20,11 +21,18 @@ def determine_columns_from_container(container):
     # will have its own columns of data per data column requested
     column_choices = container.analysis_args.column_names
     list_of_chis=container.chimeras
-    for data_type,[boolean,title] in column_choices:
+    for data_type,[boolean,title] in column_choices.items():
         if boolean:
             data_columns[title] = tuple(getattr(chimera,data_type) for chimera in list_of_chis)
     return data_columns
-def get_plddt_tuple_from_pdb(pdb_file):
+
+def convert_data_dict_to_csv(data_dict,container):
+    data_array = empty(((len(container.chimeras) + 1), len(data_dict)), dtype=object)
+    for column_count, (column_name, data) in enumerate(data_dict.items()):
+        data_array[0, column_count] = column_name
+        data_array[1:, column_count] = data
+    savetxt(container.analysis_args.analysis_output_csv, data_array, fmt=','.join('%s' for x in data_dict))
+def get_plddt_dict_from_pdb(pdb_file):
     pdb = PDB.PDBParser().get_structure('pdb', pdb_file)[0]
     homomeric = defaultdict(tuple)
     chains = tuple(chain for chain in pdb)
@@ -125,34 +133,56 @@ def overall_confidence(plddt_tuple):
     average_plddt = sum(plddt_tuple)/len(plddt_tuple)
     return average_plddt
 
-def get_reference_boundaries(sequence_of_interest, msa, fasta_identifier):
-    """Returns the list_of_boundary_tuples within the reference protein that contain the sequence_of_interest, as well as, the boundaries of the
-    sections before and after. Boundary tuples that contain the sequence_of_interest are marked by 'NS' as in Not Spliced into
-    the resulting chimera, and all other tuples are marked with 'S' as in spliced into the chimera.
-    The tuples are provided as so: ('NS',boundary_one,boundary_two) or ('S',boundary_one,boundary_two)"""
-    # This uses the msa to grab the reference sequence outlined by fasta_identifier
-    with open(msa, 'r') as alignment:
-        alignment = alignment.read().split('>')
-        sequence_dictionary = {sequence.split('\n')[0]: ''.join(sequence.split('\n')[1:]) for sequence in alignment if
-                               len(sequence) != 0}
-    reference_sequence = ''.join(x for x in sequence_dictionary[fasta_identifier] if x != '-')
-    # This is recording the 'NS' boundaries that indicate the boundaries of the sequence_of_interest
-    splice_start = reference_sequence.find(sequence_of_interest)
-    splice_end = splice_start + len(sequence_of_interest)
+# def get_reference_boundaries(sequence_of_interest, msa, fasta_identifier):
+#     """Returns the list_of_boundary_tuples within the reference protein that contain the sequence_of_interest, as well as, the boundaries of the
+#     sections before and after. Boundary tuples that contain the sequence_of_interest are marked by 'NS' as in Not Spliced into
+#     the resulting chimera, and all other tuples are marked with 'S' as in spliced into the chimera.
+#     The tuples are provided as so: ('NS',boundary_one,boundary_two) or ('S',boundary_one,boundary_two)"""
+#     # This uses the msa to grab the reference sequence outlined by fasta_identifier
+#     with open(msa, 'r') as alignment:
+#         alignment = alignment.read().split('>')
+#         sequence_dictionary = {sequence.split('\n')[0]: ''.join(sequence.split('\n')[1:]) for sequence in alignment if
+#                                len(sequence) != 0}
+#     reference_sequence = ''.join(x for x in sequence_dictionary[fasta_identifier] if x != '-')
+#     # This is recording the 'NS' boundaries that indicate the boundaries of the sequence_of_interest
+#     splice_start = reference_sequence.find(sequence_of_interest)
+#     splice_end = splice_start + len(sequence_of_interest)
+#     # Then those boundaries are compared against the very beginning and end of the proteins, by introducing them into a set
+#     # to get of redundancy if the sequence_of_interest boundaries contain the beginning or end
+#     boundaries = tuple({0, splice_start, splice_end, len(reference_sequence)})
+#     # They are sorted into ascending order
+#     boundaries=sorted(boundaries)
+#     spliced_out = (splice_start, splice_end)
+#     list_of_boundary_tuples = []
+#     # Then the loop checks if they're the sequence_of_interest boundaries and marks them accordingly
+#     for x in range(len(boundaries) - 1):
+#         if (boundaries[x], boundaries[x + 1]) == spliced_out:
+#             list_of_boundary_tuples.append(('NS', boundaries[x], boundaries[x + 1]))
+#         else:
+#             list_of_boundary_tuples.append(('S', boundaries[x], boundaries[x + 1]))
+#     return list_of_boundary_tuples
+def turn_plddt_dict_into_tuples(plddt_dict):
+    plddt_list_of_tuples=[]
+    for seq,plddt in plddt_dict.items():
+        plddt_list_of_tuples.append((seq,plddt))
+    return plddt_list_of_tuples
+def get_chimera_boundaries(chimera_seq,seq_spliced_into_ref):
+    splice_start = chimera_seq.find(seq_spliced_into_ref)
+    splice_end = splice_start + len(seq_spliced_into_ref)
     # Then those boundaries are compared against the very beginning and end of the proteins, by introducing them into a set
     # to get of redundancy if the sequence_of_interest boundaries contain the beginning or end
-    boundaries = tuple({0, splice_start, splice_end, len(reference_sequence)})
-    # They are sorted into ascending order
+    boundaries = tuple({0, splice_start, splice_end, len(chimera_seq)})
     boundaries=sorted(boundaries)
-    spliced_out = (splice_start, splice_end)
-    list_of_boundary_tuples = []
-    # Then the loop checks if they're the sequence_of_interest boundaries and marks them accordingly
-    for x in range(len(boundaries) - 1):
-        if (boundaries[x], boundaries[x + 1]) == spliced_out:
-            list_of_boundary_tuples.append(('NS', boundaries[x], boundaries[x + 1]))
+    chimera_boundaries=[]
+    for index in range(len(boundaries) - 1):
+        if (boundaries[index], boundaries[index + 1]) == (splice_start,splice_end):
+            chimera_boundaries.append(('native', boundaries[index], boundaries[index + 1]))
         else:
-            list_of_boundary_tuples.append(('S', boundaries[x], boundaries[x + 1]))
-    return list_of_boundary_tuples
+            chimera_boundaries.append(('ref', boundaries[index], boundaries[index + 1]))
+    return chimera_boundaries
+
+
+
 
 def relative_stability(native_plddt, native_boundary_tuple, chimera_plddt, chimera_boundary_tuple):
     """Returns the relative percent difference between the two equally sized sections of plddt scores that are outlined with
@@ -163,40 +193,76 @@ def relative_stability(native_plddt, native_boundary_tuple, chimera_plddt, chime
     native_score = native_plddt[native_boundary_tuple[0]:native_boundary_tuple[1]]
     chimera_score = chimera_plddt[chimera_boundary_tuple[0]:chimera_boundary_tuple[1]]
     # Recording the length of the residue scores for averaging purposes later
+    print('native:', native_boundary_tuple, 'chimera:', chimera_boundary_tuple)
     splice_length = len(chimera_score)
     relative_difference = sum((chimera-native) / native*100 for native, chimera in zip(native_score, chimera_score))
     return relative_difference, splice_length
-
-def average_relative_stability_full_chimera(native_plddt, native_boundary_tuple,
-                                            chimera_plddt, reference_plddt,
-                                            sequence_of_interest, msa, reference_fasta_identifier):
-    """Returns the averaged relative stability of a full length chimera, given a: multiple sequence alignment, reference
-    protein's plddt and identifier in the msa, the plddt of the wild-type splice partner for the reference and the boundaries as a tuple
-    that contain the spliced in sequence, and the resulting chimera's plddt"""
+# TODO compare sequences before lloking at relative stability
+def revamped_rs(native_plddt_dict, chimera_plddt_dict, reference_plddt_dict, seq_spliced_into_ref):
     raw_stability = 0
-    # This variable is recording the chimera boundaries for relative stability comparison and will also help withe averaging later
-    current_chimera_index = 0
-    # Retrieves boundaries for which sections of the reference protein to compare to the chimera
-    reference_boundaries = get_reference_boundaries(sequence_of_interest,msa,reference_fasta_identifier)
-    for index, tuples in enumerate(reference_boundaries):
-        # NS indicates that its time to calculate relative stability against the parent splice partner rather than the
-        #reference protein
-        if tuples[0] == 'NS':
-            comparison_splice_length = native_boundary_tuple[1] - native_boundary_tuple[0]
-            raw_stability += relative_stability(native_plddt, native_boundary_tuple, chimera_plddt,
-                                                (current_chimera_index, current_chimera_index + comparison_splice_length))[0]
-            current_chimera_index += comparison_splice_length
-        # S represents the opposite, that the chimera should now be compared to the reference protein
-        elif tuples[0] == 'S':
-            reference_splice_length = tuples[2] - tuples[1]
-            raw_stability += relative_stability(reference_plddt,
-                                                tuples[1:],
-                                                chimera_plddt,
-                                                (current_chimera_index,
-                                                 current_chimera_index + reference_splice_length))[0]
-            current_chimera_index += reference_splice_length
-    averaged_relative_stability = raw_stability / (current_chimera_index)
-    return averaged_relative_stability
+    native_seq=turn_plddt_dict_into_tuples(native_plddt_dict)[0][0]
+    native_plddt=turn_plddt_dict_into_tuples(native_plddt_dict)[0][1]
+    chi_seq=turn_plddt_dict_into_tuples(chimera_plddt_dict)[0][0]
+    chi_plddt = turn_plddt_dict_into_tuples(chimera_plddt_dict)[0][1]
+    reference_seq=turn_plddt_dict_into_tuples(reference_plddt_dict)[0][0]
+    reference_plddt = turn_plddt_dict_into_tuples(reference_plddt_dict)[0][1]
+    chimera_boundaries=get_chimera_boundaries(chi_seq, seq_spliced_into_ref)
+    for boundary in chimera_boundaries:
+        seq_chunk=chi_seq[boundary[1]:boundary[2]]
+        if boundary[0]=='native':
+            start=native_seq.find(seq_chunk)
+            end=start+len(seq_chunk)
+            native_chunk=native_seq[start:end]
+            if native_chunk==seq_chunk:
+                raw_stability+=relative_stability(native_plddt,(start,end),chi_plddt,boundary[1:])[0]
+            else:
+                print('sequences arent equal')
+                break
+        elif boundary[0]=='ref':
+            start=reference_seq.find(seq_chunk)
+            end=start+len(seq_chunk)
+            ref_chunk=reference_seq[start:end]
+            if ref_chunk==seq_chunk:
+                raw_stability+=relative_stability(reference_plddt,(start,end),chi_plddt,boundary[1:])[0]
+            else:
+                print('sequences arent equal')
+                break
+        else:
+            print('sequences arent equal')
+            break
+    return raw_stability/len(chi_seq)
+
+
+# def average_relative_stability_full_chimera(native_plddt, native_boundary_tuple,
+#                                             chimera_plddt, reference_plddt,
+#                                             sequence_of_interest, msa, reference_fasta_identifier):
+#     """Returns the averaged relative stability of a full length chimera, given a: multiple sequence alignment, reference
+#     protein's plddt and identifier in the msa, the plddt of the wild-type splice partner for the reference and the boundaries as a tuple
+#     that contain the spliced in sequence, and the resulting chimera's plddt"""
+#     raw_stability = 0
+#     # This variable is recording the chimera boundaries for relative stability comparison and will also help withe averaging later
+#     current_chimera_index = 0
+#     # Retrieves boundaries for which sections of the reference protein to compare to the chimera
+#     reference_boundaries = get_reference_boundaries(sequence_of_interest,msa,reference_fasta_identifier)
+#     for index, tuples in enumerate(reference_boundaries):
+#         # NS indicates that its time to calculate relative stability against the parent splice partner rather than the
+#         #reference protein
+#         if tuples[0] == 'NS':
+#             comparison_splice_length = native_boundary_tuple[1] - native_boundary_tuple[0]
+#             raw_stability += relative_stability(native_plddt, native_boundary_tuple, chimera_plddt,
+#                                                 (current_chimera_index, current_chimera_index + comparison_splice_length))[0]
+#             current_chimera_index += comparison_splice_length
+#         # S represents the opposite, that the chimera should now be compared to the reference protein
+#         elif tuples[0] == 'S':
+#             reference_splice_length = tuples[2] - tuples[1]
+#             raw_stability += relative_stability(reference_plddt,
+#                                                 tuples[1:],
+#                                                 chimera_plddt,
+#                                                 (current_chimera_index,
+#                                                  current_chimera_index + reference_splice_length))[0]
+#             current_chimera_index += reference_splice_length
+#     averaged_relative_stability = raw_stability / (current_chimera_index)
+#     return averaged_relative_stability
 
 def averaging_multimer_plddt(plddt_file, new_plddt_file,subunits):
     """This function takes a plddt and averages the scores

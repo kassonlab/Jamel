@@ -7,7 +7,7 @@ parser = argparse.ArgumentParser(description='')
 parser.add_argument('-a', '--start', type=str, required=False, help='')
 parser.add_argument('-s', '--to', type=str, required=True, help='')
 parser.add_argument('-z', '--zip', type=str, required=False, help='')
-parser.add_argument('--delete', type=bool,required=False, default=False,help='')
+parser.add_argument('--delete', action='store_true',required=False, default=False,help='')
 args = parser.parse_args()
 folder_of_folders=[folder for folder in listdir(args.start)]
 if args.start and args.to:

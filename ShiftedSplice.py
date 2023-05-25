@@ -200,7 +200,7 @@ for container in container_of_containers:
         # cuts is short for the sequence of either the reference or the partner sequence that aligned with the
         # reference that was cut by the sliding scanner
         container.chimeras[0].partner_cuts = boundary_info[0]
-        container.chimeras[0].partner_boundaries = boundary_info[1]
+        container.chimeras[0].get_plddt_dict_from_pdbdaries = boundary_info[1]
         container.chimeras[0].container_id = container
         container.not_chimera = 'yes'
     # Almost all toggles are switched on by typing True for value of the corresponding key ex. "Manually control
@@ -219,7 +219,7 @@ for container in container_of_containers:
             container.chimeras[index].reference_boundaries = boundary_info[2]
             container.chimeras[index].reference_cuts = spliced_out
             container.chimeras[index].partner_cuts = boundary_info[0]
-            container.chimeras[index].partner_boundaries = boundary_info[1]
+            container.chimeras[index].get_plddt_dict_from_pdbdaries = boundary_info[1]
             container.chimeras[index].container_id = container
 
     else:
@@ -237,7 +237,7 @@ for container in container_of_containers:
             container.chimeras[index].reference_boundaries = boundary_info[2]
             container.chimeras[index].reference_cuts = spliced_out
             container.chimeras[index].partner_cuts = boundary_info[0]
-            container.chimeras[index].partner_boundaries = boundary_info[1]
+            container.chimeras[index].get_plddt_dict_from_pdbdaries = boundary_info[1]
             container.chimeras[index].container_id = container
 
 # This loop creates copies of the non-chimeric protein to be paired with all the other chimeras created
@@ -350,12 +350,12 @@ if prime_container.operation_toggles['run_analysis_operation']:
     analysis_toggles = prime_container.analysis_args.analysis_toggles
     reference_pdb = path.join(f'{alphafold_directory}{reference_stem}', 'ranked_0.pdb')
     partner_pdb = path.join(f'{alphafold_directory}{partner_stem}', 'ranked_0.pdb')
-    reference_plddts = Analysis.get_plddt_tuple_from_pdb(reference_pdb)
-    partner_plddts = Analysis.get_plddt_tuple_from_pdb(partner_pdb)
+    reference_plddts = Analysis.get_plddt_dict_from_pdb(reference_pdb)
+    partner_plddts = Analysis.get_plddt_dict_from_pdb(partner_pdb)
 
     for chimera_group in groupings:
         chimera_group[0].pdb = path.join(f'{alphafold_directory}{chimera_group[0].file_stem}', 'ranked_0.pdb')
-        plddt_dict = Analysis.get_plddt_tuple_from_pdb(chimera_group[0].pdb)
+        plddt_dict = Analysis.get_plddt_dict_from_pdb(chimera_group[0].pdb)
         for chimera in chimera_group:
             if chimera.chi_sequence in plddt_dict:
                 chimera.plddt = plddt_dict[chimera.chi_sequence]
@@ -387,7 +387,7 @@ if prime_container.operation_toggles['run_analysis_operation']:
                 ref_plddt = reference_plddts[chimera.container_id.fasta_args.no_gap_ref_sequence]
                 par_plddt = reference_plddts[chimera.container_id.fasta_args.no_gap_par_sequence]
                 chimera.rel_stability = Analysis.average_relative_stability_full_chimera(par_plddt,
-                                                                                         chimera.partner_boundaries,
+                                                                                         chimera.get_plddt_dict_from_pdbdaries,
                                                                                          chimera.plddt,
                                                                                          ref_plddt,
                                                                                          chimera.chi_sequence,
@@ -398,7 +398,7 @@ if prime_container.operation_toggles['run_analysis_operation']:
                 ref_plddt = reference_plddts[chimera.container_id.fasta_args.no_gap_ref_sequence]
                 par_plddt = partner_plddts[chimera.container_id.fasta_args.no_gap_par_sequence]
                 chimera.rel_stability = Analysis.average_relative_stability_full_chimera(par_plddt,
-                                                                                         chimera.partner_boundaries,
+                                                                                         chimera.get_plddt_dict_from_pdbdaries,
                                                                                          chimera.plddt,
                                                                                          ref_plddt,
                                                                                          chimera.reference_cuts,

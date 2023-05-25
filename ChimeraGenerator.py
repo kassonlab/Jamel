@@ -4,10 +4,11 @@
 """Routines to generate chimeric sequences."""
 
 from pathlib import Path
-from json import load,dump
+from json import load, dump
 from os import path
 
-class chimeracls():
+
+class chimeracls:
     pass
 
 
@@ -46,8 +47,9 @@ def fasta_creation(file_name, list_of_sequence_subunits_label_tuples):
             for replicates in range(subunits):
                 outfile.write(f'>{fasta_id}\n{sequence}\n')
 
+
 # TODO create a separate functionality file???
-def update_json(default_json, dilapidated_json):
+def update_json(default_json, dilapidated_json,overwrite=False):
     try:
         with open(default_json, 'r') as f:
             default = load(f)
@@ -62,6 +64,7 @@ def update_json(default_json, dilapidated_json):
                 merge_dict(value, dilapidated_dict[key])
             if key not in dilapidated_dict:
                 dilapidated_dict[key] = value
+
     # TODO question marks ruin this
 
     def reduce_dict(default_dict, dilapidated_dict):
@@ -73,43 +76,86 @@ def update_json(default_json, dilapidated_json):
 
     merge_dict(default, dilapidated)
     reduce_dict(default, dilapidated)
-    with open(str(Path(dilapidated_json).parent) + '/new' + str(Path(dilapidated_json).name), 'w') as f:
-        dump(dilapidated, f, indent=4)
+    if overwrite:
+        with open(dilapidated_json, 'w') as f:
+            dump(dilapidated, f, indent=4)
+    else:
+        with open(str(Path(dilapidated_json).parent) + '/new' + str(Path(dilapidated_json).name), 'w') as f:
+            dump(dilapidated, f, indent=4)
 
 
-def change_value(dictionary,noted_key,new_value):
-    for key,value in dictionary.items():
-        if isinstance(value,dict):
-            change_value(value,noted_key,new_value)
-        elif key==noted_key:
-            dictionary[noted_key]=new_value
+def change_json_value(json, noted_key='', new_value='',overwrite=False,find_n_replace_tuple=''):
+    try:
+        with open(json, 'r') as f:
+            json_dict = load(f)
+    except FileNotFoundError:
+        pass
 
+    def change(inner_dict):
+        for key, value in inner_dict.items():
+            if isinstance(value, dict):
+                change(value)
+            elif key == noted_key:
+                inner_dict[key] = new_value
+                break
+    def find_n_replace(inner_dict):
+        for key, value in inner_dict.items():
+            if isinstance(value, dict):
+                find_n_replace(value)
+            elif isinstance(value, str) and find_n_replace_tuple[0] in value:
+                print(value.replace(find_n_replace_tuple[0],find_n_replace_tuple[1]))
+                inner_dict[key] = value.replace(find_n_replace_tuple[0],find_n_replace_tuple[1])
+                break
+    if find_n_replace_tuple:
+        find_n_replace(json_dict)
+    else:
+        change(json_dict)
+    if overwrite:
+        with open(json, 'w') as f:
+            dump(json_dict, f, indent=4)
+    else:
+        with open(str(Path(json).parent) + '/new' + str(Path(json).name), 'w') as f:
+            dump(json_dict, f, indent=4)
 
-def print_keys(dictionary):
-    for key,value in dictionary.items():
-        if isinstance(value,dict):
-            print_keys(value)
-        else:
+def print_keys(dictionary,key_of_interest=''):
+    dict_of_keys = {}
+
+    def iterate_over_keys(inner_dictionary):
+        for key, value in inner_dictionary.items():
+            if isinstance(value, dict):
+                iterate_over_keys(value)
+            else:
+                dict_of_keys[key]=value
+    iterate_over_keys(dictionary)
+    for key,value in sorted(list(dict_of_keys.items())):
+        if key_of_interest and key_of_interest==key:
+            print(key,':',value)
+            break
+    else:
+        for key, value in sorted(list(dict_of_keys.items())):
             print(key)
+
+
+
 def assign_file_attrs_to_chimeras(container):
     for chimera in container.chimeras:
         placeholder = container.naming_args.placeholder
         subunits = container.fasta_args.number_of_subunits
         alphafold_dir = container.naming_args.alphafold_outputs_dir
         chimera.monomer_stem = container.naming_args.monomer_naming_convention.replace(placeholder,
-                                                                                               chimera.nickname)
+                                                                                       chimera.file_stem)
         chimera.chimera_stem = container.naming_args.chimera_naming_convention.replace(placeholder,
-                                                                                               chimera.nickname)
+                                                                                       chimera.file_stem)
         chimera.chi_pdb = path.join(f'{alphafold_dir}{chimera.chimera_stem}', 'ranked_0.pdb')
         chimera.monomer_fasta = container.naming_args.fasta_directory + chimera.monomer_stem + container.naming_args.fasta_extension
         chimera.chimera_fasta = container.naming_args.fasta_directory + chimera.chimera_stem + container.naming_args.fasta_extension
         chimera.multimer_stem = container.naming_args.multimer_naming_convention.replace(placeholder,
-                                                                                                 chimera.nickname)
+                                                                                         chimera.file_stem)
         chimera.multimer_fasta = container.naming_args.fasta_directory + chimera.multimer_stem + container.naming_args.fasta_extension
 
         if subunits == 1:
             chimera.multimer_stem = container.naming_args.monomer_naming_convention.replace(placeholder,
-                                                                                                    chimera.nickname)
+                                                                                            chimera.file_stem)
             chimera.multimer_fasta = container.naming_args.fasta_directory + chimera.monomer_stem + container.naming_args.fasta_extension
 
         chimera.native_pdb = path.join(f'{alphafold_dir}{chimera.multimer_stem}', 'ranked_0.pdb')

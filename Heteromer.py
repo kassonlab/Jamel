@@ -313,12 +313,12 @@ if prime_container.operation_toggles['run_analysis_operation?'] == 'True':
     analysis_toggles = prime_container.analysis_args.analysis_toggles
     reference_pdb = path.join(f'{alphafold_directory}{reference_stem}', 'ranked_0.pdb')
     partner_pdb = path.join(f'{alphafold_directory}{partner_stem}', 'ranked_0.pdb')
-    reference_plddts = Analysis.get_plddt_tuple_from_pdb(reference_pdb)
-    partner_plddts = Analysis.get_plddt_tuple_from_pdb(partner_pdb)
+    reference_plddts = Analysis.get_plddt_dict_from_pdb(reference_pdb)
+    partner_plddts = Analysis.get_plddt_dict_from_pdb(partner_pdb)
 
     for chimera_group in groupings:
         chimera_group[0].pdb = path.join(f'{alphafold_directory}{chimera_group[0].file_stem}', 'ranked_0.pdb')
-        plddt_dict = Analysis.get_plddt_tuple_from_pdb(chimera_group[0].pdb)
+        plddt_dict = Analysis.get_plddt_dict_from_pdb(chimera_group[0].pdb)
         for chimera in chimera_group:
             if chimera.chi_sequence in plddt_dict:
                 chimera.plddt = plddt_dict[chimera.chi_sequence]

@@ -11,11 +11,10 @@
         "plddt_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Analysis_Folders/NTD_HA/",
         "alphafold_outputs_dir": "/gpfs/gpfs0/scratch/jws6pq/Notebook/AlphaFold_Outputs/NTD_HA/",
         "gromacs_slurm_dir": "/gpfs/gpfs0/scratch/jws6pq/Gromacs/",
-        "emboss_names": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/H3N2vs*HA2.emboss",
         "fasta_extension": ".fasta",
         "plddt_extension": ".plddt",
-        "setup_extension": ".setup",
-        "production_extension": ".prod",
+        "gmx_setup_extension": ".setup",
+        "gmx_production_extension": ".prod",
         "pdb_extension": ".pdb"
     },
     "fasta_arguments": {
@@ -34,7 +33,7 @@
         "constant_fasta_for_alphafold": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/3merOmicron.fasta"
     },
     "alphafold_submission_args": {
-        "submission_toggles": {"create_slurms":false,"sbatch slurms": false,"stragglers_or_custom_or_all": "stragglers","create file of stragglers": false},
+        "submission_toggles": {"create_slurms":false,"sbatch_slurms": false,"stragglers_or_custom_or_all": "stragglers","create_file_of_stragglers": false},
         "custom_list_to_run": "",
         "proteins_per_slurm": 8,
         "slurm_naming": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/*P_M_ShiftedAlphaFold.slurm",
