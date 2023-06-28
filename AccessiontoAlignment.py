@@ -3,6 +3,7 @@
 #  Code 2023 by Jamel Simpson
 
 from os import system
+import json
 from pathlib import Path
 from Bio import Entrez,Phylo,AlignIO
 from random import choice
@@ -68,7 +69,38 @@ def accession_to_fasta(monomer_file_name, accession, email_for_Bio,subunits, mul
     fasta_creation(monomer_file_name, (sequence, 1,Path(monomer_file_name).stem))
     if subunits != 1:
         fasta_creation(multimer_name, (sequence, subunits,Path(multimer_name).stem))
+# TODO make this fancy
+def accession_to_fasta_nucleic(monomer_file_name, accession, email_for_Bio):
+    """Takes an accession number and creates a fasta file with the sequence that corresponds with the accession given.
+    A monomeric file is always created by default for alignment purposes even if a multimer file is requested"""
+    Entrez.email = email_for_Bio
+    # Pulling the sequence corresponding with accession numer specified
+    handle = Entrez.esearch(db='gene', term=accession,idtype='acc',rettype='uilist',retmode='json').readlines()[0]
+    diction=json.loads(handle)
 
+    try:
+        gi = diction['esearchresult']['idlist'][0]
+        handle = Entrez.efetch(db='gene', id=gi, retmode='text', rettype='seqid').readlines()
+    except:
+        print(monomer_file_name)
+        return
+    for x in handle:
+        if 'Annotation' in x:
+            nc_accession=x.split()[1]
+            boundaries=x.split()[2].replace('(','').replace(')','').split('..')
+            start=int(boundaries[0])-1
+            end=int(boundaries[1])
+            handle = Entrez.efetch(db='nuccore', id=nc_accession, retmode='text', rettype='fasta').readlines()
+            sequence = ''.join(x for x in handle if x[0] != '>' if x != '').strip().replace('\n', '')[start:end]
+            return sequence
+
+
+    # Turning the retrieved sequence into a single string with no breaks
+    # sequence = ''.join(x for x in handle if x[0] != '>' if x != '').strip().replace('\n', '')
+    # Creating a monomer file by default for alignment purposes, if a multimer is requested it's made later
+    # fasta_creation(monomer_file_name, (sequence, 1,Path(monomer_file_name).stem))
+    # if subunits != 1:
+    #     fasta_creation(multimer_name, (sequence, subunits,Path(multimer_name).stem))
 
 def multiple_sequence_alignment(list_of_fastas, fasta_for_alignment, new_alignment_file, reference_protein_fasta,muscle_command):
     """Creates a multiple sequence alignment using muscle and a concatenated fasta file with a reference fasta as the base,
@@ -161,3 +193,7 @@ def exclude_related_sequences(cutoff,alignment_file,starting_sequence,included_f
         with open(excluded_file, 'w') as outfile:
             for strain,sequence in excluded.items():
                 outfile.write(f'>{strain}\n{sequence}\n')
+def create_list_of_fasta_files(list_of_fastas,file_name):
+    with open(file_name, 'w') as fasta_list_file:
+        fasta_list_file.write("\n".join(list_of_fastas))
+

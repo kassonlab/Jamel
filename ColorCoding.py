@@ -1,6 +1,12 @@
+from Bio import SeqIO
+from numpy import array,where
+from math import log
+from collections import Counter
+
+from ChimeraGenerator import fasta_creation
 def blosum_62_matrix():
     """Simply returns the blosum 62 matrix"""
-    from numpy import array
+
     blosum_62_array = array([['', 'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T',
                               'W', 'Y', 'V', 'B', 'Z', 'X', '-'],
                              ['A', 4.0, -1.0, -2.0, -2.0, 0.0, -1.0, -1.0, 0.0, -2.0, -1.0, -1.0, -1.0, -1.0, -2.0,
@@ -58,19 +64,18 @@ def blosum_62_matrix():
 def create_dictionary_from_alignment(alignment_file):
     """Takes a fasta style alignment and makes a dictionary where the key is whatever signifier follows '>'
     and the value is the sequence with no spaces"""
-    with open(alignment_file, "r") as alignment:
+    with open(alignment_file, 'r') as alignment:
         alignment = alignment.read().split('>')
-    sequence_dictionary = {sequence.split('\n')[0]: sequence.split('\n')[1].strip() for sequence in alignment if
-                           len(sequence) != 0}
+        sequence_dictionary = {sequence.split('\n')[0]: ''.join(sequence.split('\n')[1:]) for sequence in alignment
+                                        if
+                                        len(sequence) != 0}
     return sequence_dictionary
 
 
 def shannons_entropy_for_residue_conservation(reference_sequence_fasta_name, alignment_file):
     """Takes a fasta style alignment creates a list of shannon's entropy values
     for each residue position with an amino acid in the reference sequence given based on blosum 62 matrix scores"""
-    from numpy import where
-    from math import log
-    from collections import Counter
+
     # creating a dictionary of sequences where the keys are names signified in the fasta alignment alignment_file
     sequence_dictionary = create_dictionary_from_alignment(alignment_file)
     # Storing the sequence marked by reference_sequence_fasta_name
@@ -135,6 +140,22 @@ def plddt_color_coding(plddt_file, pdb_name, color_scheme_tuple):
     This function has to be run in pymol to work and the protein that is being color coded has to already exist"""
     list_of_values = [float(score) for score in open(plddt_file, 'r').readlines()]
     color_coding(pdb_name, list_of_values, (0, 100), color_scheme_tuple)
+def pdb_to_fasta(pdb,new_fasta):
+    with open(pdb, 'r') as pdb_file:
+        fasta_list=[]
+        for record in SeqIO.parse(pdb_file, 'pdb-atom'):
+            fasta_list.append((record.seq,1,record.id))
+    fasta_creation(new_fasta,fasta_list)
+with open("/gpfs/gpfs0/scratch/jws6pq/Notebook/Overall/List_of_coronaviruses", 'r') as loc:
+    loc = loc.readlines()
+for line in loc:
+
+    chi_pdb=f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/3merSARS2w{line.split()[-1]}S1.pdb'
+    chi_fasta=f'/gpfs/gpfs0/scratch/jws6pq/Notebook/Fastas/Broken_code_Fastas/3merSARS2w{line.split()[-1]}S1.fasta'
+    pdb_to_fasta(chi_pdb,chi_fasta)
+
+
+
 
 
 protein_list = ['BAT2006',

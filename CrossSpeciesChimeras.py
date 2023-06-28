@@ -2,6 +2,8 @@ from json import load
 from os import path
 from pathlib import Path
 from sys import exit
+
+import AccessiontoAlignment
 import Analysis
 from setup import alphafold_submission_for_chimera_container
 from AccessiontoAlignment import alignment_finder, accession_to_fasta, multiple_sequence_alignment
@@ -9,7 +11,6 @@ import ChimeraGenerator
 import argparse
 
 # TODO add autocomplete for changing keys?? readline
-# TODO add a commandline to change specific keys and replace recurring string through out all keys
 # TODO be able to designate multiple seq_of_interest
 # TODO test accession route
 # TODO test this between homologous proteins
@@ -129,9 +130,10 @@ class CrossFastaArguments:
     '''The start of the muscle command to be run to create the alignment.'''
     number_of_subunits: int
     sequence_of_interest: str
-    '''This is the path to the fasta containing the sequence of either the constant protein you want spliced into the variant proteins, or the section 
-    of the variants you want replaced with the constant protein. Each sequence of interest should be in their own 
-    fasta file. All non-reference variant proteins will have the homologous sequence from an alignment replaces'''
+    '''This is the path to the fasta containing the sequence of either the constant protein you want spliced into the 
+    variant proteins, or the section of the variants you want replaced with the constant protein. Each sequence of 
+    interest should be in their own fasta file. All non-reference variant proteins will have the homologous sequence 
+    from an alignment replaced'''
     full_reference_fasta: str
     '''The path to full-length protein of the constant protein or the reference for the variants'''
     msa_file_name: str
@@ -155,17 +157,17 @@ class CrossSubmissionArguments:
     placing true within the quotes of their value'''
     create_slurms: bool
     sbatch_slurms: bool
-    stragglers_or_custom_or_all: bool
+    stragglers_or_custom_or_all: bool = 'stragglers'
     '''If stragglers is placed in the quotes it will check to see if an alphafold prediction is done for all created 
     chimeras and making a new the list of incomplete predictions or 'stragglers' to either create a file with their 
     fastas or put them into a slurm to be submitted again. If custom is placed, all chimeras within the 
     custom_list_to_run file will be submitted as slurm jobs. If all is selected all chimeras will be run 
     indiscriminately'''
+    create_file_of_stragglers: bool
 
     custom_list_to_run: str
-    '''List that either be created by toggling on create_file_of_stragglers, or user-generated and should contain 
+    '''Path to file that for list that either be created by toggling on create_file_of_stragglers, or user-generated that should contain 
     line separated fastas of proteins you want predicted'''
-    create_file_of_stragglers: str
     proteins_per_slurm: int
     template_slurm: str
     '''Path to the file that has the template settings for alphafold slurm jobs'''
@@ -193,13 +195,16 @@ class CrossAnalysisArguments:
     '''A dictionary containing a multiple keys and their list value that each correspond with a type of data that is 
     output by the script, a user-selected title for the data column and whether that data is included in the final 
     output'''
-    overall_native_stability: list
     file_stem: list
-    '''A list [true,"Protein"] that contains quotes that when filled with true, include a data column in the final 
-    output that contains the file_stems created from the naming convention previously established. The second index 
-    controls the column name in the final output'''
+    '''An array [true,"Protein"] that contains a boolean that will control whether the data column containing 
+    filestems/nicknames created from the naming convention previously established will be included in the data csv.  
+    The second index controls the column name in the csv'''
+    overall_native_stability: list
+    '''See file_stem docstring'''
     relative_stability: list
+    '''See file_stem docstring'''
     overall_chimera_stability: list
+    '''See file_stem docstring'''
 
     def __init__(self, fasta_dict):
         for key, value in fasta_dict.items():
@@ -208,8 +213,12 @@ class CrossAnalysisArguments:
 
 class CrossChimeraContainer:
     argument_dict: dict
+    '''Dictionary containing all arguments for running the chimera script'''
     operation_toggles: dict
+    '''Dictionary containing boolean toggles for all major operation:fasta creation, alphafold submission, 
+    analysis of alphafold results, and gromacs simulation submission.'''
     run_fasta_operation: bool
+    
     alphafold_submission: bool
     run_analysis_operation: bool
     run_gromacs_operation: bool
@@ -232,7 +241,6 @@ class CrossChimeraContainer:
         self.chimeras += (chimera,)
 
 
-# TODO break some of this into functions
 container_of_containers = ()
 for index, jsn in enumerate(args.arg_jsons.split(',')):
     container = CrossChimeraContainer(jsn)
@@ -315,10 +323,8 @@ if variant_container.operation_toggles['run_fasta_operation'] or args.fasta:
         ChimeraGenerator.fasta_creation(chimera.chimera_fasta,
                                         [tuple((chimera.chi_seq, subunits, chimera.chimera_stem))])
     if fasta_toggles['Make_a_list_of_created_fasta_files']:
-        with open(variant_container.fasta_args.fasta_list_file_name, 'w') as fasta_list_file:
-            fasta_list_file.write(constant_submission + '\n')
-            fasta_list_file.write("\n".join(chimera.chimera_fasta for chimera in list_of_chis) + '\n')
-            fasta_list_file.write("\n".join(chimera.multimer_fasta for chimera in list_of_chis) + '\n')
+        list_of_fastas=[constant_submission]+[chimera.chimera_fasta for chimera in list_of_chis]+[chimera.multimer_fasta for chimera in list_of_chis]
+        AccessiontoAlignment.create_list_of_fasta_files(list_of_fastas,variant_container.fasta_args.fasta_list_file_name)
 
 if variant_container.operation_toggles['alphafold_submission'] or args.submission:
     variant_container.get_dict_args(CrossSubmissionArguments, 'submission_args', 'alphafold_submission_args')
@@ -343,6 +349,7 @@ if variant_container.operation_toggles['run_analysis_operation'] or args.analysi
         chimera.chi_plddt = {chimera.chi_seq: Analysis.get_plddt_dict_from_pdb(chimera.chi_pdb)[chimera.chi_seq]}
         chimera.overall_native_stability = Analysis.overall_confidence(chimera.native_plddt[chimera.native_seq])
         chimera.overall_chimera_stability = Analysis.overall_confidence(chimera.chi_plddt[chimera.chi_seq])
+
 
     if analysis_toggles['make_plddts']:
         for chimera in list_of_chis:

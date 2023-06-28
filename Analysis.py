@@ -5,9 +5,10 @@
 
 from pickle import load as p_load
 from json import load as j_load
-from os import system, path,strerror,listdir,makedirs
+from os import system, path, strerror, listdir, makedirs
 from shutil import copy
-from numpy import savetxt,empty
+from numpy import savetxt, empty,zeros
+from scipy.stats import rankdata
 from errno import ENOENT
 from Bio import PDB
 from collections import defaultdict
@@ -20,56 +21,63 @@ def determine_columns_from_container(container):
     # column_names from the analysis_args, Each container can have its own column preferences and every container
     # will have its own columns of data per data column requested
     column_choices = container.analysis_args.column_names
-    list_of_chis=container.chimeras
-    for data_type,[boolean,title] in column_choices.items():
+    list_of_chis = container.chimeras
+    for data_type, [boolean, title] in column_choices.items():
         if boolean:
-            data_columns[title] = tuple(getattr(chimera,data_type) for chimera in list_of_chis)
+            data_columns[title] = tuple(getattr(chimera, data_type) for chimera in list_of_chis)
     return data_columns
 
-def convert_data_dict_to_csv(data_dict,container):
+
+def convert_data_dict_to_csv(data_dict, container):
     data_array = empty(((len(container.chimeras) + 1), len(data_dict)), dtype=object)
     for column_count, (column_name, data) in enumerate(data_dict.items()):
         data_array[0, column_count] = column_name
         data_array[1:, column_count] = data
     savetxt(container.analysis_args.analysis_output_csv, data_array, fmt=','.join('%s' for x in data_dict))
+
+
 def get_plddt_dict_from_pdb(pdb_file):
     pdb = PDB.PDBParser().get_structure('pdb', pdb_file)[0]
     homomeric = defaultdict(tuple)
     chains = tuple(chain for chain in pdb)
     for chain in chains:
-        sequence=''.join(PDB.Polypeptide.three_to_one(resi.get_resname()) for resi in chain)
+        sequence = ''.join(PDB.Polypeptide.three_to_one(resi.get_resname()) for resi in chain)
         plddt = tuple(resi['CA'].bfactor for resi in chain)
         homomeric[sequence] += (plddt,)
-    homomeric = {sequence: tuple(sum(scores) / len(scores) for scores in zip(*homomers)) for sequence, homomers in homomeric.items()}
+    homomeric = {sequence: tuple(sum(scores) / len(scores) for scores in zip(*homomers)) for sequence, homomers in
+                 homomeric.items()}
     return homomeric
 
-def get_plddt_file_from_pdb(pdb_file,new_plddt_file):
+
+def get_plddt_file_from_pdb(pdb_file, new_plddt_file):
     pdb = PDB.PDBParser().get_structure('pdb', pdb_file)[0]
     homomeric = defaultdict(tuple)
     chains = tuple(chain for chain in pdb)
     for chain in chains:
-        sequence=''.join(PDB.Polypeptide.three_to_one(resi.get_resname()) for resi in chain)
+        sequence = ''.join(PDB.Polypeptide.three_to_one(resi.get_resname()) for resi in chain)
         plddt = tuple(resi['CA'].bfactor for resi in chain)
         homomeric[sequence] += (plddt,)
-    homomeric = {sequence: tuple(str(round(sum(scores) / len(scores),2)) for scores in zip(*homomers)) for sequence, homomers in homomeric.items()}
+    homomeric = {sequence: tuple(str(round(sum(scores) / len(scores), 2)) for scores in zip(*homomers)) for
+                 sequence, homomers in homomeric.items()}
     with open(new_plddt_file, 'w') as new_plddt:
-        new_plddt.write('\n'.join('>{0}\n{1}'.format(sequence,"\n".join(plddt)) for sequence, plddt in homomeric.items()))
+        new_plddt.write(
+            '\n'.join('>{0}\n{1}'.format(sequence, "\n".join(plddt)) for sequence, plddt in homomeric.items()))
 
 
 def skeletonize_alphafold_folder(alphafold_dir, storage_dir):
-    rank_file=path.join(alphafold_dir,'ranking_debug.json')
-    makedirs(storage_dir,exist_ok=True)
-    new_files=[]
-    dir_files=[file for file in listdir(alphafold_dir) if file.startswith('ranked')]
+    rank_file = path.join(alphafold_dir, 'ranking_debug.json')
+    makedirs(storage_dir, exist_ok=True)
+    new_files = []
+    dir_files = [file for file in listdir(alphafold_dir) if file.startswith('ranked')]
     try:
         copy(rank_file, path.join(storage_dir, 'ranking_debug.json'))
         for pdb_file in dir_files:
-            new_pdb=path.join(storage_dir,pdb_file)
-            new_plddt=path.join(storage_dir,str(Path(pdb_file).stem)+'.plddt')
+            new_pdb = path.join(storage_dir, pdb_file)
+            new_plddt = path.join(storage_dir, str(Path(pdb_file).stem) + '.plddt')
             new_files.append(new_pdb)
             new_files.append(new_plddt)
-            copy(path.join(alphafold_dir,pdb_file), new_pdb)
-            get_plddt_file_from_pdb(path.join(alphafold_dir,pdb_file), new_plddt)
+            copy(path.join(alphafold_dir, pdb_file), new_pdb)
+            get_plddt_file_from_pdb(path.join(alphafold_dir, pdb_file), new_plddt)
         if all(path.exists(file) for file in new_files):
             return True
     except FileNotFoundError:
@@ -77,8 +85,7 @@ def skeletonize_alphafold_folder(alphafold_dir, storage_dir):
         return False
 
 
-
-def run_Foldx(foldx_file,pdb_file,foldx_command):
+def run_Foldx(foldx_file, pdb_file, foldx_command):
     """Call FoldX.  This is optional functionality."""
     pdb_dir = path.dirname(pdb_file)
     foldx_dir = path.dirname(foldx_file)
@@ -86,31 +93,35 @@ def run_Foldx(foldx_file,pdb_file,foldx_command):
            f'--output-dir {foldx_dir} --output-file {path.basename(foldx_file)} '
            f'--pdb-dir {pdb_dir}')
 
+
 def get_Foldx_results(foldx_file):
     """Read FoldX results."""
     with open(foldx_file, 'r') as foldx_score:
         return foldx_score.read().split()[1]
+
 
 def generate_alphafold_files(alphafold_folder, new_plddt='', new_pdb=''):
     """Creates a text file containing the plddt values of the highest_rank_model extracted from alphafold's result pkl file
     and renames the ranked_0.pdb file and places it in the desired directory."""
     # Checking to see if ranking_debug.json exists. This file is the last to be output by alphafold and is a check that
     # the pkl file you want to extract from exists, as well as to avoid errors
-    ranking_file=path.join(alphafold_folder,'ranking_debug.json')
+    ranking_file = path.join(alphafold_folder, 'ranking_debug.json')
     try:
         if new_pdb:
             # The highest ranked structure is copied with a new name and directory
-            copy(path.join(alphafold_folder,'ranked_0.pdb'), new_pdb)
+            copy(path.join(alphafold_folder, 'ranked_0.pdb'), new_pdb)
         if new_plddt:
             # ranking_debug is also useful for determining which result pkl file is the highest ranked. The model result pkl files are
             # numbered by the order they are created and not their overall confidence score. The information about their rank by
             # confidence score is found in ranking_debug.json
             with open(ranking_file, 'r') as jfile:
                 highest_rank_model = j_load(jfile)['order'][0]
-            with open(path.join(alphafold_folder,f'result_{highest_rank_model}.pkl'), 'rb') as pfile:
+            with open(path.join(alphafold_folder, f'result_{highest_rank_model}.pkl'), 'rb') as pfile:
                 # The plddt scores are put into a column in a text file named by new_plddt
                 savetxt(new_plddt, p_load(pfile)['plddt'], fmt='%s', delimiter=' ')
-    except FileNotFoundError: raise FileNotFoundError(ENOENT, strerror(ENOENT), ranking_file)
+    except FileNotFoundError:
+        raise FileNotFoundError(ENOENT, strerror(ENOENT), ranking_file)
+
 
 def get_sequence_similarity(emboss_file):
     """Returns sequence similarity from an emboss needle file."""
@@ -118,70 +129,50 @@ def get_sequence_similarity(emboss_file):
         infile = infile.read().split('#')
         for line in infile:
             if 'Similarity' in line:
-                emboss_score = line.split()[-1].replace('(','').replace(')','').replace('%','')
+                emboss_score = line.split()[-1].replace('(', '').replace(')', '').replace('%', '')
     return emboss_score
+
 
 def overall_confidence_from_file(plddt_file):
     """Returns the average confidence score from a protein's plddt file."""
     with open(plddt_file, 'r') as infile:
         plddt = tuple(float(score) for score in infile.readlines())
-    average_plddt = sum(plddt)/len(plddt)
+    average_plddt = sum(plddt) / len(plddt)
     return average_plddt
+
 
 def overall_confidence(plddt_tuple):
     """Returns the average confidence score from a protein's plddt file."""
-    average_plddt = sum(plddt_tuple)/len(plddt_tuple)
+    average_plddt = sum(plddt_tuple) / len(plddt_tuple)
     return average_plddt
 
-# def get_reference_boundaries(sequence_of_interest, msa, fasta_identifier):
-#     """Returns the list_of_boundary_tuples within the reference protein that contain the sequence_of_interest, as well as, the boundaries of the
-#     sections before and after. Boundary tuples that contain the sequence_of_interest are marked by 'NS' as in Not Spliced into
-#     the resulting chimera, and all other tuples are marked with 'S' as in spliced into the chimera.
-#     The tuples are provided as so: ('NS',boundary_one,boundary_two) or ('S',boundary_one,boundary_two)"""
-#     # This uses the msa to grab the reference sequence outlined by fasta_identifier
-#     with open(msa, 'r') as alignment:
-#         alignment = alignment.read().split('>')
-#         sequence_dictionary = {sequence.split('\n')[0]: ''.join(sequence.split('\n')[1:]) for sequence in alignment if
-#                                len(sequence) != 0}
-#     reference_sequence = ''.join(x for x in sequence_dictionary[fasta_identifier] if x != '-')
-#     # This is recording the 'NS' boundaries that indicate the boundaries of the sequence_of_interest
-#     splice_start = reference_sequence.find(sequence_of_interest)
-#     splice_end = splice_start + len(sequence_of_interest)
-#     # Then those boundaries are compared against the very beginning and end of the proteins, by introducing them into a set
-#     # to get of redundancy if the sequence_of_interest boundaries contain the beginning or end
-#     boundaries = tuple({0, splice_start, splice_end, len(reference_sequence)})
-#     # They are sorted into ascending order
-#     boundaries=sorted(boundaries)
-#     spliced_out = (splice_start, splice_end)
-#     list_of_boundary_tuples = []
-#     # Then the loop checks if they're the sequence_of_interest boundaries and marks them accordingly
-#     for x in range(len(boundaries) - 1):
-#         if (boundaries[x], boundaries[x + 1]) == spliced_out:
-#             list_of_boundary_tuples.append(('NS', boundaries[x], boundaries[x + 1]))
-#         else:
-#             list_of_boundary_tuples.append(('S', boundaries[x], boundaries[x + 1]))
-#     return list_of_boundary_tuples
 def turn_plddt_dict_into_tuples(plddt_dict):
-    plddt_list_of_tuples=[]
-    for seq,plddt in plddt_dict.items():
-        plddt_list_of_tuples.append((seq,plddt))
+    plddt_list_of_tuples = []
+    for seq, plddt in plddt_dict.items():
+        plddt_list_of_tuples.append((seq, plddt))
     return plddt_list_of_tuples
-def get_chimera_boundaries(chimera_seq,seq_spliced_into_ref):
-    splice_start = chimera_seq.find(seq_spliced_into_ref)
+
+
+def get_chimera_boundaries(chimera_seq, seq_spliced_into_ref):
+    if chimera_seq.find(seq_spliced_into_ref) != -1:
+        splice_start = chimera_seq.find(seq_spliced_into_ref)
+    else:
+        print('broken')
+        print(chimera_seq, seq_spliced_into_ref)
+        return
     splice_end = splice_start + len(seq_spliced_into_ref)
     # Then those boundaries are compared against the very beginning and end of the proteins, by introducing them into a set
     # to get of redundancy if the sequence_of_interest boundaries contain the beginning or end
+
     boundaries = tuple({0, splice_start, splice_end, len(chimera_seq)})
-    boundaries=sorted(boundaries)
-    chimera_boundaries=[]
+    boundaries = sorted(boundaries)
+    chimera_boundaries = []
     for index in range(len(boundaries) - 1):
-        if (boundaries[index], boundaries[index + 1]) == (splice_start,splice_end):
+        if (boundaries[index], boundaries[index + 1]) == (splice_start, splice_end):
             chimera_boundaries.append(('native', boundaries[index], boundaries[index + 1]))
         else:
             chimera_boundaries.append(('ref', boundaries[index], boundaries[index + 1]))
     return chimera_boundaries
-
-
 
 
 def relative_stability(native_plddt, native_boundary_tuple, chimera_plddt, chimera_boundary_tuple):
@@ -193,78 +184,47 @@ def relative_stability(native_plddt, native_boundary_tuple, chimera_plddt, chime
     native_score = native_plddt[native_boundary_tuple[0]:native_boundary_tuple[1]]
     chimera_score = chimera_plddt[chimera_boundary_tuple[0]:chimera_boundary_tuple[1]]
     # Recording the length of the residue scores for averaging purposes later
-    print('native:', native_boundary_tuple, 'chimera:', chimera_boundary_tuple)
     splice_length = len(chimera_score)
-    relative_difference = sum((chimera-native) / native*100 for native, chimera in zip(native_score, chimera_score))
+    relative_difference = sum((chimera - native) / native * 100 for native, chimera in zip(native_score, chimera_score))
     return relative_difference, splice_length
+
+
 # TODO compare sequences before lloking at relative stability
 def revamped_rs(native_plddt_dict, chimera_plddt_dict, reference_plddt_dict, seq_spliced_into_ref):
     raw_stability = 0
-    native_seq=turn_plddt_dict_into_tuples(native_plddt_dict)[0][0]
-    native_plddt=turn_plddt_dict_into_tuples(native_plddt_dict)[0][1]
-    chi_seq=turn_plddt_dict_into_tuples(chimera_plddt_dict)[0][0]
+    native_seq = turn_plddt_dict_into_tuples(native_plddt_dict)[0][0]
+    native_plddt = turn_plddt_dict_into_tuples(native_plddt_dict)[0][1]
+    chi_seq = turn_plddt_dict_into_tuples(chimera_plddt_dict)[0][0]
     chi_plddt = turn_plddt_dict_into_tuples(chimera_plddt_dict)[0][1]
-    reference_seq=turn_plddt_dict_into_tuples(reference_plddt_dict)[0][0]
+    reference_seq = turn_plddt_dict_into_tuples(reference_plddt_dict)[0][0]
     reference_plddt = turn_plddt_dict_into_tuples(reference_plddt_dict)[0][1]
-    chimera_boundaries=get_chimera_boundaries(chi_seq, seq_spliced_into_ref)
+    chimera_boundaries = get_chimera_boundaries(chi_seq, seq_spliced_into_ref)
     for boundary in chimera_boundaries:
-        seq_chunk=chi_seq[boundary[1]:boundary[2]]
-        if boundary[0]=='native':
-            start=native_seq.find(seq_chunk)
-            end=start+len(seq_chunk)
-            native_chunk=native_seq[start:end]
-            if native_chunk==seq_chunk:
-                raw_stability+=relative_stability(native_plddt,(start,end),chi_plddt,boundary[1:])[0]
+        seq_chunk = chi_seq[boundary[1]:boundary[2]]
+        if boundary[0] == 'native':
+            start = native_seq.find(seq_chunk)
+            end = start + len(seq_chunk)
+            native_chunk = native_seq[start:end]
+            if native_chunk == seq_chunk:
+                raw_stability += relative_stability(native_plddt, (start, end), chi_plddt, boundary[1:])[0]
             else:
                 print('sequences arent equal')
                 break
-        elif boundary[0]=='ref':
-            start=reference_seq.find(seq_chunk)
-            end=start+len(seq_chunk)
-            ref_chunk=reference_seq[start:end]
-            if ref_chunk==seq_chunk:
-                raw_stability+=relative_stability(reference_plddt,(start,end),chi_plddt,boundary[1:])[0]
+        elif boundary[0] == 'ref':
+            start = reference_seq.find(seq_chunk)
+            end = start + len(seq_chunk)
+            ref_chunk = reference_seq[start:end]
+            if ref_chunk == seq_chunk:
+                raw_stability += relative_stability(reference_plddt, (start, end), chi_plddt, boundary[1:])[0]
             else:
                 print('sequences arent equal')
                 break
         else:
             print('sequences arent equal')
             break
-    return raw_stability/len(chi_seq)
+    return raw_stability / len(chi_seq)
 
-
-# def average_relative_stability_full_chimera(native_plddt, native_boundary_tuple,
-#                                             chimera_plddt, reference_plddt,
-#                                             sequence_of_interest, msa, reference_fasta_identifier):
-#     """Returns the averaged relative stability of a full length chimera, given a: multiple sequence alignment, reference
-#     protein's plddt and identifier in the msa, the plddt of the wild-type splice partner for the reference and the boundaries as a tuple
-#     that contain the spliced in sequence, and the resulting chimera's plddt"""
-#     raw_stability = 0
-#     # This variable is recording the chimera boundaries for relative stability comparison and will also help withe averaging later
-#     current_chimera_index = 0
-#     # Retrieves boundaries for which sections of the reference protein to compare to the chimera
-#     reference_boundaries = get_reference_boundaries(sequence_of_interest,msa,reference_fasta_identifier)
-#     for index, tuples in enumerate(reference_boundaries):
-#         # NS indicates that its time to calculate relative stability against the parent splice partner rather than the
-#         #reference protein
-#         if tuples[0] == 'NS':
-#             comparison_splice_length = native_boundary_tuple[1] - native_boundary_tuple[0]
-#             raw_stability += relative_stability(native_plddt, native_boundary_tuple, chimera_plddt,
-#                                                 (current_chimera_index, current_chimera_index + comparison_splice_length))[0]
-#             current_chimera_index += comparison_splice_length
-#         # S represents the opposite, that the chimera should now be compared to the reference protein
-#         elif tuples[0] == 'S':
-#             reference_splice_length = tuples[2] - tuples[1]
-#             raw_stability += relative_stability(reference_plddt,
-#                                                 tuples[1:],
-#                                                 chimera_plddt,
-#                                                 (current_chimera_index,
-#                                                  current_chimera_index + reference_splice_length))[0]
-#             current_chimera_index += reference_splice_length
-#     averaged_relative_stability = raw_stability / (current_chimera_index)
-#     return averaged_relative_stability
-
-def averaging_multimer_plddt(plddt_file, new_plddt_file,subunits):
+def averaging_multimer_plddt(plddt_file, new_plddt_file, subunits):
     """This function takes a plddt and averages the scores
     for each residue position across the number of subunints specified"""
     # Using list comprehension to turn the plddt file into a list of floats
@@ -279,3 +239,77 @@ def averaging_multimer_plddt(plddt_file, new_plddt_file,subunits):
     # creating a file to input the averaged scores
     with open(new_plddt_file, 'w') as new_plddt:
         new_plddt.write('\n'.join(str(score) for score in averaged_scores))
+
+
+def alignment_to_confidence(reference_label, comparison_label, alignment_file, sequence_of_interest, pdb):
+    with open(alignment_file, "r") as alignment:
+        alignment = alignment.read().split('>')
+        # Splitting up the sequences names and sequences into a dictionary
+        sequence_dictionary = {sequence.split('\n')[0]: ''.join(sequence.split('\n')[1:]) for sequence in alignment if
+                               len(sequence) != 0}
+    # Recording the specified sequences as variables
+    reference_sequence = sequence_dictionary[reference_label]
+    comparison_sequence = sequence_dictionary[comparison_label]
+    # Matching python indexing for the indexing from the alignment with some amount of '-' and indexing in the regular sequence
+    reference_alignment_indexing = tuple((ind for ind, x in enumerate(reference_sequence) if x.isalpha()))
+    # Creating a regular sequence without '-'
+    no_gap_reference_sequence = ''.join(x for ind, x in enumerate(reference_sequence) if x.isalpha())
+    # Boundaries are given in python index
+    alignment_reference_start = reference_alignment_indexing[no_gap_reference_sequence.find(sequence_of_interest)]
+    alignment_reference_end = reference_alignment_indexing[
+        no_gap_reference_sequence.find(sequence_of_interest) + len(sequence_of_interest)]
+    comparison_sequence = sequence_dictionary[comparison_label]
+    aligned_sequence_chunk=comparison_sequence[alignment_reference_start:alignment_reference_end].replace('-', '')
+    # Matching python indexing for the indexing from the alignment with some amount of '-' and indexing in the regular sequence
+    comparison_alignment_indexing = tuple((ind for ind, x in enumerate(comparison_sequence) if x.isalpha()))
+    # Creating a regular sequence without '-'
+    no_gap_comparison_sequence = ''.join(x for ind, x in enumerate(comparison_sequence) if x.isalpha())
+    # Boundaries are given in python index
+    # Pulling the section of the comparison_sequence that overlaps with the sequence_of_interest
+    total_alignment_list = list(comparison_sequence)
+    found_alignment_indexing = comparison_alignment_indexing[
+                               no_gap_comparison_sequence.find(aligned_sequence_chunk):no_gap_comparison_sequence.find(
+                                   aligned_sequence_chunk) + len(aligned_sequence_chunk)]
+    alignment_comparison_start = comparison_alignment_indexing[no_gap_comparison_sequence.find(aligned_sequence_chunk)]
+    alignment_comparison_end = comparison_alignment_indexing[
+        no_gap_comparison_sequence.find(aligned_sequence_chunk) + len(aligned_sequence_chunk)]
+    # Pulling the section of the comparison_sequence that overlaps with the sequence_of_interest
+
+    plddt = get_plddt_dict_from_pdb(pdb)
+    for sequence, plddt in plddt.items():
+        start = sequence.find(aligned_sequence_chunk)
+        end = start + len(aligned_sequence_chunk)
+        plddt_chunk = plddt[start:end]
+        for index, position in enumerate(found_alignment_indexing):
+            total_alignment_list[position] = plddt_chunk[index]
+    return total_alignment_list
+
+def confidence_rank_matrix(alignment_file, list_of_label_pdb_tuples, reference_label,sequence_of_interest, rank_matrix_file,
+                           raw_matrix_file=''):
+    plddt_matrix = zeros((len(list_of_label_pdb_tuples) + 1, len(S1) + 1), dtype=object)
+    for index, (label, pdb) in enumerate(list_of_label_pdb_tuples):
+        plddt_matrix[index, 0] = label
+        plddt_matrix[index, 1:] = alignment_to_confidence(reference_label, label, alignment_file, S1.replace('-', ''),
+                                                          pdb)
+    plddt_matrix[-1, 0] = reference_label
+    plddt_matrix[-1, 1:] = alignment_to_confidence(reference_label, reference_label, alignment_file,
+                                                   S1.replace('-', ''),
+                                                   f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/3merSARS2.pdb')
+    if raw_matrix_file:
+        savetxt(raw_matrix_file, plddt_matrix, fmt='%s')
+    for index, column in enumerate(plddt_matrix[0, 1:]):
+        column = plddt_matrix[:, 1 + index]
+        rank_column = rankdata([x for x in column if x != '-'], 'ordinal')
+        column_indexing = [ind for ind, x in enumerate(column) if x != '-']
+        for rank_index, correct_index in enumerate(column_indexing):
+            column[correct_index] = rank_column[rank_index]
+        plddt_matrix[:, 1 + index] = column
+    savetxt(rank_matrix_file, plddt_matrix, fmt='%s')
+def rank_difference_table_to_dict(table):
+    with open(table, "r") as data:
+        data = data.readlines()
+    difference_dict ={}
+    for line in data:
+        difference_dict[line.split()[0]]=line.split()[1]
+    return difference_dict
+
