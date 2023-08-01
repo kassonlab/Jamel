@@ -64,56 +64,57 @@ def blosum_62_matrix():
 def create_dictionary_from_alignment(alignment_file):
     """Takes a fasta style alignment and makes a dictionary where the key is whatever signifier follows '>'
     and the value is the sequence with no spaces"""
-    with open(alignment_file, 'r') as alignment:
-        alignment = alignment.read().split('>')
-        sequence_dictionary = {sequence.split('\n')[0]: ''.join(sequence.split('\n')[1:]) for sequence in alignment
-                                        if
-                                        len(sequence) != 0}
+    sequence_dictionary={}
+    with open(alignment_file) as handle:
+        for seq in SeqIO.parse(handle, "fasta"):
+            sequence_dictionary[seq.id]=seq.seq
     return sequence_dictionary
 
 
-def shannons_entropy_for_residue_conservation(reference_sequence_fasta_name, alignment_file):
+def shannons_entropy_for_residue_conservation(reference_label, alignment_file):
     """Takes a fasta style alignment creates a list of shannon's entropy values
     for each residue position with an amino acid in the reference sequence given based on blosum 62 matrix scores"""
 
     # creating a dictionary of sequences where the keys are names signified in the fasta alignment alignment_file
     sequence_dictionary = create_dictionary_from_alignment(alignment_file)
     # Storing the sequence marked by reference_sequence_fasta_name
-    reference_sequence = sequence_dictionary[reference_sequence_fasta_name]
+    reference_sequence = sequence_dictionary[reference_label]
     # making a list that gets rid of dashes in the sequence
     # and attaches the residue index in the entire alignment
-    corrected_reference_sequence = [(residue_index, residue) for residue_index, residue in enumerate(reference_sequence)
+    alignment_indexed_reference = [(alignment_index, residue) for alignment_index, residue in enumerate(reference_sequence)
                                     if residue != '-']
     # deleting the reference after storing for easier iteration later
-    del sequence_dictionary[reference_sequence_fasta_name]
+    del sequence_dictionary[reference_label]
     # creating a list of the alignment names for iteration later
-    sequence_list = list(sequence_dictionary.keys())
     shannons_entropy = []
     # these sets of loops will work to calculate
     # and store entropy values for each residue position in the reference specified
-    for residue_index, residue in corrected_reference_sequence:
+    blosum_column=list(blosum_62_matrix()[:,0])
+    blosum_row=list(blosum_62_matrix()[0,:])
+    for alignment_index, residue in alignment_indexed_reference:
         list_of_scores = []
         # The residue letter code is stored in an array, and the corresponding row in the matrix is stored
-        reference_matrix_index = where(blosum_62_matrix()[:, 0] == reference_sequence[residue_index])[0]
-        for name in sequence_list:
+        reference_blosum_row = blosum_row.index(reference_sequence[alignment_index])
+        for sequence in sequence_dictionary.values():
             # The comparison matrix column is stored, and used the row reference to
             # find the substitution score which is also stored,
             # this iterates for all comparison sequences
-            comparison_matrix_index = where(blosum_62_matrix()[0, :] == sequence_dictionary[name][residue_index])[0]
-            list_of_scores.append(int(blosum_62_matrix()[reference_matrix_index, comparison_matrix_index]))
+            comparison_blosum_column = blosum_column.index(sequence[alignment_index])
+            list_of_scores.append(int(blosum_62_matrix()[reference_blosum_row, comparison_blosum_column]))
         # The substitution scores for the reference amino acid are counted,
         # as well as all possible matrix values for the reference residue
         score_list_histogram = Counter(list_of_scores)
-        number_of_possible_bins = len(Counter(list(blosum_62_matrix()[reference_matrix_index, 1:][0])))
+        number_of_possible_bins = len(Counter(list(blosum_62_matrix()[reference_blosum_row, 1:])))
         entropy = 0
         for score_count in score_list_histogram.values():
             # The entropy for each residue position is calculated and stored in a list
             probability = score_count / len(list_of_scores)
             entropy += -probability * log(probability, number_of_possible_bins)
-        shannons_entropy.append(entropy)
+        shannons_entropy.append((alignment_index,reference_sequence[alignment_index],entropy))
     return shannons_entropy
-
-
+# threshold=[(index,residue,entropy) for index,residue,entropy in shannons_entropy_for_residue_conservation('6vsb_B','CoronavirusMSA.aln') if entropy<=.5 if index>=1402]
+# print(len((threshold)))
+# print(sorted(threshold,key=lambda x:x[2]))
 def color_coding(pdb_name, list_of_values, scale_tuple, color_scheme_tuple):
     """Takes a list_of_values and colors a residue of a pymol structure in the scale specified by
     scale_tuple:(min_value_in_scale,max_value_in_scale) and color_scheme_tuple:(low_color,high_color).
@@ -146,13 +147,13 @@ def pdb_to_fasta(pdb,new_fasta):
         for record in SeqIO.parse(pdb_file, 'pdb-atom'):
             fasta_list.append((record.seq,1,record.id))
     fasta_creation(new_fasta,fasta_list)
-with open("/gpfs/gpfs0/scratch/jws6pq/Notebook/Overall/List_of_coronaviruses", 'r') as loc:
-    loc = loc.readlines()
-for line in loc:
-
-    chi_pdb=f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/3merSARS2w{line.split()[-1]}S1.pdb'
-    chi_fasta=f'/gpfs/gpfs0/scratch/jws6pq/Notebook/Fastas/Broken_code_Fastas/3merSARS2w{line.split()[-1]}S1.fasta'
-    pdb_to_fasta(chi_pdb,chi_fasta)
+# with open("/gpfs/gpfs0/scratch/jws6pq/Notebook/Overall/List_of_coronaviruses", 'r') as loc:
+#     loc = loc.readlines()
+# for line in loc:
+#
+#     chi_pdb=f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/3merSARS2w{line.split()[-1]}S1.pdb'
+#     chi_fasta=f'/gpfs/gpfs0/scratch/jws6pq/Notebook/Fastas/Broken_code_Fastas/3merSARS2w{line.split()[-1]}S1.fasta'
+#     pdb_to_fasta(chi_pdb,chi_fasta)
 
 
 

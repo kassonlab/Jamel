@@ -2,7 +2,6 @@ from json import load
 from os import path
 from pathlib import Path
 from sys import exit
-
 import AccessiontoAlignment
 import Analysis
 from setup import alphafold_submission_for_chimera_container

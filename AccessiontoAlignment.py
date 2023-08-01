@@ -5,10 +5,11 @@
 from os import system
 import json
 from pathlib import Path
-from Bio import Entrez,Phylo,AlignIO
+from Bio import Entrez,Phylo,AlignIO,SeqIO
 from random import choice
 from Bio.Phylo.TreeConstruction import DistanceCalculator,DistanceTreeConstructor
 from ChimeraGenerator import fasta_creation
+
 def all_parents(tree):
     parents = dict()
     for node in tree.get_terminals():
@@ -70,7 +71,7 @@ def accession_to_fasta(monomer_file_name, accession, email_for_Bio,subunits, mul
     if subunits != 1:
         fasta_creation(multimer_name, (sequence, subunits,Path(multimer_name).stem))
 # TODO make this fancy
-def accession_to_fasta_nucleic(monomer_file_name, accession, email_for_Bio):
+def accession_to_fasta_nucleic(accession,  email_for_Bio,monomer_file_name=''):
     """Takes an accession number and creates a fasta file with the sequence that corresponds with the accession given.
     A monomeric file is always created by default for alignment purposes even if a multimer file is requested"""
     Entrez.email = email_for_Bio
@@ -92,15 +93,11 @@ def accession_to_fasta_nucleic(monomer_file_name, accession, email_for_Bio):
             end=int(boundaries[1])
             handle = Entrez.efetch(db='nuccore', id=nc_accession, retmode='text', rettype='fasta').readlines()
             sequence = ''.join(x for x in handle if x[0] != '>' if x != '').strip().replace('\n', '')[start:end]
+            # Creating a monomer file by default for alignment purposes, if a multimer is requested it's made later
+            if monomer_file_name:
+                fasta_creation(monomer_file_name, (sequence, 1,Path(monomer_file_name).stem))
             return sequence
 
-
-    # Turning the retrieved sequence into a single string with no breaks
-    # sequence = ''.join(x for x in handle if x[0] != '>' if x != '').strip().replace('\n', '')
-    # Creating a monomer file by default for alignment purposes, if a multimer is requested it's made later
-    # fasta_creation(monomer_file_name, (sequence, 1,Path(monomer_file_name).stem))
-    # if subunits != 1:
-    #     fasta_creation(multimer_name, (sequence, subunits,Path(multimer_name).stem))
 
 def multiple_sequence_alignment(list_of_fastas, fasta_for_alignment, new_alignment_file, reference_protein_fasta,muscle_command):
     """Creates a multiple sequence alignment using muscle and a concatenated fasta file with a reference fasta as the base,
@@ -137,7 +134,7 @@ def alignment_finder(alignment_file, sequence_of_interest, comparison_protein,
     reference_sequence = sequence_dictionary[reference_protein]
     comparison_sequence = sequence_dictionary[comparison_protein]
     # Matching python indexing for the indexing from the alignment with some amount of '-' and indexing in the regular sequence
-    reference_alignment_indexing = tuple((ind for ind, x in enumerate(reference_sequence) if x.isalpha()))
+    reference_alignment_indexing = tuple(get_alignment_indexing(reference_sequence))
     # Creating a regular sequence without '-'
     no_gap_reference_sequence = ''.join(x for ind, x in enumerate(reference_sequence) if x.isalpha())
     # Boundaries are given in python index
@@ -196,4 +193,21 @@ def exclude_related_sequences(cutoff,alignment_file,starting_sequence,included_f
 def create_list_of_fasta_files(list_of_fastas,file_name):
     with open(file_name, 'w') as fasta_list_file:
         fasta_list_file.write("\n".join(list_of_fastas))
+
+def get_alignment_indexing(alignment_seq):
+    """Creating a list of alignment indexes for non '-' characters"""
+    return [ind for ind, x in enumerate(alignment_seq) if x.isalpha()]
+def no_gap_sequence_from_alignment(alignment_seq):
+    """Removes gaps from an alignment sequence"""
+    return ''.join(x for ind, x in enumerate(alignment_seq) if x.isalpha())
+
+def clustalw_to_fasta(clustal_aln_file,new_fasta_aln_file):
+    """Converts clustal w aliignment file into a fasta alignment"""
+    clw = SeqIO.parse(clustal_aln_file, "clustal")
+    return SeqIO.write(clw, new_fasta_aln_file, "fasta")
+
+
+# def align_pdb_sequences(ref_pdb_chain_tuple,comparison_pdb_chain_tuple,new_alignment,muscle_command):
+#     get_sequence_from_pdb()
+
 
