@@ -67,7 +67,8 @@ def create_dictionary_from_alignment(alignment_file):
     sequence_dictionary={}
     with open(alignment_file) as handle:
         for seq in SeqIO.parse(handle, "fasta"):
-            sequence_dictionary[seq.id]=seq.seq
+
+            sequence_dictionary[seq.id]=str(seq.seq)
     return sequence_dictionary
 
 

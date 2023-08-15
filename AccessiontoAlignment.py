@@ -199,7 +199,7 @@ def get_alignment_indexing(alignment_seq):
     return [ind for ind, x in enumerate(alignment_seq) if x.isalpha()]
 def no_gap_sequence_from_alignment(alignment_seq):
     """Removes gaps from an alignment sequence"""
-    return ''.join(x for ind, x in enumerate(alignment_seq) if x.isalpha())
+    return alignment_seq.replace('-','')
 
 def clustalw_to_fasta(clustal_aln_file,new_fasta_aln_file):
     """Converts clustal w aliignment file into a fasta alignment"""

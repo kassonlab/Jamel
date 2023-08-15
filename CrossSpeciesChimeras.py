@@ -103,7 +103,7 @@ class CrossNamingArguments:
     pdb_extension: str = '.pdb'
     gmx_setup_extension: str = '.setup'
     gmx_production_extension: str = '.prod'
-
+    #TODO set to general method for all
     # All non-nested keys from the json are set as attributes to be called later
     def __init__(self, naming_dict):
         for key, value in naming_dict.items():

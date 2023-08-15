@@ -11,6 +11,12 @@ from os import path
 class chimeracls:
     pass
 
+def general_attr_set(class_obj, dict_of_attrs):
+    """All non-nested keys from the json are set as attributes to be called later"""
+    for key, value in dict_of_attrs.items():
+        setattr(class_obj, key, value)
+    return class_obj
+
 
 def sequence_splice(fasta_file, boundary_tuple, python_index='Yes'):
     """Takes a fasta sequence and returns the section of the sequence between indexes specified by the boundary one and two,
@@ -46,6 +52,8 @@ def fasta_creation(file_name, list_of_sequence_subunits_label_tuples):
         for (sequence, subunits, fasta_id) in list_of_sequence_subunits_label_tuples:
             for replicates in range(subunits):
                 outfile.write(f'>{fasta_id}\n{sequence}\n')
+
+
 
 
 # TODO create a separate functionality file???
