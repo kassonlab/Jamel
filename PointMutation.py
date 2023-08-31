@@ -5,6 +5,7 @@ import argparse
 from sys import exit
 from json import load
 from os import path
+from setup import alphafold_submission_for_chimera_container
 parser = argparse.ArgumentParser(
     description='')
 parser.add_argument('-i', '--jsoninput', dest='arg_jsons', required=False, type=str,
@@ -121,12 +122,15 @@ for id,seq in seq_dict.items():
     chimera.nickname=id
     chimera.seq=seq
     chimera.WT_stem = naming_args.multimer_naming_convention.replace(placeholder, chimera.nickname)
+    # TODO should i fix them for this, this is only mutating wildtype but not chimera
     if mutate_to==seq[mutation_index]:
         chimera.mutated=False
     else:
         chimera.mutated = True
+    # is this the broken version
     chimera.mutated_seq=no_gap_sequence_from_alignment(seq[:mutation_index]+mutate_to.upper()+seq[mutation_index+1:])
     chimera.mutated_stem=naming_args.mutated_naming_convention.replace(placeholder, chimera.nickname)
+
 
 if container.operation_toggles['run_fasta_operation']:
     fasta_creation(path.join(naming_args.fasta_directory,chimera.mutated_stem+naming_args.fasta_extension), [(chimera.mutated_seq, subunits, chimera.nickname)])
@@ -135,4 +139,6 @@ if container.operation_toggles['run_fasta_operation']:
             fasta_creation(chimera.WT_stem, [(chimera.seq, subunits, chimera.nickname)])
 
 if container.operation_toggles['alphafold_submission']:
+    mutated_list=
+    alphafold_submission_for_chimera_container(container,)
     

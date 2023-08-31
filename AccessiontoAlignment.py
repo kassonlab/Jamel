@@ -154,6 +154,26 @@ def alignment_finder(alignment_file, sequence_of_interest, comparison_protein,
     return found_alignment, (splice_start, splice_end), (no_gap_reference_start, no_gap_reference_end)
 
 
+def truncate_alignmnent(alignment_file,sequence_of_interest,new_aln_file):
+    """Might be dilapidated"""
+    with open(alignment_file, 'r') as alignment:
+        alignment = alignment.read().split('>')
+        sequence_dictionary = {sequence.split('\n')[0]: ''.join(sequence.split('\n')[1:]) for sequence in alignment
+                                        if
+                                        len(sequence) != 0}
+        reference_sequence = sequence_dictionary['6vsb_adjacent']
+        # Matching python indexing for the indexing from the alignment with some amount of '-' and indexing in the regular sequence
+        reference_alignment_indexing = tuple((ind for ind, x in enumerate(reference_sequence) if x.isalpha()))
+        no_gap_reference_sequence = ''.join(x for ind, x in enumerate(reference_sequence) if x.isalpha())
+        alignment_reference_start = reference_alignment_indexing[no_gap_reference_sequence.find(sequence_of_interest)]
+        alignment_reference_end = reference_alignment_indexing[
+                                      no_gap_reference_sequence.find(sequence_of_interest) + len(sequence_of_interest) - 1] + 1
+        list_of_tuples=[]
+        for stem,sequence in sequence_dictionary.items():
+            list_of_tuples.append((sequence[alignment_reference_start:alignment_reference_end],1,stem))
+            fasta_creation(new_aln_file,list_of_tuples)
+
+
 def check_mutation_cutoff(cutoff,seq_1,seq_2):
     difference_count=0
     for res1,res2 in zip(seq_1,seq_2):

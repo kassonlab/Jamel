@@ -14,7 +14,8 @@ def get_coordinates_dict_per_chain(pdb_file):
     STRUCTURE = PDB.PDBParser().get_structure(pdb_file, pdb_file)
     # Then selecting the chain
     PROTEIN = STRUCTURE[0]
-    list_of_chain_coordinates = {chain.id: [tuple(res["CA"].coord) for res in chain if len(chain)>10] for chain in PROTEIN}
+    list_of_chain_coordinates = {chain.id: [tuple(res["CB"].coord) if res.get_resname()!='GLY' else tuple(res["CA"].coord) for res in chain if len(chain)>10] for chain in PROTEIN}
+
     return list_of_chain_coordinates
 
 
@@ -23,7 +24,7 @@ def create_spatial_index(list_coords):
     return kdtree
 
 
-def find_neighbors(kdtree, list_of_coords, residue_index, distance_cutoff=7.0, residue_dist_cutoff=6):
+def find_neighbors(kdtree, list_of_coords, residue_index, distance_cutoff=8.0, residue_dist_cutoff=6):
     neighbors = kdtree.query_ball_point(list_of_coords[residue_index], distance_cutoff)
     return sorted(tuple(res for res in neighbors if abs(res - residue_index) >= residue_dist_cutoff))
 
@@ -60,13 +61,11 @@ def calc_residue_dist(residue_one, residue_two) :
     # Mostly copied from https://warwick.ac.uk/fac/sci/moac/people/students/peter_cock/python/protein_contact_map/
 
     # Using distance formula to calculate residue distance
-    diff_vector  = residue_one["CA"].coord - residue_two["CA"].coord
+    diff_vector  = residue_one["CB"].coord - residue_two["CB"].coord
     return sqrt(sum(diff_vector * diff_vector))
-def residue_dist_matrix(pdb_file, chain_id, make_it_binary='Yes', distance_cutoff=7):
+def residue_dist_matrix(pdb_file, chain_id, make_it_binary='Yes', distance_cutoff=8):
     """Takes a distance matrix of a protein and converts it to a binary matrix that uses 1 to signify a residue
     contact and 0 for no contact or Returns a matrix of C-alpha distances between residues in a protein chain or b"""
-
-    RESIDUE_NUMBER_CUTOFF=6
 
     if make_it_binary=='Yes':
         # Using list comprehension to create a nested list
@@ -136,7 +135,7 @@ def get_individual_inter_contacts(pdb_file,chain_id,index,index_to_position=Fals
         range_placeholder += len(coords)
     kd_tree = create_spatial_index(total_coords)
     inter_contacts = []
-    neighbors = kd_tree.query_ball_point(coord_dict[chain_id][index], 7)
+    neighbors = kd_tree.query_ball_point(coord_dict[chain_id][index], 8)
     for neighbor in neighbors:
         chain_for_index = assign_index_to_chain(neighbor, contact_range)
         if chain_for_index[0] != chain_id:
@@ -210,37 +209,14 @@ def compare_aligned_contact_all_proteins(alignment_file, native_pdb_format, chim
 aln='/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/CoronavirusMSA.aln'
 native_format='/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/3mer{0}.pdb'
 chi_format='/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/3merSARS2w{0}S1.pdb'
-with open("/gpfs/gpfs0/scratch/jws6pq/Notebook/Overall/List_of_coronaviruses", 'r') as loc:
-    loc = [line.split()[-1] for line in loc.readlines()]
-compare_aligned_contact_all_proteins(aln,native_format,chi_format,'B',1792,loc,'/gpfs/gpfs0/scratch/jws6pq/Notebook/Fastas/Immersion/1793_contacts.tsv')
-
-# residuenumber,blosumscore,absolute value of confidence score difference,binary contact
-# blosum=blosum_62_matrix()
-# blosum=delete(blosum,0,axis=0)
-# blosum=delete(blosum,0,axis=1)
-# maxi, mini=npmax(blosum),npmin(blosum)
-# normalize between zero an -1 and then flip the signs, also check distribution of blosum scores
-# low + (high-low)*(x-minimum)/(maximum-minimmum)
-# normalize = lambda x: (-1+1*(x-mini)/(maxi-mini))
-# blosum=[list(normalize(y) for y in x) for x in blosum]
-# 1 if both contact, 0 if no contact, -1 if only one contact
-
+# with open("/gpfs/gpfs0/scratch/jws6pq/Notebook/Overall/List_of_coronaviruses", 'r') as loc:
+#     loc = [line.split()[-1] for line in loc.readlines()]
+# compare_aligned_contact_all_proteins(aln,native_format,chi_format,'B',1267,loc,'/gpfs/gpfs0/scratch/jws6pq/Notebook/Immersion/CarbonB_1267_contacts.tsv','/gpfs/gpfs0/scratch/jws6pq/Notebook/Immersion/Rank_change_1268.tsv')
 # def compare_aligned_contacts(alignment_file,reference_label,comparison_label,ref_pdb,com_pdb):
 #     aligned_reference=ColorCoding.create_dictionary_from_alignment(alignment_file)[reference_label]
 #     aligned_comparison = ColorCoding.create_dictionary_from_alignment(alignment_file)[comparison_label]
 #     reference_indexing=get_alignment_indexing(aligned_reference)
 #     comparison_indexing=get_alignment_indexing(aligned_comparison)
-#     alignment_index_intersection=[index for index in reference_indexing if index in comparison_indexing]
-# inanotb=0
-# inbanota=0
-# total_a_contacts=0
-# total_b_contacts=0
-# for full,trunc in zip(get_residue_contact_pairs('6VSB_B.pdb','B'),get_residue_contact_pairs('3merSARS2.pdb','B')):
-#     total_a_contacts+=len(full)
-#     total_b_contacts += len(trunc)
-#     inanotb+=len(set(full)-set(trunc))
-#     inbanota += len(set(trunc) - set(full))
-# print(inanotb,inbanota,total_a_contacts,total_b_contacts)
 def ContactOverlap(alignment_file, comparison, reference='6VSB_B'):
     sequence_dictionary=create_dictionary_from_alignment(alignment_file)
     reference_sequence,comparison_sequence=sequence_dictionary[reference],sequence_dictionary[comparison]

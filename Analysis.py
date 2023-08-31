@@ -287,14 +287,14 @@ def alignment_to_confidence(reference_label, comparison_label, alignment_file, s
 
 def confidence_rank_matrix(alignment_file, list_of_label_pdb_tuples, reference_label,sequence_of_interest, rank_matrix_file,
                            raw_matrix_file=''):
-    plddt_matrix = zeros((len(list_of_label_pdb_tuples) + 1, len(S1) + 1), dtype=object)
+    plddt_matrix = zeros((len(list_of_label_pdb_tuples) + 1, len(sequence_of_interest) + 1), dtype=object)
     for index, (label, pdb) in enumerate(list_of_label_pdb_tuples):
         plddt_matrix[index, 0] = label
-        plddt_matrix[index, 1:] = alignment_to_confidence(reference_label, label, alignment_file, S1.replace('-', ''),
+        plddt_matrix[index, 1:] = alignment_to_confidence(reference_label, label, alignment_file, sequence_of_interest.replace('-', ''),
                                                           pdb)
     plddt_matrix[-1, 0] = reference_label
     plddt_matrix[-1, 1:] = alignment_to_confidence(reference_label, reference_label, alignment_file,
-                                                   S1.replace('-', ''),
+                                                   sequence_of_interest.replace('-', ''),
                                                    f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/3merSARS2.pdb')
     if raw_matrix_file:
         savetxt(raw_matrix_file, plddt_matrix, fmt='%s')

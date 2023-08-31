@@ -186,20 +186,20 @@ def contact_contingency(alignment_file, native_pdb, chimera_pdb, chain_id, label
             residue_to_find]
 
 
-# with open("/gpfs/gpfs0/scratch/jws6pq/Notebook/Overall/List_of_coronaviruses", 'r') as loc:
-#     loc = loc.readlines()
-# aln='/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/CoronavirusMSA.aln'
-# comparison_matrix=zeros((len(loc),8),dtype=object)
-# index=1267
-# rank_change = f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/Rank_change_{1268}.tsv'
-# for indexes,label in enumerate(loc):
-#     protein_label=label.split()[-1]
-#     native=f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/3mer{protein_label}.pdb'
-#     chi=f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/3merSARS2w{protein_label}S1.pdb'
-#     comparison=contact_contingency(aln, native, chi, 'B', protein_label,index, rank_change,1792,'SSNF')
-#     print(comparison)
-#     comparison_matrix[indexes]=comparison
-# savetxt(f'/gpfs/gpfs0/scratch/jws6pq/Notebook/Fastas/Immersion/1268_contacts.csv', comparison_matrix, fmt='%s/%s/%s/%s/%s/%s/%s/%s')
+with open("/gpfs/gpfs0/scratch/jws6pq/Notebook/Overall/List_of_coronaviruses", 'r') as loc:
+    loc = loc.readlines()
+aln='/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/CoronavirusMSA.aln'
+comparison_matrix=zeros((len(loc),8),dtype=object)
+index=1267
+rank_change = f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/Rank_change_{index+1}.tsv'
+for indexes,label in enumerate(loc):
+    protein_label=label.split()[-1]
+    native=f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/3mer{protein_label}.pdb'
+    chi=f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/3merSARS2w{protein_label}S1.pdb'
+    comparison=contact_contingency(aln, native, chi, 'B', protein_label,index, rank_change,1792,'SSNF')
+    print(comparison)
+    comparison_matrix[indexes]=comparison
+savetxt(f'/gpfs/gpfs0/scratch/jws6pq/Notebook/Immersion/CarbonB_1268_contacts.csv', comparison_matrix, fmt='%s/%s/%s/%s/%s/%s/%s/%s')
 
 # with open("/gpfs/gpfs0/scratch/jws6pq/Notebook/Overall/List_of_coronaviruses", 'r') as loc:
 #     loc = loc.readlines()
