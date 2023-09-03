@@ -63,13 +63,21 @@ def accession_to_fasta(monomer_file_name, accession, email_for_Bio,subunits, mul
     A monomeric file is always created by default for alignment purposes even if a multimer file is requested"""
     Entrez.email = email_for_Bio
     # Pulling the sequence corresponding with accession numer specified
-    handle = Entrez.efetch(db='protein', id=accession, retmode='text', rettype='fasta').readlines()
+    handle = Entrez.efetch(db='protein', id=accession, retmode='text', rettype='fasta')
     # Turning the retrieved sequence into a single string with no breaks
-    sequence = ''.join(x for x in handle if x[0] != '>' if x != '').strip().replace('\n', '')
+    sequence = SeqIO.read(handle, "fasta").seq
     # Creating a monomer file by default for alignment purposes, if a multimer is requested it's made later
     fasta_creation(monomer_file_name, (sequence, 1,Path(monomer_file_name).stem))
     if subunits != 1:
         fasta_creation(multimer_name, (sequence, subunits,Path(multimer_name).stem))
+
+
+def get_accession_sequence(accession, email_for_Bio):
+    Entrez.email = email_for_Bio
+    # Pulling the sequence corresponding with accession numer specified
+    handle = Entrez.efetch(db='protein', id=accession, retmode='text', rettype='fasta')
+    print(handle)
+    return SeqIO.read(handle, "fasta").seq
 # TODO make this fancy
 def accession_to_fasta_nucleic(accession,  email_for_Bio,monomer_file_name=''):
     """Takes an accession number and creates a fasta file with the sequence that corresponds with the accession given.
@@ -98,6 +106,25 @@ def accession_to_fasta_nucleic(accession,  email_for_Bio,monomer_file_name=''):
                 fasta_creation(monomer_file_name, (sequence, 1,Path(monomer_file_name).stem))
             return sequence
 
+
+def create_dictionary_from_alignment(alignment_file):
+    """Takes a fasta style alignment and makes a dictionary where the key is whatever signifier follows '>'
+    and the value is the sequence with no spaces"""
+    sequence_dictionary={}
+    with open(alignment_file) as handle:
+        for seq in SeqIO.parse(handle, "fasta"):
+
+            sequence_dictionary[seq.id]=str(seq.seq)
+    return sequence_dictionary
+
+
+
+def multiple_sequence_fasta(list_of_sequences,new_fasta_file,list_of_fastas=''):
+
+    if list_of_fastas:
+        list_of_sequences=[]
+        for fasta in list_of_fastas:
+            list_of_sequences.append()
 
 def multiple_sequence_alignment(list_of_fastas, fasta_for_alignment, new_alignment_file, reference_protein_fasta,muscle_command):
     """Creates a multiple sequence alignment using muscle and a concatenated fasta file with a reference fasta as the base,
@@ -226,7 +253,12 @@ def clustalw_to_fasta(clustal_aln_file,new_fasta_aln_file):
     clw = SeqIO.parse(clustal_aln_file, "clustal")
     return SeqIO.write(clw, new_fasta_aln_file, "fasta")
 
+# ODO needs to be a monomer
+def extract_seq_from_fasta(fasta_file):
+    with open(fasta_file, "r") as handle:
+        return SeqIO.read(handle, "fasta").seq
 
+print(extract_seq_from_fasta('6vsb_S1.fasta'))
 # def align_pdb_sequences(ref_pdb_chain_tuple,comparison_pdb_chain_tuple,new_alignment,muscle_command):
 #     get_sequence_from_pdb()
 

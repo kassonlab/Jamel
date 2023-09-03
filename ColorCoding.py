@@ -61,15 +61,7 @@ def blosum_62_matrix():
     return blosum_62_array
 
 
-def create_dictionary_from_alignment(alignment_file):
-    """Takes a fasta style alignment and makes a dictionary where the key is whatever signifier follows '>'
-    and the value is the sequence with no spaces"""
-    sequence_dictionary={}
-    with open(alignment_file) as handle:
-        for seq in SeqIO.parse(handle, "fasta"):
 
-            sequence_dictionary[seq.id]=str(seq.seq)
-    return sequence_dictionary
 
 
 def shannons_entropy_for_residue_conservation(reference_label, alignment_file):
