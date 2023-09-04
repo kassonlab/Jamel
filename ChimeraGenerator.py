@@ -6,7 +6,9 @@
 from pathlib import Path
 from json import load, dump
 from os import path
-
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
+from Bio import SeqIO
 
 class chimeracls:
     pass
@@ -47,13 +49,13 @@ def chimera_sequence_creation(section_being_spliced_in, marked_sequence, mark_in
 def fasta_creation(file_name, list_of_sequence_subunits_label_tuples):
     """Creates a fasta file with the given file_name, and replicates the sequence within it the specified number of times
     to create a homo multimer if subunits is greater than 1."""
-    # TODO make each sequence label malleable
+    sequences=[]
     with open(file_name, 'w') as outfile:
+
         for (sequence, subunits, fasta_id) in list_of_sequence_subunits_label_tuples:
             for replicates in range(subunits):
-                outfile.write(f'>{fasta_id}\n{sequence}\n')
-
-
+                sequences.append(SeqRecord(Seq(sequence), id=fasta_id,description=""))
+        SeqIO.write(sequences, outfile, "fasta")
 
 
 # TODO create a separate functionality file???

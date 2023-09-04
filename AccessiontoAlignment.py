@@ -10,6 +10,7 @@ from random import choice
 from Bio.Phylo.TreeConstruction import DistanceCalculator,DistanceTreeConstructor
 from ChimeraGenerator import fasta_creation
 
+
 def all_parents(tree):
     parents = dict()
     for node in tree.get_terminals():
@@ -67,17 +68,18 @@ def accession_to_fasta(monomer_file_name, accession, email_for_Bio,subunits, mul
     # Turning the retrieved sequence into a single string with no breaks
     sequence = SeqIO.read(handle, "fasta").seq
     # Creating a monomer file by default for alignment purposes, if a multimer is requested it's made later
-    fasta_creation(monomer_file_name, (sequence, 1,Path(monomer_file_name).stem))
+    fasta_creation(monomer_file_name, [(sequence, 1,Path(monomer_file_name).stem)])
     if subunits != 1:
-        fasta_creation(multimer_name, (sequence, subunits,Path(multimer_name).stem))
+        fasta_creation(multimer_name, [(sequence, subunits,Path(multimer_name).stem)])
 
 
 def get_accession_sequence(accession, email_for_Bio):
     Entrez.email = email_for_Bio
     # Pulling the sequence corresponding with accession numer specified
     handle = Entrez.efetch(db='protein', id=accession, retmode='text', rettype='fasta')
-    print(handle)
     return SeqIO.read(handle, "fasta").seq
+
+
 # TODO make this fancy
 def accession_to_fasta_nucleic(accession,  email_for_Bio,monomer_file_name=''):
     """Takes an accession number and creates a fasta file with the sequence that corresponds with the accession given.
@@ -119,22 +121,28 @@ def create_dictionary_from_alignment(alignment_file):
 
 
 
-def multiple_sequence_fasta(list_of_sequences,new_fasta_file,list_of_fastas=''):
-
+def multiple_sequence_fasta(new_fasta_file,list_of_sequences='',list_of_fastas=''):
+    from Bio import SeqIO
+    if list_of_sequences:
+        with open(new_fasta_file, "w") as output_handle:
+            SeqIO.write(list_of_sequences, output_handle, "fasta")
     if list_of_fastas:
         list_of_sequences=[]
         for fasta in list_of_fastas:
-            list_of_sequences.append()
+            with open(fasta, "r") as handle:
+                seq_rec=SeqIO.read(handle, "fasta")
+                seq_rec.description=''
+                list_of_sequences.append(seq_rec)
+        with open(new_fasta_file, "w") as outfile:
+            SeqIO.write(list_of_sequences, outfile, "fasta")
 
-def multiple_sequence_alignment(list_of_fastas, fasta_for_alignment, new_alignment_file, reference_protein_fasta,muscle_command):
+
+
+def multiple_sequence_alignment(list_of_fastas, fasta_for_alignment, new_alignment_file,muscle_command):
     """Creates a multiple sequence alignment using muscle and a concatenated fasta file with a reference fasta as the base,
      joined with all fastas specified in list_of_fastas."""
     # Creating a copy of the fasta file of a reference_protein_fasta to be added into
-    # TODO use fasta creation formchimeragenerato
-    system(f'cp  {reference_protein_fasta} {fasta_for_alignment}')
-    # Concatenating the fasta files found in list_of_fasta
-    for fasta in list_of_fastas:
-        system(f"cat {fasta} >> {fasta_for_alignment}")
+    multiple_sequence_fasta(fasta_for_alignment,list_of_fastas=list_of_fastas)
     # Using muscle to perform the alignment
     system(f'{muscle_command} -in {fasta_for_alignment} -out {new_alignment_file}')
 
@@ -258,7 +266,6 @@ def extract_seq_from_fasta(fasta_file):
     with open(fasta_file, "r") as handle:
         return SeqIO.read(handle, "fasta").seq
 
-print(extract_seq_from_fasta('6vsb_S1.fasta'))
 # def align_pdb_sequences(ref_pdb_chain_tuple,comparison_pdb_chain_tuple,new_alignment,muscle_command):
 #     get_sequence_from_pdb()
 

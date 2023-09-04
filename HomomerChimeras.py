@@ -53,6 +53,7 @@ operations.add_argument('-a', '--analysis', required=False, action='store_true',
 args = parser.parse_args()
 # All conditionals to check for flags related to manipulation or clarification of json config files: (u,ch,pr,nv,overwite,fr)
 # If any of them are called the program will cease after completion or error
+print(args.arg_jsons, hasattr(args,'arg_jsons'))
 if args.updatejson:
     args.updatejson = args.updatejson.split(',')
     ChimeraGenerator.update_json(args.updatejson[0], args.updatejson[1], args.overwrite)
@@ -77,8 +78,7 @@ if args.findnreplace and args.change:
     ChimeraGenerator.change_json_value(args.change, overwrite=args.overwrite, find_n_replace_tuple=pair)
     exit()
 # Allows for commandline operation flags to override selections made in the json config
-if args.fasta or args.submission or args.analysis:
-    operation_args = (args.fasta, args.submission, args.analysis)
+
 
 
 class HomomerNamingArguments:
@@ -133,7 +133,7 @@ class HomomerFastaArguments:
     variant proteins, or the section of the variants you want replaced with the constant protein. Each sequence of 
     interest should be in their own fasta file. All non-reference variant proteins will have the Homomer sequence 
     from an alignment replaced'''
-    full_reference_fasta: str
+    full_reference_seq_fasta: str
     '''The path to full-length protein of the constant protein or the reference for the variants'''
     msa_file_name: str
     '''Path to the multiple sequence alignment to be created or a user-generated msa'''
@@ -244,25 +244,26 @@ container.get_dict_args(HomomerFastaArguments, 'fasta_args', 'fasta_arguments')
 container.get_dict_args(HomomerNamingArguments, 'naming_args', 'naming_arguments')
 fasta_toggles = container.fasta_args.fasta_toggles
 
-if any(operation_args):
-    for key in container.operation_toggles:
-        container.operation_toggles[key] = False
+if hasattr(args,'fasta') or hasattr(args,'submission') or hasattr(args,'analysis'):
+    operation_args = (args.fasta, args.submission, args.analysis)
+    if any(operation_args) and operation_args:
+        for key in container.operation_toggles:
+            container.operation_toggles[key] = False
+
 
 placeholder = container.naming_args.nickname_placeholder
 msa = container.fasta_args.msa_file_name
 subunits = container.fasta_args.number_of_subunits
 alphafold_dir = container.naming_args.alphafold_outputs_dir
 seq_of_interest=container.fasta_args.sequence_of_interest
-ref_sequence=AccessiontoAlignment.extract_seq_from_fasta(container.fasta_args.full_reference_fasta)
-print(ref_sequence)
+ref_sequence=AccessiontoAlignment.extract_seq_from_fasta(container.fasta_args.full_reference_seq_fasta)
 if path.exists(container.fasta_args.msa_file_name):
-    with open(container.fasta_args.msa_file_name, "r") as alignment:
-        sequence_dictionary = AccessiontoAlignment.create_dictionary_from_alignment(alignment)
-        for fasta_id, sequence in sequence_dictionary.items():
-            chimera = ChimeraGenerator.chimeracls()
-            container.add_chimera(chimera)
-            chimera.file_stem = fasta_id
-            chimera.native_seq = sequence.replace('-', '')
+    sequence_dictionary = AccessiontoAlignment.create_dictionary_from_alignment(container.fasta_args.msa_file_name)
+    for fasta_id, sequence in sequence_dictionary.items():
+        chimera = ChimeraGenerator.chimeracls()
+        container.add_chimera(chimera)
+        chimera.file_stem = fasta_id
+        chimera.native_seq = sequence.replace('-', '')
 else:
     with open(container.fasta_args.protein_list, 'r') as info_list:
         info_list = info_list.readlines()
@@ -275,14 +276,6 @@ list_of_chis = container.chimeras
 num_of_chi = len(list_of_chis)
 ChimeraGenerator.assign_file_attrs_to_chimeras(container)
 
-if fasta_toggles['Create_an_alignment'] or not path.exists(container.fasta_args.msa_file_name):
-    email = container.fasta_args.email_for_accession
-    for chimera in list_of_chis:
-        AccessiontoAlignment.accession_to_fasta(chimera.monomer_fasta, chimera.accession, email, subunits,
-                           chimera.multimer_fasta)
-    AccessiontoAlignment.multiple_sequence_alignment(tuple(chimera.monomer_fasta for chimera in list_of_chis),
-                                container.fasta_args.msa_fasta, msa,
-                                variant_fasta, container.fasta_args.muscle_command_for_msa)
 
 for chimera in list_of_chis:
     homologous_splice = AccessiontoAlignment.alignment_finder(msa, seq_of_interest, chimera.file_stem,
@@ -290,6 +283,18 @@ for chimera in list_of_chis:
     chimera.chi_seq = ref_sequence.replace(seq_of_interest, homologous_splice)
 
 if container.operation_toggles['run_fasta_operation'] or args.fasta:
+    email = container.fasta_args.email_for_accession
+    for chimera in list_of_chis:
+        if not path.exists(chimera.monomer_fasta) and :
+            AccessiontoAlignment.accession_to_fasta(chimera.monomer_fasta, chimera.accession, email, subunits,
+                                                    chimera.multimer_fasta)
+    if fasta_toggles['Create_an_alignment'] or not path.exists(container.fasta_args.msa_file_name):
+
+
+        AccessiontoAlignment.multiple_sequence_alignment(
+            tuple(chimera.monomer_fasta for chimera in list_of_chis) + container.fasta_args.full_reference_seq_fasta,
+            container.fasta_args.msa_fasta, msa,
+            container.fasta_args.muscle_command_for_msa)
 
     for chimera in list_of_chis:
         ChimeraGenerator.fasta_creation(chimera.multimer_fasta,
