@@ -2,7 +2,7 @@ from Bio import SeqIO
 from numpy import array,where
 from math import log
 from collections import Counter
-
+from AccessiontoAlignment import create_dictionary_from_alignment
 from ChimeraGenerator import fasta_creation
 def blosum_62_matrix():
     """Simply returns the blosum 62 matrix"""

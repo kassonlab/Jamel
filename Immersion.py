@@ -1,7 +1,7 @@
 import math
 from Bio import Seq
 import Analysis
-from AccessiontoAlignment import get_alignment_indexing,no_gap_sequence_from_alignment,clustalw_to_fasta
+from AccessiontoAlignment import get_alignment_indexing,no_gap_sequence_from_alignment,clustalw_to_fasta,alignment_finder
 from numpy import zeros, savetxt
 from scipy.stats import rankdata
 import ContactMap
@@ -56,11 +56,13 @@ def dilapidated_translate_old_to_new_alignment(old_alignment_file, reference_lab
     new_alignment_comparison_end = comparison_alignment_indexing[
         comparison_sequence.find(old_sequence_chunk) + len(old_sequence_chunk)]
     return old_sequence_chunk,new_alignment_comparison_start,new_alignment_comparison_end
-def alignment_to_confidence(alignment_file,comparison_label,pdb,comparison_soi):
-    sequence_dict = create_dictionary_from_alignment(alignment_file)
+def alignment_to_confidence(aln_file, comparison_label, ref_label,pdb_file, soi):
+    sequence_dict = create_dictionary_from_alignment(aln_file)
     comparison_alignment = sequence_dict[comparison_label]
     comparison_alignment_indexing = get_alignment_indexing(comparison_alignment)
     comparison_sequence = no_gap_sequence_from_alignment(comparison_alignment)
+    comparison_soi=alignment_finder(aln_file, soi, comparison_label,ref_label,chimera.chi_seq
+    # = ref_sequence.replace(seq_of_interest, homologous_splice)
     # Turns the alignment sequence into a mutable object (list) so that the corresponding residues can be swapped
     listed_alignment_characters = list(comparison_alignment)
     # Finds the no gap sequence indexes for the sequence of interest (soi)
@@ -68,7 +70,7 @@ def alignment_to_confidence(alignment_file,comparison_label,pdb,comparison_soi):
     no_gap_end = comparison_sequence.find(comparison_soi)+len(comparison_soi)
     # Splices the indexing list into a list of indexes for residues that need to be replaced with the corresponding confidence score
     found_alignment_indexing = comparison_alignment_indexing[no_gap_start:no_gap_end]
-    plddt = Analysis.get_plddt_dict_from_pdb(pdb)
+    plddt = Analysis.get_plddt_dict_from_pdb(pdb_file)
     for sequence, plddt in plddt.items():
         start = sequence.find(comparison_soi)
         end = start + len(comparison_soi)
@@ -77,6 +79,7 @@ def alignment_to_confidence(alignment_file,comparison_label,pdb,comparison_soi):
             listed_alignment_characters[position] = plddt_chunk[index]
     confidence_scores=listed_alignment_characters
     return confidence_scores
+alignment_to_confidence('6vsb_MSA.aln','AlphaCorona2013','3merAlphaCorona2013.pdb')
 
 
 # soi = dilapidated_translate_old_to_new_alignment(f"/gpfs/gpfs0/scratch/jws6pq/Notebook/Alignment/{label}onSARS2.fasta",
@@ -186,20 +189,20 @@ def contact_contingency(alignment_file, native_pdb, chimera_pdb, chain_id, label
             residue_to_find]
 
 
-with open("/gpfs/gpfs0/scratch/jws6pq/Notebook/Overall/List_of_coronaviruses", 'r') as loc:
-    loc = loc.readlines()
-aln='/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/CoronavirusMSA.aln'
-comparison_matrix=zeros((len(loc),8),dtype=object)
-index=1267
-rank_change = f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/Rank_change_{index+1}.tsv'
-for indexes,label in enumerate(loc):
-    protein_label=label.split()[-1]
-    native=f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/3mer{protein_label}.pdb'
-    chi=f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/3merSARS2w{protein_label}S1.pdb'
-    comparison=contact_contingency(aln, native, chi, 'B', protein_label,index, rank_change,1792,'SSNF')
-    print(comparison)
-    comparison_matrix[indexes]=comparison
-savetxt(f'/gpfs/gpfs0/scratch/jws6pq/Notebook/Immersion/CarbonB_1268_contacts.csv', comparison_matrix, fmt='%s/%s/%s/%s/%s/%s/%s/%s')
+# with open("/gpfs/gpfs0/scratch/jws6pq/Notebook/Overall/List_of_coronaviruses", 'r') as loc:
+#     loc = loc.readlines()
+# aln='/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/CoronavirusMSA.aln'
+# comparison_matrix=zeros((len(loc),8),dtype=object)
+# index=1267
+# rank_change = f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/Rank_change_{index+1}.tsv'
+# for indexes,label in enumerate(loc):
+#     protein_label=label.split()[-1]
+#     native=f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/3mer{protein_label}.pdb'
+#     chi=f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/3merSARS2w{protein_label}S1.pdb'
+#     comparison=contact_contingency(aln, native, chi, 'B', protein_label,index, rank_change,1792,'SSNF')
+#     print(comparison)
+#     comparison_matrix[indexes]=comparison
+# savetxt(f'/gpfs/gpfs0/scratch/jws6pq/Notebook/Immersion/CarbonB_1268_contacts.csv', comparison_matrix, fmt='%s/%s/%s/%s/%s/%s/%s/%s')
 
 # with open("/gpfs/gpfs0/scratch/jws6pq/Notebook/Overall/List_of_coronaviruses", 'r') as loc:
 #     loc = loc.readlines()
