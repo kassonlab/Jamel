@@ -1,33 +1,21 @@
 import math
 from Bio import Seq
 import Analysis
-from AccessiontoAlignment import get_alignment_indexing,no_gap_sequence_from_alignment,clustalw_to_fasta,alignment_finder
+from AccessiontoAlignment import get_alignment_indexing, no_gap_sequence_from_alignment, clustalw_to_fasta, \
+    alignment_finder
 from numpy import zeros, savetxt
 from scipy.stats import rankdata
 import ContactMap
 from ColorCoding import create_dictionary_from_alignment
+
 '''This is very specific code for dilapidated and wrong sectioning of S1 and conversion of individual alignments to 
 map on a MSA'''
 
-S1_aln = '--------------------AYTNS' \
-     '-------------------------------------------------------------------------------------------------FTRGV' \
-     '-------YYPDK--------------------------VFR--------------------------------------------S-------SVLHSTQD' \
-     '----LFLPFFS-----------------------------------------------------NVTW-----FHNP----------------------VL' \
-     '--PFNDGVYFASTEKSNII--------------------------------RGWIFG---TTLD----------------SKTQSLLIVN' \
-     '-------------------------------NA--TN---------------------VVIKVC--------------------------EFQFC--NDP-------FLSE' \
-     '--FRVYSS------------------------------ANNCTFEYVSQPFLKNLRE--------------FVFKNIDG-YFKIYSK' \
-     '-------------------HTPPQGFSALEPLVDL-PIGINIT---RFQTLLAA------------------------YYVGYL' \
-     '------QPRTFLLKYNENGTITDAVDCALD-PLSETKCTLKSFTVEKGIYQTSNFRV--QPTESIV--RFPNITNLC--PFGEVFNAT--RFAS---VYAWNRKRIS--NC' \
-     '-----VADYSVLYNSASFSTFKCYGVSPTKLNDLCFTNVYADSF--VIRGDEVRQIA--PGQTGKIADYNYKLPDDFTGCVIAWNSNNL-----------DSYNYL' \
-     '---------YRN-------------------LKP------------FER-----DIS----T-EIY' \
-     '--------------------------------------------------------------NC---YFP----------LQ---------------------SYGFQ' \
-     '------PT----VGYQPYR------------VVVLSFELL------------------------------------------------------HAPATVCGPK-----KS' \
-     '------------------TNLVKNKCVNFNFNGLTGTGVLTE-SN----KKFL-PFQQFGRDIAD' \
-     '--TTDAVRDPQTLEILDITPCSFGGVSVITPGTNTSNQVAVLYQDVNCTEVT-------------------------------GSNVFQTR----AGCLIGAEHVNNSY' \
-     '------E--CDIPI----GAGICA'
+vsb_S1 = 'QCVNLTTRTQLPPAYTNSFTRGVYYPDKVFRSSVLHSTQDLFLPFFSNVTWFHAIHVSGTNGTKRFDNPVLPFNDGVYFASTEKSNIIRGWIFGTTLDSKTQSLLIVNNATNVVIKVCEFQFCNDPFLGVYYHKNNKSWMESEFRVYSSANNCTFEYVSQPFLMDLEGKQGNFKNLREFVFKNIDGYFKIYSKHTPINLVRDLPQGFSALEPLVDLPIGINITRFQTLLALHRSYLTPGDSSSGWTAGAAAYYVGYLQPRTFLLKYNENGTITDAVDCALDPLSETKCTLKSFTVEKGIYQTSNFRVQPTESIVRFPNITNLCPFGEVFNATRFASVYAWNRKRISNCVADYSVLYNSASFSTFKCYGVSPTKLNDLCFTNVYADSFVIRGDEVRQIAPGQTGKIADYNYKLPDDFTGCVIAWNSNNLDSKVGGNYNYLYRLFRKSNLKPFERDISTEIYQAGSTPCNGVEGFNCYFPLQSYGFQPTNGVGYQPYRVVVLSFELLHAPATVCGPKKSTNLVKNKCVNFNFNGLTGTGVLTESNKKFLPFQQFGRDIADTTDAVRDPQTLEILDITPCSFGGVSVITPGTNTSNQVAVLYQDVNCTEVPVAIHADQLTPTWRVYSTGSNVFQTRAGCLIGAEHVNNSYECDIPIGAGICASYQTQTNSPGSASS'
 
-S1=S1_aln.replace('-','')
-def dilapidated_translate_old_to_new_alignment(old_alignment_file, reference_label, comparison_label, alignment_file, sequence_of_interest):
+
+def dilapidated_translate_old_to_new_alignment(old_alignment_file, reference_label, comparison_label, alignment_file,
+                                               sequence_of_interest):
     """This is a dilapidated piece of code to find the boundaries of overlapping sequences in a pairwise fasta
     alignment, but it has a purposeful mistake from previous iterations of alignment_finder that will help replicate previous chimeric
     sequences until new data with more accurate chimeras are created. Takes a fasta style alignment and a
@@ -35,7 +23,7 @@ def dilapidated_translate_old_to_new_alignment(old_alignment_file, reference_lab
     in the boundaries of the sequence_of_interest, as well as the python index boundaries for the found_alignment of
     the comparison_protein. reference_protein and comparison_protein must the names following '>' in the alignment
     file"""
-    old_sequence_dict=create_dictionary_from_alignment(old_alignment_file)
+    old_sequence_dict = create_dictionary_from_alignment(old_alignment_file)
     old_reference_alignment = old_sequence_dict[reference_label]
     old_comparison_alignment = old_sequence_dict[comparison_label]
     reference_alignment_indexing = get_alignment_indexing(old_reference_alignment)
@@ -48,26 +36,29 @@ def dilapidated_translate_old_to_new_alignment(old_alignment_file, reference_lab
     # this generates what is the most recent chimeric slice for the data as of 07/2023. It should read
     # 'old_comparison_sequence[alignment_reference_start:alignment_reference_end].replace('-', '')'
     old_sequence_chunk = old_comparison_alignment.replace('-', '')[alignment_reference_start:alignment_reference_end]
-    sequence_dict=create_dictionary_from_alignment(alignment_file)
+    sequence_dict = create_dictionary_from_alignment(alignment_file)
     comparison_alignment = sequence_dict[comparison_label]
     comparison_alignment_indexing = get_alignment_indexing(comparison_alignment)
     comparison_sequence = no_gap_sequence_from_alignment(comparison_alignment)
     new_alignment_comparison_start = comparison_alignment_indexing[comparison_sequence.find(old_sequence_chunk)]
     new_alignment_comparison_end = comparison_alignment_indexing[
         comparison_sequence.find(old_sequence_chunk) + len(old_sequence_chunk)]
-    return old_sequence_chunk,new_alignment_comparison_start,new_alignment_comparison_end
-def alignment_to_confidence(aln_file, comparison_label, ref_label,pdb_file, soi):
+    return old_sequence_chunk, new_alignment_comparison_start, new_alignment_comparison_end
+
+
+def alignment_to_confidence(aln_file, comparison_label, ref_label, pdb_file, soi):
+    '''This only works with homologous proteins for now'''
     sequence_dict = create_dictionary_from_alignment(aln_file)
     comparison_alignment = sequence_dict[comparison_label]
     comparison_alignment_indexing = get_alignment_indexing(comparison_alignment)
     comparison_sequence = no_gap_sequence_from_alignment(comparison_alignment)
-    comparison_soi=alignment_finder(aln_file, soi, comparison_label,ref_label,chimera.chi_seq
+    comparison_soi = alignment_finder(aln_file, soi, comparison_label, ref_label)[0]
     # = ref_sequence.replace(seq_of_interest, homologous_splice)
     # Turns the alignment sequence into a mutable object (list) so that the corresponding residues can be swapped
     listed_alignment_characters = list(comparison_alignment)
     # Finds the no gap sequence indexes for the sequence of interest (soi)
-    no_gap_start=comparison_sequence.find(comparison_soi)
-    no_gap_end = comparison_sequence.find(comparison_soi)+len(comparison_soi)
+    no_gap_start = comparison_sequence.find(comparison_soi)
+    no_gap_end = comparison_sequence.find(comparison_soi) + len(comparison_soi)
     # Splices the indexing list into a list of indexes for residues that need to be replaced with the corresponding confidence score
     found_alignment_indexing = comparison_alignment_indexing[no_gap_start:no_gap_end]
     plddt = Analysis.get_plddt_dict_from_pdb(pdb_file)
@@ -77,43 +68,31 @@ def alignment_to_confidence(aln_file, comparison_label, ref_label,pdb_file, soi)
         plddt_chunk = plddt[start:end]
         for index, position in enumerate(found_alignment_indexing):
             listed_alignment_characters[position] = plddt_chunk[index]
-    confidence_scores=listed_alignment_characters
+    confidence_scores = listed_alignment_characters
     return confidence_scores
-alignment_to_confidence('6vsb_MSA.aln','AlphaCorona2013','3merAlphaCorona2013.pdb')
 
 
-# soi = dilapidated_translate_old_to_new_alignment(f"/gpfs/gpfs0/scratch/jws6pq/Notebook/Alignment/{label}onSARS2.fasta",
-#                                                  '6vsb_B', label, alignment_file, )[0]
-#
-# # turn this into smaller so you can put soi for each indivdual
-# def confidence_rank_matrix(alignment_file, list_of_label_pdb_tuples, reference_label, rank_matrix_file,sequence_of_interest,
-#                            raw_matrix_file=''):
-#     with open(alignment_file, "r") as alignment:
-#         alignment = alignment.read().split('>')
-#         # Splitting up the sequences names and sequences into a dictionary
-#         alignment_length = len({sequence.split('\n')[0]: ''.join(sequence.split('\n')[1:]) for sequence in alignment if
-#                                 len(sequence) != 0}[reference_label])
-#     plddt_matrix = zeros((len(list_of_label_pdb_tuples) + 1, alignment_length + 1), dtype=object)
-#     for index, (label, pdb) in enumerate(list_of_label_pdb_tuples):
-#         plddt_matrix[index, 0] = label
-#         plddt_matrix[index, 1:] = alignment_to_confidence(
-#             , reference_label, label,
-#             alignment_file, S1.replace('-', ''),
-#             pdb)
-#     plddt_matrix[-1, 0] = 'SARS2'
-#     plddt_matrix[-1, 1:] = Analysis.alignment_to_confidence(reference_label, reference_label, alignment_file,
-#                                                             S1.replace('-', ''),
-#                                                             f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/3merSARS2.pdb')
-#     if raw_matrix_file:
-#         savetxt(raw_matrix_file, plddt_matrix, fmt='%s')
-#     for index, column in enumerate(plddt_matrix[0, 1:]):
-#         column = plddt_matrix[:, 1 + index]
-#         rank_column = rankdata([x for x in column if x != '-'], 'ordinal')
-#         column_indexing = [ind for ind, x in enumerate(column) if x != '-']
-#         for rank_index, correct_index in enumerate(column_indexing):
-#             column[correct_index] = rank_column[rank_index]
-#         plddt_matrix[:, 1 + index] = column
-#     savetxt(rank_matrix_file, plddt_matrix, fmt='%s')
+# turn this into smaller so you can put soi for each indivdual
+def confidence_rank_matrix(alignment_file, pdb_naming, reference_label, rank_matrix_file, sequence_of_interest,
+                           raw_matrix_file=''):
+    aln_dict = create_dictionary_from_alignment(alignment_file)
+    aln_seq_length = len(aln_dict[reference_label])
+    aln_length = len(aln_dict)
+    plddt_matrix = zeros((aln_length + 1, aln_seq_length + 1), dtype=object)
+    for index, label in enumerate(aln_dict.keys()):
+        plddt_matrix[index, 0] = label
+        plddt_matrix[index, 1:] = alignment_to_confidence(alignment_file, label, reference_label,
+                                                          pdb_naming.replace('*', label), sequence_of_interest)
+    if raw_matrix_file:
+        savetxt(raw_matrix_file, plddt_matrix, fmt='%s')
+    for index, column in enumerate(plddt_matrix[0, 1:]):
+        column = plddt_matrix[:, 1 + index]
+        rank_column = rankdata([x for x in column if x != '-'], 'ordinal')
+        column_indexing = [ind for ind, x in enumerate(column) if x != '-']
+        for rank_index, correct_index in enumerate(column_indexing):
+            column[correct_index] = rank_column[rank_index]
+        plddt_matrix[:, 1 + index] = column
+    savetxt(rank_matrix_file, plddt_matrix, fmt='%s')
 
 
 # with open("/gpfs/gpfs0/scratch/jws6pq/Notebook/Overall/List_of_coronaviruses", 'r') as loc:
@@ -230,16 +209,16 @@ def contact_contingency(alignment_file, native_pdb, chimera_pdb, chain_id, label
 # negative_index = [1266, 1265, 1264, 1030, 1267, 1263, 1270, 1262, 73, 1237, 1238, 1272, 1285, 1271, 1040, 1042, 749,
 #                   856, 1287, 750, 1261, 1239, 751, 716, 1283, 1284, 501, 1286, 1396, 1297]
 
-def convert_nucleotide_clusters_to_protein_alignment_index(cluster_file,columns_of_interest):
-    nucleotide_protein_intersect=()
+def convert_nucleotide_clusters_to_protein_alignment_index(cluster_file, columns_of_interest):
+    nucleotide_protein_intersect = ()
     with open(cluster_file, 'r') as clusters:
         clusters = clusters.readlines()
     for cluster in clusters:
         cluster = cluster.split()
-        corrected_cluster=[math.floor(int(index) / 3) for index in cluster]
+        corrected_cluster = [math.floor(int(index) / 3) for index in cluster]
         for index in corrected_cluster:
             if index in columns_of_interest:
-                nucleotide_protein_intersect+=(index,)
+                nucleotide_protein_intersect += (index,)
     return nucleotide_protein_intersect
 
 # with open("/gpfs/gpfs0/scratch/jws6pq/Notebook/Overall/List_of_coronaviruses", 'r') as loc:

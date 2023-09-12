@@ -242,75 +242,7 @@ def averaging_multimer_plddt(plddt_file, new_plddt_file, subunits):
         new_plddt.write('\n'.join(str(score) for score in averaged_scores))
 
 
-def alignment_to_confidence(reference_label, comparison_label, alignment_file, sequence_of_interest, pdb):
-    with open(alignment_file, "r") as alignment:
-        alignment = alignment.read().split('>')
-        # Splitting up the sequences names and sequences into a dictionary
-        sequence_dictionary = {sequence.split('\n')[0]: ''.join(sequence.split('\n')[1:]) for sequence in alignment if
-                               len(sequence) != 0}
-    # Recording the specified sequences as variables
-    reference_sequence = sequence_dictionary[reference_label]
-    comparison_sequence = sequence_dictionary[comparison_label]
-    # Matching python indexing for the indexing from the alignment with some amount of '-' and indexing in the regular sequence
-    reference_alignment_indexing = tuple((ind for ind, x in enumerate(reference_sequence) if x.isalpha()))
-    # Creating a regular sequence without '-'
-    no_gap_reference_sequence = ''.join(x for ind, x in enumerate(reference_sequence) if x.isalpha())
-    # Boundaries are given in python index
-    alignment_reference_start = reference_alignment_indexing[no_gap_reference_sequence.find(sequence_of_interest)]
-    alignment_reference_end = reference_alignment_indexing[
-        no_gap_reference_sequence.find(sequence_of_interest) + len(sequence_of_interest)]
-    comparison_sequence = sequence_dictionary[comparison_label]
-    aligned_sequence_chunk=comparison_sequence[alignment_reference_start:alignment_reference_end].replace('-', '')
-    # Matching python indexing for the indexing from the alignment with some amount of '-' and indexing in the regular sequence
-    comparison_alignment_indexing = tuple((ind for ind, x in enumerate(comparison_sequence) if x.isalpha()))
-    # Creating a regular sequence without '-'
-    no_gap_comparison_sequence = ''.join(x for ind, x in enumerate(comparison_sequence) if x.isalpha())
-    # Boundaries are given in python index
-    # Pulling the section of the comparison_sequence that overlaps with the sequence_of_interest
-    total_alignment_list = list(comparison_sequence)
-    found_alignment_indexing = comparison_alignment_indexing[
-                               no_gap_comparison_sequence.find(aligned_sequence_chunk):no_gap_comparison_sequence.find(
-                                   aligned_sequence_chunk) + len(aligned_sequence_chunk)]
-    alignment_comparison_start = comparison_alignment_indexing[no_gap_comparison_sequence.find(aligned_sequence_chunk)]
-    alignment_comparison_end = comparison_alignment_indexing[
-        no_gap_comparison_sequence.find(aligned_sequence_chunk) + len(aligned_sequence_chunk)]
-    # Pulling the section of the comparison_sequence that overlaps with the sequence_of_interest
 
-    plddt = get_plddt_dict_from_pdb(pdb)
-    for sequence, plddt in plddt.items():
-        start = sequence.find(aligned_sequence_chunk)
-        end = start + len(aligned_sequence_chunk)
-        plddt_chunk = plddt[start:end]
-        for index, position in enumerate(found_alignment_indexing):
-            total_alignment_list[position] = plddt_chunk[index]
-    return total_alignment_list
 
-def confidence_rank_matrix(alignment_file, list_of_label_pdb_tuples, reference_label,sequence_of_interest, rank_matrix_file,
-                           raw_matrix_file=''):
-    plddt_matrix = zeros((len(list_of_label_pdb_tuples) + 1, len(sequence_of_interest) + 1), dtype=object)
-    for index, (label, pdb) in enumerate(list_of_label_pdb_tuples):
-        plddt_matrix[index, 0] = label
-        plddt_matrix[index, 1:] = alignment_to_confidence(reference_label, label, alignment_file, sequence_of_interest.replace('-', ''),
-                                                          pdb)
-    plddt_matrix[-1, 0] = reference_label
-    plddt_matrix[-1, 1:] = alignment_to_confidence(reference_label, reference_label, alignment_file,
-                                                   sequence_of_interest.replace('-', ''),
-                                                   f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/3merSARS2.pdb')
-    if raw_matrix_file:
-        savetxt(raw_matrix_file, plddt_matrix, fmt='%s')
-    for index, column in enumerate(plddt_matrix[0, 1:]):
-        column = plddt_matrix[:, 1 + index]
-        rank_column = rankdata([x for x in column if x != '-'], 'ordinal')
-        column_indexing = [ind for ind, x in enumerate(column) if x != '-']
-        for rank_index, correct_index in enumerate(column_indexing):
-            column[correct_index] = rank_column[rank_index]
-        plddt_matrix[:, 1 + index] = column
-    savetxt(rank_matrix_file, plddt_matrix, fmt='%s')
-def rank_difference_table_to_dict(table):
-    with open(table, "r") as data:
-        data = data.readlines()
-    difference_dict ={}
-    for line in data:
-        difference_dict[line.split()[0]]=line.split()[1]
-    return difference_dict
+
 
