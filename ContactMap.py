@@ -1,6 +1,6 @@
 from numpy import sqrt,array,where,delete,zeros,savetxt
 from Bio import PDB,SeqIO
-
+from ChimeraGenerator import sequence_splice
 import ColorCoding
 from ColorCoding import blosum_62_matrix,create_dictionary_from_alignment
 from Analysis import rank_difference_table_to_dict,convert_array_to_file
@@ -9,7 +9,7 @@ from numpy import min as npmin
 # TODO allow looking at contacts for specific position for intra
 # TODO combine contacts across all homomers
 from scipy.spatial import KDTree
-from AccessiontoAlignment import get_alignment_indexing
+from AccessiontoAlignment import get_alignment_indexing,alignment_finder
 def get_coordinates_dict_per_chain(pdb_file):
     STRUCTURE = PDB.PDBParser().get_structure(pdb_file, pdb_file)
     # Then selecting the chain
@@ -101,14 +101,23 @@ def get_intra_residue_contact_pairs(pdb_file, chain_id):
 def correct_alignment_for_residue_position(alignment_file, alignment_label, alignment_index):
     sequence_dict=create_dictionary_from_alignment(alignment_file)
     sequence_from_alignment=sequence_dict[alignment_label]
-    sequence_indexing = [ind for ind, x in enumerate(sequence_from_alignment) if x != '-']
+    sequence_indexing = get_alignment_indexing(sequence_from_alignment)
     return sequence_indexing.index(alignment_index)
+
+def correct_alignment_for_chimera_residue_position(aln_file, ref_label, aln_label, aln_index,spliced_in_seq):
+    sequence_from_aln=create_dictionary_from_alignment(aln_file)[aln_label]
+    ref_aln=create_dictionary_from_alignment(aln_file)[ref_label]
+    boundaries=alignment_finder(aln_file, spliced_in_seq,aln_label,ref_label)
+    com_boundaries=boundaries[1]
+    com_boundaries = boundaries[2]
+    comparison_aln_indexing=get_alignment_indexing(sequence_from_aln)[boundaries[1]]
+    ref_aln_indexing=get_alignment_indexing(ref_aln)
+    # nonspliced=
+    ref_aln=create_dictionary_from_alignment(aln_file)[ref_label]
+
 def correct_residue_index_for_alignment(alignment_file,residue_index,protein_label):
     aligned_seq=create_dictionary_from_alignment(alignment_file)[protein_label]
     print(get_alignment_indexing(aligned_seq)[residue_index])
-
-
-
 
 def get_residue_at_native_position(alignment_file,alignment_label,alignment_index=None,residue_index=None):
     sequence_dict=create_dictionary_from_alignment(alignment_file)
@@ -116,7 +125,7 @@ def get_residue_at_native_position(alignment_file,alignment_label,alignment_inde
     if alignment_index:
         return sequence_from_alignment[alignment_index]
     elif residue_index:
-        sequence = [x for ind, x in enumerate(sequence_from_alignment) if x != '-']
+        sequence = get_alignment_indexing(sequence_from_alignment)
         return sequence[residue_index]
 def get_individual_intra_contacts(pdb_file, chain_id, index):
     coords = get_coordinates_dict_per_chain(pdb_file)[chain_id]

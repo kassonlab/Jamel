@@ -82,6 +82,7 @@ def alphafold_submission_for_chimera_container(container,list_of_fastas):
         # if all of them are complete and fasta_to_run is empty then all slurm actions are toggled off
         if not fasta_to_run:
             submission_toggles['create_slurms'] = submission_toggles['sbatch slurms'] = False
+            print('All Done')
     elif submission_toggles['stragglers_or_custom_or_all'] == 'custom':
         with open(container.submission_args.custom_list_to_run, 'r') as run_list:
             run_list = run_list.readlines()

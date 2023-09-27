@@ -131,7 +131,7 @@ def Truncating_sars_dna_sequence(aligned_full_length, aligned_trunc, unaligned_d
 
 
 def contact_contingency(alignment_file, native_pdb, chimera_pdb, chain_id, label, alignment_index, rank_difference_file,
-                        contact_to_find_aln_index, contingent_seq):
+                        contact_to_find_aln_index):
     try:
         residue = ContactMap.get_residue_at_native_position(alignment_file, label, alignment_index)
         native_index = ContactMap.correct_alignment_for_residue_position(alignment_file, label, alignment_index)
@@ -248,3 +248,24 @@ def convert_nucleotide_clusters_to_protein_alignment_index(cluster_file, columns
 #         comparison_matrix[y]=comparison
 #         y+=1
 # savetxt(f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/rank_comparison.csv', comparison_matrix, fmt='%s/%s/%s/%s/%s/%s')
+
+from MDAnalysis import analysis as MDAnaly
+from MDAnalysis import Universe # test trajectory
+
+#New MDAnalysis stuff
+# target_chain = "A"  # Replace "A" with the chain ID you want to select
+#
+# # Select atoms from the specified chain
+# atoms_from_target_chain = u.select_atoms(f"chain {target_chain}")
+
+def residue_dist_matrix_md_analysis(pdb_file, chain_id, make_it_binary='Yes', distance_cutoff=6):
+    """Takes a distance matrix of a protein and converts it to a binary matrix that uses 1 to signify a residue
+    contact and 0 for no contact or Returns a matrix of C-alpha distances between residues in a protein chain or b"""
+    protein_coords = Universe(pdb_file, pdb_file)
+    # Turns residues into atom groups and excludes non heavy atoms (hydrogens)
+    atom_groups = [res.atoms.select_atoms(f'not type H') for res in protein_coords.residues]
+    print(len(atom_groups))
+    dist_arr = MDAnaly.distances.distance_array(atom_groups[0].positions,  # reference
+                                                 atom_groups[0].positions,  # configuration
+                                                 box=protein_coords.dimensions)
+residue_dist_matrix_md_analysis('3merSARS2.pdb','B')
