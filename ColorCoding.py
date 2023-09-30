@@ -105,9 +105,6 @@ def shannons_entropy_for_residue_conservation(reference_label, alignment_file):
             entropy += -probability * log(probability, number_of_possible_bins)
         shannons_entropy.append((alignment_index,reference_sequence[alignment_index],entropy))
     return shannons_entropy
-# threshold=[(index,residue,entropy) for index,residue,entropy in shannons_entropy_for_residue_conservation('6vsb_B','CoronavirusMSA.aln') if entropy<=.5 if index>=1402]
-# print(len((threshold)))
-# print(sorted(threshold,key=lambda x:x[2]))
 def color_coding(pdb_name, list_of_values, scale_tuple, color_scheme_tuple):
     """Takes a list_of_values and colors a residue of a pymol structure in the scale specified by
     scale_tuple:(min_value_in_scale,max_value_in_scale) and color_scheme_tuple:(low_color,high_color).
@@ -140,37 +137,3 @@ def pdb_to_fasta(pdb,new_fasta):
         for record in SeqIO.parse(pdb_file, 'pdb-atom'):
             fasta_list.append((record.seq,1,record.id))
     fasta_creation(new_fasta,fasta_list)
-# with open("/gpfs/gpfs0/scratch/jws6pq/Notebook/Overall/List_of_coronaviruses", 'r') as loc:
-#     loc = loc.readlines()
-# for line in loc:
-#
-#     chi_pdb=f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/3merSARS2w{line.split()[-1]}S1.pdb'
-#     chi_fasta=f'/gpfs/gpfs0/scratch/jws6pq/Notebook/Fastas/Broken_code_Fastas/3merSARS2w{line.split()[-1]}S1.fasta'
-#     pdb_to_fasta(chi_pdb,chi_fasta)
-
-
-
-
-
-protein_list = ['BAT2006',
-                'BATHKU25',
-                'BatHKU4',
-                'BATHKU9',
-                'EidolonBat',
-                'Hedgehog',
-                'Zhejiang2013',
-                'BATGCCDC1']
-# protein=protein_list[3]
-# loop=[float(score) for index,score in enumerate(open('Avg3merSARS2wBAT2006S1.plddt', 'r').readlines()) if index not in range(647, 682)]
-# noloop=[float(score) for score in open('Avg3merSARS2wBAT2006S1mutatedloop.plddt', 'r').readlines()]
-# del noloop[647:650]
-# differenec=[score-loop[index] for index,score in enumerate(noloop)]
-# differenec[647:647]=[max(differenec) for x in range(647,682)]
-# color_coding('SARSw'+protein+'S1frame0', differenec, (min(differenec),max(differenec)), ('red','green'))
-# plddt_color_coding('Avg3merSARS2w'+protein+'S1.plddt', 'SARSw'+protein+'S1frame0', ('red', 'green'))
-# plddt_color_coding('Avg3merSARS2w'+protein+'S1mutatedloop.plddt', '3merSARS2w'+protein+'S1mutatedloop', ('red', 'green'))
-# plddt_color_coding('Avg3merSARS2.plddt', '3merSARS2', ('red', 'green'))
-
-# for protein in protein_list[0:1]:
-#     plddt_color_coding('Avg3merSARS2w'+protein+'S1.plddt', 'SARSw'+protein+'S1frame0', ('red', 'green'))
-#     plddt_color_coding('Avg3merSARS2w'+protein+'S1mutatedloop.plddt', '3merSARS2w'+protein+'S1mutatedloop', ('red', 'green'))

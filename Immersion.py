@@ -2,11 +2,10 @@ import math
 from Bio import Seq
 import Analysis
 from AccessiontoAlignment import get_alignment_indexing, no_gap_sequence_from_alignment, clustalw_to_fasta, \
-    alignment_finder
+    alignment_finder,create_dictionary_from_alignment
 from numpy import zeros, savetxt
 from scipy.stats import rankdata
 import ContactMap
-from ColorCoding import create_dictionary_from_alignment
 
 '''This is very specific code for dilapidated and wrong sectioning of S1 and conversion of individual alignments to 
 map on a MSA'''
@@ -155,7 +154,7 @@ def contact_contingency(alignment_file, native_pdb, chimera_pdb, chain_id, label
         residue_to_find = '-'
 
     chimera_seq = ContactMap.get_sequence_from_pdb(chimera_pdb, chain_id)
-    chi_index = ContactMap.correct_native_for_chimera_index(alignment_file, label, native_index, chimera_seq)
+    chi_index = ContactMap.correct_alignment_for_chimera_index(alignment_file, label, native_index, chimera_seq)
     residue_ids = f'{residue}{native_index + 1},{residue}{chi_index + 1}'
     chimera_contacts = ContactMap.get_individual_intra_contacts(chimera_pdb, chain_id, chi_index)
     chimera_contacts += ContactMap.get_inter_protein_contacts(chimera_pdb, chain_id)[chi_index]

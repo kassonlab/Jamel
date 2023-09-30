@@ -153,7 +153,9 @@ def run_emboss_needle(new_emboss_file, sequence_one, sequence_two, needle_direct
 
 def get_alignment_indexing(alignment_seq):
     """Creating a list of alignment indexes for non '-' characters"""
-    return [ind for ind, x in enumerate(alignment_seq) if x.isalpha()]
+    return [ind for ind, x in enumerate(alignment_seq) if x!='-']
+def get_alignment_indexing_w_dashes(alignment_seq):
+    return [ind if x!='-' else '-' for ind,x in enumerate(alignment_seq)]
 def alignment_finder(alignment_file, sequence_of_interest, comparison_protein,
                      reference_protein, run_emboss='', new_emboss_file=''):
     """Takes a fasta style alignment and a sequence_of_interest from a reference_protein and returns the sequence of the
@@ -161,11 +163,7 @@ def alignment_finder(alignment_file, sequence_of_interest, comparison_protein,
      for the found_alignment of the comparison_protein. reference_protein and comparison_protein must the names following
       '>' in the alignment file"""
     #Must be in fasta format
-    with open(alignment_file, "r") as alignment:
-        alignment = alignment.read().split('>')
-        # Splitting up the sequences names and sequences into a dictionary
-        sequence_dictionary = {sequence.split('\n')[0]: ''.join(sequence.split('\n')[1:]) for sequence in alignment if
-                           len(sequence) != 0}
+    sequence_dictionary=create_dictionary_from_alignment(alignment_file)
     # Recording the specified sequences as variables
     reference_sequence = sequence_dictionary[reference_protein]
     comparison_sequence = sequence_dictionary[comparison_protein]
@@ -178,7 +176,7 @@ def alignment_finder(alignment_file, sequence_of_interest, comparison_protein,
     # Because indexing doesnt include the ending index, the final index is put up one
     alignment_reference_end = reference_alignment_indexing[no_gap_reference_sequence.find(sequence_of_interest) + len(sequence_of_interest)-1]+1
     # Pulling the section of the comparison_sequence that overlaps with the sequence_of_interest
-    found_alignment = comparison_sequence[alignment_reference_start:(alignment_reference_end)].replace('-', '')
+    found_alignment = comparison_sequence[alignment_reference_start:alignment_reference_end].replace('-', '')
     no_gap_reference_start = no_gap_reference_sequence.find(sequence_of_interest)
     no_gap_reference_end = no_gap_reference_start + len(sequence_of_interest)
     # Recording the indexes of the found_alignment
@@ -266,10 +264,11 @@ def extract_seq_from_fasta(fasta_file):
     with open(fasta_file, "r") as handle:
         return str(SeqIO.read(handle, "fasta").seq)
 
-def straighten_alignment(aln_file,new_aln):
-    with open(aln_file, "r") as aln,open(new_aln, "w") as out:
+def straighten_alignment(aln_file, new_aln_file):
+    with open(aln_file, "r") as aln,open(new_aln_file, "w") as out:
         records=SeqIO.parse(aln, "fasta")
         SeqIO.write(records,out,'fasta-2line')
+straighten_alignment('6vsb_MSA.aln','flat_6vsb_MSA.aln')
 # def msa_to_fastas(msa_file):
 #     with open(msa_file, "r") as msa:
 
