@@ -145,27 +145,28 @@ def print_keys(dictionary,key_of_interest=''):
             print(key)
 
 
-
 def assign_file_attrs_to_chimeras(container):
     for chimera in container.chimeras:
-        placeholder = container.naming_args.placeholder
+        name_placeholder = container.naming_args.nickname_placeholder
+        file_placeholder=container.naming_args.file_placeholder
         subunits = container.fasta_args.number_of_subunits
         alphafold_dir = container.naming_args.alphafold_outputs_dir
-        chimera.monomer_stem = container.naming_args.monomer_naming_convention.replace(placeholder,
+        chimera.monomer_stem = container.naming_args.monomer_naming_convention.replace(name_placeholder,
                                                                                        chimera.file_stem)
-        chimera.chimera_stem = container.naming_args.chimera_naming_convention.replace(placeholder,
+        chimera.chimera_stem = container.naming_args.chimera_naming_convention.replace(name_placeholder,
                                                                                        chimera.file_stem)
         chimera.chi_pdb = path.join(f'{alphafold_dir}{chimera.chimera_stem}', 'ranked_0.pdb')
-        chimera.monomer_fasta = container.naming_args.fasta_directory + chimera.monomer_stem + container.naming_args.fasta_extension
-        chimera.chimera_fasta = container.naming_args.fasta_directory + chimera.chimera_stem + container.naming_args.fasta_extension
-        chimera.multimer_stem = container.naming_args.multimer_naming_convention.replace(placeholder,
-                                                                                         chimera.file_stem)
-        chimera.multimer_fasta = container.naming_args.fasta_directory + chimera.multimer_stem + container.naming_args.fasta_extension
+        chimera.monomer_fasta = container.naming_args.fasta_naming.replace(file_placeholder,chimera.monomer_stem)
+        chimera.chimera_fasta = container.naming_args.fasta_naming.replace(file_placeholder,chimera.chimera_stem)
 
         if subunits == 1:
-            chimera.multimer_stem = container.naming_args.monomer_naming_convention.replace(placeholder,
+            chimera.multimer_stem = container.naming_args.monomer_naming_convention.replace(name_placeholder,
                                                                                             chimera.file_stem)
-            chimera.multimer_fasta = container.naming_args.fasta_directory + chimera.monomer_stem + container.naming_args.fasta_extension
+            chimera.multimer_fasta = container.naming_args.fasta_naming.replace(file_placeholder,chimera.monomer_stem)
+        else:
+            chimera.multimer_stem = container.naming_args.multimer_naming_convention.replace(name_placeholder,
+                                                                                             chimera.file_stem)
+            chimera.multimer_fasta = container.naming_args.fasta_naming.replace(file_placeholder, chimera.multimer_stem)
 
         chimera.native_pdb = path.join(f'{alphafold_dir}{chimera.multimer_stem}', 'ranked_0.pdb')
         chimera.chi_pdb = path.join(f'{alphafold_dir}{chimera.chimera_stem}', 'ranked_0.pdb')

@@ -112,18 +112,6 @@ def correct_alignment_for_residue_position(alignment_file, alignment_label, alig
     return sequence_indexing.index(alignment_index)
 
 
-def correct_alignment_for_chimera_residue_position(aln_file, ref_label, aln_label, aln_index, spliced_in_seq):
-    sequence_from_aln = create_dictionary_from_alignment(aln_file)[aln_label]
-    ref_aln = create_dictionary_from_alignment(aln_file)[ref_label]
-    boundaries = alignment_finder(aln_file, spliced_in_seq, aln_label, ref_label)
-    com_boundaries = boundaries[1]
-    com_boundaries = boundaries[2]
-    comparison_aln_indexing = get_alignment_indexing(sequence_from_aln)[boundaries[1]]
-    ref_aln_indexing = get_alignment_indexing(ref_aln)
-    # nonspliced=
-    ref_aln = create_dictionary_from_alignment(aln_file)[ref_label]
-
-
 def correct_residue_index_for_alignment(alignment_file, residue_index, protein_label):
     aligned_seq = create_dictionary_from_alignment(alignment_file)[protein_label]
     print(get_alignment_indexing(aligned_seq)[residue_index])

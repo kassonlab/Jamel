@@ -93,9 +93,9 @@ class HomomerNamingArguments:
     multimer_naming_convention: str
     chimera_naming_convention: str
     gromacs_slurm_dir: str
-    fasta_directory: str
-    plddt_directory: str
-    pdb_directory: str
+    fasta_naming: str
+    plddt_naming: str
+    pdb_naming: str
     alphafold_outputs_dir: str
     fasta_extension: str = '.fasta'
     '''File extension for fasta files'''
@@ -252,7 +252,8 @@ if hasattr(args,'fasta') or hasattr(args,'submission') or hasattr(args,'analysis
             container.operation_toggles[key] = False
 
 
-placeholder = container.naming_args.nickname_placeholder
+name_placeholder = container.naming_args.nickname_placeholder
+file_placeholder = container.naming_args.file_placeholder
 msa = container.fasta_args.msa_file_name
 subunits = container.fasta_args.number_of_subunits
 alphafold_dir = container.naming_args.alphafold_outputs_dir
@@ -315,22 +316,26 @@ if container.operation_toggles['alphafold_submission']:
     alphafold_submission_for_chimera_container(container, fastas)
 
 if container.operation_toggles['run_analysis_operation']:
-    plddt_direc, plddt_ext, pdb_direc, pdb_ext = container.naming_args.plddt_directory, \
-        container.naming_args.plddt_extension, container.naming_args.pdb_directory, \
-        container.naming_args.pdb_extension
+    for chimera in list_of_chis:
+        homologous_splice = AccessiontoAlignment.alignment_finder(msa, seq_of_interest, chimera.file_stem,
+                                                                  container.fasta_args.reference_identifier)[0]
+        chimera.chi_seq = ref_sequence.replace(seq_of_interest, homologous_splice)
     container.get_dict_args(HomomerAnalysisArguments, 'analysis_args', 'analysis_arguments')
     analysis_toggles = container.analysis_args.analysis_toggles
-    ref_stem = Path(container.fasta_args.fasta_for_alphafold).stem
-    ref_pdb = path.join(f'{alphafold_dir}{ref_stem}', 'ranked_0.pdb')
+    ref_file_stem = Path(container.fasta_args.fasta_for_alphafold).stem
+    ref_pdb = path.join(f'{alphafold_dir}{ref_file_stem}', 'ranked_0.pdb')
     ref_plddt = {ref_sequence: Analysis.get_plddt_dict_from_pdb(ref_pdb)[ref_sequence]}
+    if analysis_toggles['make_emboss_files']:
+        for chimera in list_of_chis:
+            AccessiontoAlignment.alignment_finder(msa, seq_of_interest, chimera.file_stem, container.fasta_args.reference_identifier, container.analysis_args.emboss_command, container.naming_args.emboss_naming.replace(name_placeholder, chimera.file_stem))
     if analysis_toggles["make_pdbs"] or any(not path.exists(chimera.native_pdb) for chimera in list_of_chis) or any(not path.exists(chimera.chi_pdb) for chimera in list_of_chis):
         for chimera in list_of_chis:
             Analysis.generate_alphafold_files(f'{alphafold_dir}{chimera.multimer_stem}',
-                                              new_pdb=path.join(pdb_direc, chimera.multimer_stem + pdb_ext))
+                                              new_pdb=container.naming_args.pdb_naming.replace(file_placeholder,chimera.multimer_stem))
             Analysis.generate_alphafold_files(f'{alphafold_dir}{chimera.chimera_stem}',
-                                              new_pdb=path.join(pdb_direc, chimera.chimera_stem + pdb_ext))
+                                              new_pdb=container.naming_args.pdb_naming.replace(file_placeholder,chimera.chimera_stem))
         Analysis.generate_alphafold_files(
-            f'{alphafold_dir}{ref_stem}',new_pdb=path.join(pdb_direc, ref_stem + pdb_ext))
+            f'{alphafold_dir}{ref_file_stem}',new_pdb=container.naming_args.pdb_naming.replace(file_placeholder, ref_file_stem))
     for chimera in list_of_chis:
         chimera.native_plddt = {
             chimera.native_seq: Analysis.get_plddt_dict_from_pdb(chimera.native_pdb)[chimera.native_seq]}
@@ -342,10 +347,10 @@ if container.operation_toggles['run_analysis_operation']:
     if analysis_toggles['make_plddts']:
         for chimera in list_of_chis:
             Analysis.get_plddt_file_from_pdb(chimera.native_pdb,
-                                             path.join(plddt_direc, chimera.multimer_stem + plddt_ext))
+                                             container.naming_args.plddt_naming.replace(file_placeholder,chimera.multimer_stem))
             Analysis.get_plddt_file_from_pdb(chimera.chi_pdb,
-                                             path.join(plddt_direc, chimera.chimera_stem + plddt_ext))
-        Analysis.get_plddt_file_from_pdb(ref_pdb, path.join(plddt_direc, ref_stem + plddt_ext))
+                                             container.naming_args.plddt_naming.replace(file_placeholder,chimera.chimera_stem))
+        Analysis.get_plddt_file_from_pdb(ref_pdb, container.naming_args.plddt_naming.replace(file_placeholder, ref_file_stem))
     for chimera in list_of_chis:
         chimera.rel_stability = Analysis.revamped_rs(ref_plddt, chimera.chi_plddt, chimera.native_plddt,
                                                      seq_of_interest)

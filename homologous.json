@@ -7,6 +7,7 @@
         "multimer_naming_convention": "3mer*",
         "chimera_naming_convention": "3merNTDw*HA2",
         "fasta_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Fastas/NTD-HA_Fastas/",
+        "emboss_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Fastas/NTD-HA_Fastas/",
         "pdb_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Analysis_Folders/NTD_HA/",
         "plddt_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Analysis_Folders/NTD_HA/",
         "alphafold_outputs_dir": "/gpfs/gpfs0/scratch/jws6pq/Notebook/AlphaFold_Outputs/NTD_HA/",

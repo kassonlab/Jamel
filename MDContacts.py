@@ -9,7 +9,7 @@ from ContactMap import get_intra_residue_contact_pairs
 # # Select atoms from the specified chain
 # atoms_from_target_chain = u.select_atoms(f"chain {target_chain}")
 # TODO for kdtree
-def intra_residue_dist_matrix_md_analysis(pdb_file, chain_id,residue_separation=6, npy_matrix_file='',make_it_binary='Yes', distance_cutoff=6):
+def intra_residue_dist_matrix_md_analysis(pdb_file, chain_id,residue_separation=6, npy_matrix_file='', distance_cutoff=6):
     """Takes a distance matrix of a protein and converts it to a binary matrix that uses 1 to signify a residue
     contact and 0 for no contact or Returns a matrix of C-alpha distances between residues in a protein chain or b"""
     protein_coords = Universe(pdb_file, pdb_file)
@@ -34,7 +34,7 @@ def segment_to_str(segment_obj):
     return str(segment_obj).split()[-1].replace('>', "")
 
 
-def inter_residue_dist_matrix_md_analysis(pdb_file, chain_id,residue_separation=6, npy_matrix_file='',make_it_binary='Yes', distance_cutoff=6):
+def inter_residue_contact_list_md_analysis(pdb_file, chain_id, distance_cutoff=6):
     """Takes a distance matrix of a protein and converts it to a binary matrix that uses 1 to signify a residue
     contact and 0 for no contact or Returns a matrix of C-alpha distances between residues in a protein chain or b"""
     protein_coords = Universe(pdb_file, pdb_file)
@@ -48,7 +48,7 @@ def inter_residue_dist_matrix_md_analysis(pdb_file, chain_id,residue_separation=
     for index,res in enumerate(residues_of_interest):
         for foreign_chain,res_list in chain_dict.items():
             for foreign_index,foreign_res in enumerate(res_list):
-                if check_for_contact(res,foreign_res,protein_coords):
+                if check_for_contact(res,foreign_res,protein_coords,distance_cutoff):
                     inter_contacts[index].append(f'{foreign_chain}:{foreign_index}')
     return inter_contacts
 
@@ -65,5 +65,3 @@ def get_residue_contact_pairs(pdb_filename,chain_identifier,npy_matrix_file=''):
     for x, y in zip(x_axis, y_axis):
         list_of_contact_pairs[x].append(y)
     return list_of_contact_pairs
-# turn matrix into a file npy file prolly
-print(inter_residue_dist_matrix_md_analysis('3merSARS2.pdb','A'))

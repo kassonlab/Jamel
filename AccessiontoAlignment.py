@@ -268,7 +268,6 @@ def straighten_alignment(aln_file, new_aln_file):
     with open(aln_file, "r") as aln,open(new_aln_file, "w") as out:
         records=SeqIO.parse(aln, "fasta")
         SeqIO.write(records,out,'fasta-2line')
-straighten_alignment('6vsb_MSA.aln','flat_6vsb_MSA.aln')
 # def msa_to_fastas(msa_file):
 #     with open(msa_file, "r") as msa:
 

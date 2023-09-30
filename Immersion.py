@@ -5,7 +5,8 @@ from AccessiontoAlignment import get_alignment_indexing, no_gap_sequence_from_al
     alignment_finder,create_dictionary_from_alignment
 from numpy import zeros, savetxt
 from scipy.stats import rankdata
-import ContactMap
+import MDContacts
+import  ContactMap
 
 '''This is very specific code for dilapidated and wrong sectioning of S1 and conversion of individual alignments to 
 map on a MSA'''
@@ -130,15 +131,15 @@ def Truncating_sars_dna_sequence(aligned_full_length, aligned_trunc, unaligned_d
 
 
 def contact_contingency(alignment_file, native_pdb, chimera_pdb, chain_id, label, alignment_index, rank_difference_file,
-                        contact_to_find_aln_index):
+                        contact_to_find_aln_index,ref_label,sequence_of_interest):
     try:
         residue = ContactMap.get_residue_at_native_position(alignment_file, label, alignment_index)
         native_index = ContactMap.correct_alignment_for_residue_position(alignment_file, label, alignment_index)
     except:
         print('doesnt exist')
         return [label, '-', '-', '-', '-', '-', '-']
-    native_contacts = ContactMap.get_individual_intra_contacts(native_pdb, chain_id, native_index)
-    native_contacts += ContactMap.get_inter_protein_contacts(native_pdb, chain_id)[native_index]
+    native_contacts = MDContacts.intra_residue_dist_matrix_md_analysis(native_pdb, chain_id)[native_index]
+    native_contacts += MDContacts.inter_residue_contact_list_md_analysis(native_pdb, chain_id)[native_index]
     native_contacts = [int(str(contacts).split(':')[-1]) for contacts in native_contacts]
     try:
         native_index_to_find = ContactMap.correct_alignment_for_residue_position(alignment_file, label,
@@ -153,16 +154,15 @@ def contact_contingency(alignment_file, native_pdb, chimera_pdb, chain_id, label
         native_yes = False
         residue_to_find = '-'
 
-    chimera_seq = ContactMap.get_sequence_from_pdb(chimera_pdb, chain_id)
-    chi_index = ContactMap.correct_alignment_for_chimera_index(alignment_file, label, native_index, chimera_seq)
+    chi_index = ContactMap.correct_alignment_for_chimera_index(alignment_file, ref_label, alignment_index, label,sequence_of_interest)
     residue_ids = f'{residue}{native_index + 1},{residue}{chi_index + 1}'
     chimera_contacts = ContactMap.get_individual_intra_contacts(chimera_pdb, chain_id, chi_index)
     chimera_contacts += ContactMap.get_inter_protein_contacts(chimera_pdb, chain_id)[chi_index]
     chimera_contacts = [int(str(contacts).split(':')[-1]) for contacts in chimera_contacts]
-    chi_index_to_find = chimera_seq.find(contingent_seq)
+    chi_index_to_find = ContactMap.correct_alignment_for_chimera_index(alignment_file, ref_label, contact_to_find_aln_index, label,sequence_of_interest)
     chi_yes = chi_index_to_find in chimera_contacts
     chi_no = chi_index_to_find not in chimera_contacts
-    rank_difference = Analysis.rank_difference_table_to_dict(rank_difference_file)[label]
+    rank_difference = confidence_rank_matrix(rank_difference_file)[label]
     return [label, residue_ids, rank_difference, int(native_yes), int(native_no), int(chi_yes), int(chi_no),
             residue_to_find]
 
@@ -220,51 +220,5 @@ def convert_nucleotide_clusters_to_protein_alignment_index(cluster_file, columns
                 nucleotide_protein_intersect += (index,)
     return nucleotide_protein_intersect
 
-# with open("/gpfs/gpfs0/scratch/jws6pq/Notebook/Overall/List_of_coronaviruses", 'r') as loc:
-#     loc = loc.readlines()
-# indexes=['Human229E',
-# 'WigeonHKU20',
-# 'Wencheng',
-# 'SorexT14',
-# 'EidolonBat',
-# 'BATGCCDC1',
-# 'BatBGR',
-# 'Shandong',
-# 'BetaCoronaSC2018',
-# 'Mystacina','RabbitHKU14','BatAlpha','MoorHKU21','FalconHKU27','WIV16']
-# alignment_positions=[1262,1263,1264,1265,1266,1267,1268]
-# aln='/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/CoronavirusMSA.aln'
-# comparison_matrix=zeros((len(alignment_positions)*len(indexes),6),dtype=object)
-# y=0
-# for postion in alignment_positions:
-#     rank_change = f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/Rank_change_{postion}.tsv'
-#     for label in indexes:
-#         protein_label=label
-#         native=f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/3mer{protein_label}.pdb'
-#         chi=f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/3merSARS2w{protein_label}S1.pdb'
-#         comparison=compare_contacts(aln, native, chi, 'B', protein_label, postion - 1, rank_change)
-#         print(comparison)
-#         comparison_matrix[y]=comparison
-#         y+=1
-# savetxt(f'/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/rank_comparison.csv', comparison_matrix, fmt='%s/%s/%s/%s/%s/%s')
 
-from MDAnalysis import analysis as MDAnaly
-from MDAnalysis import Universe # test trajectory
 
-#New MDAnalysis stuff
-# target_chain = "A"  # Replace "A" with the chain ID you want to select
-#
-# # Select atoms from the specified chain
-# atoms_from_target_chain = u.select_atoms(f"chain {target_chain}")
-
-def residue_dist_matrix_md_analysis(pdb_file, chain_id, make_it_binary='Yes', distance_cutoff=6):
-    """Takes a distance matrix of a protein and converts it to a binary matrix that uses 1 to signify a residue
-    contact and 0 for no contact or Returns a matrix of C-alpha distances between residues in a protein chain or b"""
-    protein_coords = Universe(pdb_file, pdb_file)
-    # Turns residues into atom groups and excludes non heavy atoms (hydrogens)
-    atom_groups = [res.atoms.select_atoms(f'not type H') for res in protein_coords.residues]
-    print(len(atom_groups))
-    dist_arr = MDAnaly.distances.distance_array(atom_groups[0].positions,  # reference
-                                                 atom_groups[0].positions,  # configuration
-                                                 box=protein_coords.dimensions)
-residue_dist_matrix_md_analysis('3merSARS2.pdb','B')
