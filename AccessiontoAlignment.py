@@ -268,11 +268,6 @@ def straighten_alignment(aln_file, new_aln_file):
     with open(aln_file, "r") as aln,open(new_aln_file, "w") as out:
         records=SeqIO.parse(aln, "fasta")
         SeqIO.write(records,out,'fasta-2line')
-# def msa_to_fastas(msa_file):
-#     with open(msa_file, "r") as msa:
 
-
-# def align_pdb_sequences(ref_pdb_chain_tuple,comparison_pdb_chain_tuple,new_alignment,muscle_command):
-#     get_sequence_from_pdb()
 
 

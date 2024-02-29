@@ -1,6 +1,5 @@
 from numpy import sqrt, array, where,  zeros
 from Bio import PDB, SeqIO
-from ColorCoding import blosum_62_matrix
 from Analysis import convert_array_to_file
 # TODO allow looking at contacts for specific position for intra
 # TODO combine contacts across all homomers
@@ -134,7 +133,7 @@ def get_individual_intra_contacts(pdb_file, chain_id, index):
     return contacts
 
 
-def get_individual_inter_contacts(pdb_file, chain_id, index, index_to_position=False):
+def get_individual_inter_contacts(pdb_file, chain_id, index,index_to_position=False):
     coord_dict = get_coordinates_dict_per_chain(pdb_file)
     contact_range = {}
     range_placeholder = 0
@@ -186,8 +185,6 @@ def correct_alignment_for_chimera_index(alignment_file, ref_label, aln_index, co
     chimera_index=indexed_ref_aln.index(aln_index)
     chi_AA=chimera_seq[chimera_index]
     return chimera_index,chi_AA,chimera_seq
-S1='QCVNLTTRTQLPPAYTNSFTRGVYYPDKVFRSSVLHSTQDLFLPFFSNVTWFHAIHVSGTNGTKRFDNPVLPFNDGVYFASTEKSNIIRGWIFGTTLDSKTQSLLIVNNATNVVIKVCEFQFCNDPFLGVYYHKNNKSWMESEFRVYSSANNCTFEYVSQPFLMDLEGKQGNFKNLREFVFKNIDGYFKIYSKHTPINLVRDLPQGFSALEPLVDLPIGINITRFQTLLALHRSYLTPGDSSSGWTAGAAAYYVGYLQPRTFLLKYNENGTITDAVDCALDPLSETKCTLKSFTVEKGIYQTSNFRVQPTESIVRFPNITNLCPFGEVFNATRFASVYAWNRKRISNCVADYSVLYNSASFSTFKCYGVSPTKLNDLCFTNVYADSFVIRGDEVRQIAPGQTGKIADYNYKLPDDFTGCVIAWNSNNLDSKVGGNYNYLYRLFRKSNLKPFERDISTEIYQAGSTPCNGVEGFNCYFPLQSYGFQPTNGVGYQPYRVVVLSFELLHAPATVCGPKKSTNLVKNKCVNFNFNGLTGTGVLTESNKKFLPFQQFGRDIADTTDAVRDPQTLEILDITPCSFGGVSVITPGTNTSNQVAVLYQDVNCTEVPVAIHADQLTPTWRVYSTGSNVFQTRAGCLIGAEHVNNSYECDIPIGAGICASYQTQTNSPGSASS'
-print(correct_alignment_for_chimera_index('6vsb_MSA.aln','6VSB',1767,'Myotis',S1))
 
 def get_sequence_from_pdb(pdb_file, chain_id):
     # Iterate over all records in the PDB file
@@ -198,49 +195,6 @@ def get_sequence_from_pdb(pdb_file, chain_id):
             return str(record.seq)
     # Extract the sequence from the chain
 
-
-def compare_aligned_contact(alignment_file, native_pdb, chimera_pdb, chain_id, label, alignment_index,
-                            rank_difference_file=''):
-    try:
-        residue = get_residue_at_native_position(alignment_file, label, alignment_index)
-        native_index = correct_alignment_for_residue_position(alignment_file, label, alignment_index)
-    except:
-        print('doesnt exist')
-        return [label, alignment_index + 1, [], [], [], []]
-    native_contacts = get_individual_intra_contacts(native_pdb, chain_id, native_index)
-    native_seq = get_sequence_from_pdb(native_pdb, chain_id)
-    if native_contacts:
-        native_contacts_ids = [f'{native_seq[x]}{x + 1}' for x in native_contacts]
-    else:
-        native_contacts_ids = []
-    native_contacts_ids += get_inter_protein_contacts(native_pdb, chain_id, True)[native_index]
-    chimera_seq = get_sequence_from_pdb(chimera_pdb, chain_id)
-    chi_index = correct_alignment_for_chimera_index(alignment_file, label, native_index, chimera_seq)
-    residue_ids = f'{residue}{native_index + 1},{residue}{chi_index + 1}'
-    chimera_contacts = get_individual_intra_contacts(chimera_pdb, chain_id, chi_index)
-    if chimera_contacts:
-        chimera_contacts_ids = [f'{chimera_seq[x]}{x + 1}' for x in chimera_contacts]
-    else:
-        chimera_contacts_ids = []
-    chimera_contacts_ids += get_inter_protein_contacts(chimera_pdb, chain_id, True)[chi_index]
-    if rank_difference_file:
-        rank_difference = rank_difference_table_to_dict(rank_difference_file)[label]
-        return [label, alignment_index + 1, residue_ids, rank_difference, native_contacts_ids, chimera_contacts_ids]
-    else:
-        return [label, alignment_index + 1, residue_ids, native_contacts_ids, chimera_contacts_ids]
-
-
-def compare_aligned_contact_all_proteins(alignment_file, native_pdb_format, chimera_pdb_format, chain_id,
-                                         alignment_index, label_list, contact_comparison_file, rank_difference_file=''):
-    comparison_matrix = zeros((len(label_list), 5 + int(bool(rank_difference_file))), dtype=object)
-    for index, label in enumerate(label_list):
-        native = native_pdb_format.format(label)
-        chi = chimera_pdb_format.format(label)
-        comparison = compare_aligned_contact(alignment_file, native, chi, chain_id, label, alignment_index,
-                                             rank_difference_file)
-        print(comparison)
-        comparison_matrix[index] = comparison
-    convert_array_to_file(comparison_matrix, '/', contact_comparison_file)
 
 
 aln = '/gpfs/gpfs0/scratch/jws6pq/Notebook/PDB/CoronavirusMSA.aln'

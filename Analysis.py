@@ -8,7 +8,6 @@ from json import load as j_load
 from os import system, path, strerror, listdir, makedirs
 from shutil import copy
 from numpy import savetxt, empty,zeros
-from scipy.stats import rankdata
 from errno import ENOENT
 from Bio import PDB
 from collections import defaultdict
@@ -159,7 +158,6 @@ def get_chimera_boundaries(chimera_seq, seq_spliced_into_ref):
         splice_start = chimera_seq.find(seq_spliced_into_ref)
     else:
         print('broken')
-        print(chimera_seq, seq_spliced_into_ref)
         return
     splice_end = splice_start + len(seq_spliced_into_ref)
     # Then those boundaries are compared against the very beginning and end of the proteins, by introducing them into a set
@@ -188,6 +186,9 @@ def relative_stability(native_plddt, native_boundary_tuple, chimera_plddt, chime
     splice_length = len(chimera_score)
     relative_difference = sum((chimera - native) / native * 100 for native, chimera in zip(native_score, chimera_score))
     return relative_difference, splice_length
+
+
+# def turn_rank_matrix_into_dict(rank_matrix_file):
 
 
 # TODO compare sequences before lloking at relative stability

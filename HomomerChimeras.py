@@ -85,7 +85,7 @@ if args.findnreplace and args.change:
 class HomomerNamingArguments:
     placeholder: str = "*"
     '''a unique character to be replaced by fasta identifiers or provided nicknames for naming convention'''
-    monomer_naming_convention: str = "*"
+    monomer_naming_convention: str = "3mer*"
     '''A combination of words and placeholders to create a naming that will persist through all monomer chimera 
     related data files e.g. (fasta,pdb,plddt)'''
     slurm_naming: str
@@ -280,8 +280,7 @@ else:
 list_of_chis = container.chimeras
 num_of_chi = len(list_of_chis)
 ChimeraGenerator.assign_file_attrs_to_chimeras(container)
-fastas = [chimera.chimera_fasta for chimera in list_of_chis] + [
-        container.fasta_args.fasta_for_alphafold] + [chimera.multimer_fasta for chimera in
+fastas = [chimera.chimera_fasta for chimera in list_of_chis] + [chimera.multimer_fasta for chimera in
                                                                       list_of_chis]
 if container.operation_toggles['run_fasta_operation']:
     email = container.fasta_args.email_for_accession
@@ -323,7 +322,7 @@ if container.operation_toggles['run_analysis_operation']:
     container.get_dict_args(HomomerAnalysisArguments, 'analysis_args', 'analysis_arguments')
     analysis_toggles = container.analysis_args.analysis_toggles
     ref_file_stem = Path(container.fasta_args.fasta_for_alphafold).stem
-    ref_pdb = path.join(f'{alphafold_dir}{ref_file_stem}', 'ranked_0.pdb')
+    ref_pdb = path.join(f'{alphafold_dir}3mer6VSB', 'ranked_0.pdb')
     ref_plddt = {ref_sequence: Analysis.get_plddt_dict_from_pdb(ref_pdb)[ref_sequence]}
     if analysis_toggles['make_emboss_files']:
         for chimera in list_of_chis:
@@ -342,7 +341,7 @@ if container.operation_toggles['run_analysis_operation']:
         chimera.chi_plddt = {chimera.chi_seq: Analysis.get_plddt_dict_from_pdb(chimera.chi_pdb)[chimera.chi_seq]}
         chimera.overall_native_stability = Analysis.overall_confidence(chimera.native_plddt[chimera.native_seq])
         chimera.overall_chimera_stability = Analysis.overall_confidence(chimera.chi_plddt[chimera.chi_seq])
-
+        chimera.sequence_similarity=Analysis.get_sequence_similarity(container.naming_args.emboss_naming.replace(name_placeholder, chimera.file_stem))
 
     if analysis_toggles['make_plddts']:
         for chimera in list_of_chis:
@@ -352,8 +351,10 @@ if container.operation_toggles['run_analysis_operation']:
                                              container.naming_args.plddt_naming.replace(file_placeholder,chimera.chimera_stem))
         Analysis.get_plddt_file_from_pdb(ref_pdb, container.naming_args.plddt_naming.replace(file_placeholder, ref_file_stem))
     for chimera in list_of_chis:
-        chimera.rel_stability = Analysis.revamped_rs(ref_plddt, chimera.chi_plddt, chimera.native_plddt,
-                                                     seq_of_interest)
+        homologous_splice = AccessiontoAlignment.alignment_finder(msa, seq_of_interest, chimera.file_stem,
+                                                                  container.fasta_args.reference_identifier)[0]
+        chimera.rel_stability = Analysis.revamped_rs(chimera.native_plddt, chimera.chi_plddt,ref_plddt,
+                                                     homologous_splice)
 
     data_columns = Analysis.determine_columns_from_container(container)
     Analysis.convert_data_dict_to_csv(data_columns, container)

@@ -3,7 +3,7 @@ from os import system
 
 SpliceLength1=200
 Boundary1=[x for x in range(0,489-SpliceLength1,10)]
-Protein1=['HA.fasta' for x in Boundary1]
+# Protein1=['Chimera_sequeincing.fasta' for x in Boundary1]
 Boundary2=[x+SpliceLength1 for x in Boundary1]
 SequenceList1=[x[0] for x in list(map(ChimeraGenerator.sequence_splice, Protein1, Boundary1, Boundary2))]
 
