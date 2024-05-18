@@ -1,14 +1,13 @@
 import math
 from Bio import Seq
 import Analysis
-from AccessiontoAlignment import get_alignment_indexing, no_gap_sequence_from_alignment, clustalw_to_fasta, \
-    alignment_finder,create_dictionary_from_alignment
-from numpy import zeros, savetxt, save,load,where
+from Chimeragenesis.AccessiontoAlignment import get_alignment_indexing, no_gap_sequence_from_alignment, alignment_finder,create_dictionary_from_alignment
+from numpy import zeros, savetxt, save,load
 from scipy.stats import rankdata,spearmanr
 import MDContacts
 import ContactMap
 from pathlib import Path
-from os import path
+
 '''This is very specific code for dilapidated and wrong sectioning of S1 and conversion of individual alignments to 
 map on a MSA'''
 

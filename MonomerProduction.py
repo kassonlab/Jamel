@@ -1,7 +1,5 @@
 ProteinList=open('List','r').readlines()
 import numpy as np
-import AlignmentFinder
-import AccessiontoAlignment
 import ChimeraGenerator
 import os
 CommandStart='python /scratch/jws6pq/CMfiles/multimeralpha_list.py -s='

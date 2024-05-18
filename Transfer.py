@@ -17,5 +17,5 @@ if args.start and args.to:
             rmtree(path.join(args.start, folder))
 if args.zip and args.to and args.start:
     chdir(args.to+'../')
-    system(f'zip -m -r {path(args.to,args.zip+".zip")} {args.to}')
+    system(f'zip -m -r {args.zip+".zip"} {args.to}')
 

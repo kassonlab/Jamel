@@ -2,9 +2,8 @@ from json import load
 from os import path
 from pathlib import Path
 from sys import exit
-import AccessiontoAlignment
+from Chimeragenesis import AccessiontoAlignment
 import Analysis
-import setup
 from setup import alphafold_submission_for_chimera_container
 import ChimeraGenerator
 import argparse
@@ -218,7 +217,6 @@ class HomomerChimeraContainer:
     '''Dictionary containing boolean toggles for all major operation:fasta creation, alphafold submission, 
     analysis of alphafold results, and gromacs simulation submission.'''
     run_fasta_operation: bool
-
     alphafold_submission: bool
     run_analysis_operation: bool
     run_gromacs_operation: bool
@@ -257,17 +255,18 @@ file_placeholder = container.naming_args.file_placeholder
 msa = container.fasta_args.msa_file_name
 subunits = container.fasta_args.number_of_subunits
 alphafold_dir = container.naming_args.alphafold_outputs_dir
-seq_of_interest=AccessiontoAlignment.extract_seq_from_fasta(container.fasta_args.sequence_of_interest)
-ref_sequence=AccessiontoAlignment.extract_seq_from_fasta(container.fasta_args.full_reference_seq_fasta)
-
+seq_of_interest= AccessiontoAlignment.extract_seq_from_fasta(container.fasta_args.sequence_of_interest)
+ref_sequence= AccessiontoAlignment.extract_seq_from_fasta(container.fasta_args.full_reference_seq_fasta)
+# This is a conditional to forgo creating an alignment if one already exist, and its creation wasn't toggled on. This allows existing MSA to be overwritten if needed.
 if path.exists(container.fasta_args.msa_file_name) and not fasta_toggles['Create_an_alignment']:
     sequence_dictionary = AccessiontoAlignment.create_dictionary_from_alignment(container.fasta_args.msa_file_name)
+    # chimeras are turned into classes with labeling attributes from the existing msa and the native sequence from the non-reference protein
     for fasta_id, sequence in sequence_dictionary.items():
         chimera = ChimeraGenerator.chimeracls()
         container.add_chimera(chimera)
         chimera.file_stem = fasta_id
         chimera.native_seq = sequence.replace('-', '')
-
+# failed conditional trigger a creation of chimeras with labels from the protein list that will be used to make the msa
 else:
     with open(container.fasta_args.protein_list, 'r') as info_list:
         info_list = info_list.readlines()
@@ -279,12 +278,16 @@ else:
 
 list_of_chis = container.chimeras
 num_of_chi = len(list_of_chis)
+#function takes all chimeras from the container and attaches file names of the future pdb and fasta files
 ChimeraGenerator.assign_file_attrs_to_chimeras(container)
+#a list is then crafted based on the recently created filenames
 fastas = [chimera.chimera_fasta for chimera in list_of_chis] + [chimera.multimer_fasta for chimera in
                                                                       list_of_chis]
 if container.operation_toggles['run_fasta_operation']:
     email = container.fasta_args.email_for_accession
+    # checking if all wild-type and non-reference fastas exist or that there creation was toggled
     if fasta_toggles['make_native_fastas'] or any(not path.exists(chimera.monomer_fasta) for chimera in list_of_chis):
+        #loop checks if theirs an existing msa and therefore sequence attribute, if not the accession number attached is used to retrieve the sequence
         for chimera in list_of_chis:
             if hasattr(chimera,'native_seq'):
                 ChimeraGenerator.fasta_creation(chimera.monomer_fasta,
@@ -294,6 +297,7 @@ if container.operation_toggles['run_fasta_operation']:
             else:
                 AccessiontoAlignment.accession_to_fasta(chimera.monomer_fasta, chimera.accession, email, subunits,
                                                         chimera.multimer_fasta)
+    # checking if msa exists or if creation was toggled now that all fastas are created
     if fasta_toggles['Create_an_alignment'] or not path.exists(container.fasta_args.msa_file_name):
         AccessiontoAlignment.multiple_sequence_alignment(
             tuple(chimera.monomer_fasta for chimera in list_of_chis) + (container.fasta_args.full_reference_seq_fasta,),

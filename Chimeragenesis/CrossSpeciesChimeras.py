@@ -323,7 +323,7 @@ if variant_container.operation_toggles['run_fasta_operation'] or args.fasta:
                                         [tuple((chimera.chi_seq, subunits, chimera.chimera_stem))])
     if fasta_toggles['Make_a_list_of_created_fasta_files']:
         list_of_fastas=[constant_submission]+[chimera.chimera_fasta for chimera in list_of_chis]+[chimera.multimer_fasta for chimera in list_of_chis]
-        AccessiontoAlignment.create_list_of_fasta_files(list_of_fastas,variant_container.fasta_args.fasta_list_file_name)
+        AccessiontoAlignment.create_list_of_fasta_files(list_of_fastas, variant_container.fasta_args.fasta_list_file_name)
 
 if variant_container.operation_toggles['alphafold_submission'] or args.submission:
     variant_container.get_dict_args(CrossSubmissionArguments, 'submission_args', 'alphafold_submission_args')

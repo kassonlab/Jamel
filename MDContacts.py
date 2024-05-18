@@ -1,15 +1,13 @@
 from MDAnalysis.analysis import distances as MDdist
 from MDAnalysis import Universe # test trajectory
 from numpy import any as npany
-from numpy import save,load,sqrt, array, where,  zeros
+from numpy import save,load, where,  zeros
 from os.path import exists
 import json
-from Bio import PDB, SeqIO
-from Analysis import convert_array_to_file
+
+
 # TODO allow looking at contacts for specific position for intra
 # TODO combine contacts across all homomers
-from scipy.spatial import KDTree
-from AccessiontoAlignment import get_alignment_indexing,get_alignment_indexing_w_dashes, alignment_finder,create_dictionary_from_alignment,no_gap_sequence_from_alignment
 
 #New MDAnalysis stuff
 # TODO for kdtree

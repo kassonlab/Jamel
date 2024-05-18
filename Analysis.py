@@ -35,7 +35,7 @@ def convert_data_dict_to_csv(data_dict, container):
     savetxt(container.analysis_args.analysis_output_csv, data_array, fmt=','.join('%s' for x in data_dict))
 
 def convert_array_to_file(arr,delimiter,file_name):
-    savetxt(file_name, arr, fmt=delimiter.join(('%s' for x in arr[1])))
+    savetxt(file_name, arr, fmt=delimiter.join(('%s' for x in arr)))
 def get_plddt_dict_from_pdb(pdb_file):
     pdb = PDB.PDBParser().get_structure('pdb', pdb_file)[0]
     homomeric = defaultdict(tuple)

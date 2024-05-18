@@ -1,5 +1,5 @@
 import Immersion
-from AccessiontoAlignment import create_dictionary_from_alignment, clustalw_to_fasta
+from Chimeragenesis.AccessiontoAlignment import create_dictionary_from_alignment
 # with open("/gpfs/gpfs0/scratch/jws6pq/Notebook/Overall/List_of_coronaviruses", 'r') as loc:
 #     loc = loc.readlines()
 #     label_pdb_list = []
@@ -18,8 +18,7 @@ from AccessiontoAlignment import create_dictionary_from_alignment, clustalw_to_f
 #                        '/gpfs/gpfs0/scratch/jws6pq/Notebook/Fastas/Immersion/rank_native_plddt_matrix.csv',
 #                        '/gpfs/gpfs0/scratch/jws6pq/Notebook/Fastas/Immersion/raw_native_plddt_matrix.csv')
 
-from numpy import zeros,savetxt
-
+from numpy import zeros
 
 S1='QCVNLTTRTQLPPAYTNSFTRGVYYPDKVFRSSVLHSTQDLFLPFFSNVTWFHAIHVSGTNGTKRFDNPVLPFNDGVYFASTEKSNIIRGWIFGTTLDSKTQSLLIVNNATNVVIKVCEFQFCNDPFLGVYYHKNNKSWMESEFRVYSSANNCTFEYVSQPFLMDLEGKQGNFKNLREFVFKNIDGYFKIYSKHTPINLVRDLPQGFSALEPLVDLPIGINITRFQTLLALHRSYLTPGDSSSGWTAGAAAYYVGYLQPRTFLLKYNENGTITDAVDCALDPLSETKCTLKSFTVEKGIYQTSNFRVQPTESIVRFPNITNLCPFGEVFNATRFASVYAWNRKRISNCVADYSVLYNSASFSTFKCYGVSPTKLNDLCFTNVYADSFVIRGDEVRQIAPGQTGKIADYNYKLPDDFTGCVIAWNSNNLDSKVGGNYNYLYRLFRKSNLKPFERDISTEIYQAGSTPCNGVEGFNCYFPLQSYGFQPTNGVGYQPYRVVVLSFELLHAPATVCGPKKSTNLVKNKCVNFNFNGLTGTGVLTESNKKFLPFQQFGRDIADTTDAVRDPQTLEILDITPCSFGGVSVITPGTNTSNQVAVLYQDVNCTEVPVAIHADQLTPTWRVYSTGSNVFQTRAGCLIGAEHVNNSYECDIPIGAGICASYQTQTNSPGSASS'
 alignment_file='/scratch/jws6pq/Notebook/Fixed_S1/Analysis_Folders/Fixed_S1/6vsb_MSA.aln'

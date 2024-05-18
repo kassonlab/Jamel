@@ -1,10 +1,10 @@
 from numpy import sqrt, array, where,  zeros
 from Bio import PDB, SeqIO
-from Analysis import convert_array_to_file
 # TODO allow looking at contacts for specific position for intra
 # TODO combine contacts across all homomers
 from scipy.spatial import KDTree
-from AccessiontoAlignment import get_alignment_indexing,get_alignment_indexing_w_dashes, alignment_finder,create_dictionary_from_alignment,no_gap_sequence_from_alignment
+from Chimeragenesis.AccessiontoAlignment import get_alignment_indexing,get_alignment_indexing_w_dashes, \
+    create_dictionary_from_alignment,no_gap_sequence_from_alignment
 
 
 def get_coordinates_dict_per_chain(pdb_file):
