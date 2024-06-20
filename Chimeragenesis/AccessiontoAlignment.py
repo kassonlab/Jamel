@@ -8,7 +8,7 @@ from pathlib import Path
 from Bio import Entrez,Phylo,AlignIO,SeqIO
 from random import choice
 from Bio.Phylo.TreeConstruction import DistanceCalculator,DistanceTreeConstructor
-from ChimeraGenerator import fasta_creation
+from Chimeragenesis.ChimeraGenerator import fasta_creation
 
 
 def all_parents(tree):

@@ -34,7 +34,7 @@ S1='AYTNS-----------------------------------------------------------------------
      '------------------TNLVKNKCVNFNFNGLTGTGVLTE-SN----KKFL-PFQQFGRDIAD' \
      '--TTDAVRDPQTLEILDITPCSFGGVSVITPGTNTSNQVAVLYQDVNCTEVT-------------------------------GSNVFQTR----AGCLIGAEHVNNSY' \
      '------E--CDIPI----GAGICA'
-boundaries=alignment_finder('CoronavirusMSA.aln',S1.replace('-',''),'RhinoBeta')
+boundaries=alignment_finder('../CoronavirusMSA.aln', S1.replace('-', ''), 'RhinoBeta')
 
 
 def run_emboss(new_emboss_file, sequence_one, sequence_two):

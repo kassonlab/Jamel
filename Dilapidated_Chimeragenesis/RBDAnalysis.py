@@ -1,6 +1,6 @@
 import numpy as np
-import Analysis
-from AlignmentFinder import alignment_finder
+from Chimeragenesis import Analysis
+from Dilapidated_Chimeragenesis.AlignmentFinder import alignment_finder
 import concurrent.futures
 
 Listtoanalyze='List'
@@ -25,9 +25,9 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
     Fault=list(executor.map(Analysis.fault_scan, PDB))
     i=0
     for x in NativePlddtfiles:
-        Section1=Analysis.MultimerConfidenceComparison('Avg3merSARS2.plddt',ChimeraPlddtfiles[i],(0,223),(0,223))
-        Section2=Analysis.MultimerConfidenceComparison(NativePlddtfiles[i],ChimeraPlddtfiles[i],(223,223+SpliceLength[i]),(SpliceBoundaries[i][0],SpliceBoundaries[i][1]))
-        Section3=Analysis.MultimerConfidenceComparison('Avg3merSARS2.plddt', ChimeraPlddtfiles[i], (223+SpliceLength[i],None), (424,None))
+        Section1= Analysis.MultimerConfidenceComparison('Avg3merSARS2.plddt', ChimeraPlddtfiles[i], (0, 223), (0, 223))
+        Section2= Analysis.MultimerConfidenceComparison(NativePlddtfiles[i], ChimeraPlddtfiles[i], (223, 223 + SpliceLength[i]), (SpliceBoundaries[i][0], SpliceBoundaries[i][1]))
+        Section3= Analysis.MultimerConfidenceComparison('Avg3merSARS2.plddt', ChimeraPlddtfiles[i], (223 + SpliceLength[i], None), (424, None))
         AverageRelativeDifference=(Section1[0]+Section2[0]+Section3[0])/(Section1[1]+Section2[1]+Section3[1])
         AverageDifference.append(AverageRelativeDifference)
         i+=1

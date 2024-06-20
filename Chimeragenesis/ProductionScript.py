@@ -8,7 +8,7 @@ accession number sequences in a protein_info file"""
 
 from json import load
 from sys import argv
-import ChimeraGenerator
+from Chimeragenesis import ChimeraGenerator
 import AccessiontoAlignment
 
 # 3 command line inputs are required for this production script, a .tsv file with accession numbers in column one

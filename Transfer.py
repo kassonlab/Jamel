@@ -1,7 +1,7 @@
 from os import listdir,path,system,chdir
 import argparse
 from shutil import rmtree
-from Analysis import skeletonize_alphafold_folder
+from Chimeragenesis.Analysis import skeletonize_alphafold_folder
 
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('-s', '--start', type=str, required=True, help='Starting directory holding alphafold data')

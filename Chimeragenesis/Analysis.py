@@ -7,7 +7,7 @@ from pickle import load as p_load
 from json import load as j_load
 from os import system, path, strerror, listdir, makedirs
 from shutil import copy
-from numpy import savetxt, empty,zeros
+from numpy import savetxt, empty,zeros,array
 from errno import ENOENT
 from Bio import PDB
 from collections import defaultdict
@@ -51,26 +51,24 @@ def get_plddt_dict_from_pdb(pdb_file):
 
 def get_plddt_file_from_pdb(pdb_file, new_plddt_file):
     pdb = PDB.PDBParser().get_structure('pdb', pdb_file)[0]
-    homomeric = defaultdict(tuple)
     chains = tuple(chain for chain in pdb)
+    sequence = ''.join(PDB.Polypeptide.three_to_one(resi.get_resname()) for resi in pdb[0])
+    plddts=[]
     for chain in chains:
-        sequence = ''.join(PDB.Polypeptide.three_to_one(resi.get_resname()) for resi in chain)
-        plddt = tuple(resi['CA'].bfactor for resi in chain)
-        homomeric[sequence] += (plddt,)
-    homomeric = {sequence: tuple(str(round(sum(scores) / len(scores), 2)) for scores in zip(*homomers)) for
-                 sequence, homomers in homomeric.items()}
+        plddts.append( array(resi['CA'].bfactor for resi in chain))
+    plddt=sum(plddts)/len(plddts)
     with open(new_plddt_file, 'w') as new_plddt:
         new_plddt.write(
-            '\n'.join('>{0}\n{1}'.format(sequence, "\n".join(plddt)) for sequence, plddt in homomeric.items()))
+            '>{0}\n{1}'.format(sequence, "\n".join(plddt)))
 
 
 def skeletonize_alphafold_folder(alphafold_dir, storage_dir):
-    rank_file = path.join(alphafold_dir, 'ranking_debug.json')
+    rank_file = path.join(alphafold_dir, '../ranking_debug.json')
     makedirs(storage_dir, exist_ok=True)
     new_files = []
     dir_files = [file for file in listdir(alphafold_dir) if file.startswith('ranked')]
     try:
-        copy(rank_file, path.join(storage_dir, 'ranking_debug.json'))
+        copy(rank_file, path.join(storage_dir, '../ranking_debug.json'))
         for pdb_file in dir_files:
             new_pdb = path.join(storage_dir, pdb_file)
             new_plddt = path.join(storage_dir, str(Path(pdb_file).stem) + '.plddt')
@@ -105,7 +103,7 @@ def generate_alphafold_files(alphafold_folder, new_plddt='', new_pdb=''):
     and renames the ranked_0.pdb file and places it in the desired directory."""
     # Checking to see if ranking_debug.json exists. This file is the last to be output by alphafold and is a check that
     # the pkl file you want to extract from exists, as well as to avoid errors
-    ranking_file = path.join(alphafold_folder, 'ranking_debug.json')
+    ranking_file = path.join(alphafold_folder, '../ranking_debug.json')
     try:
         if new_pdb:
             # The highest ranked structure is copied with a new name and directory
@@ -146,14 +144,14 @@ def overall_confidence(plddt_tuple):
     average_plddt = sum(plddt_tuple) / len(plddt_tuple)
     return average_plddt
 
-def turn_plddt_dict_into_tuples(plddt_dict):
+def turn_plddt_dict_into_tuples(plddt_dict:dict):
     plddt_list_of_tuples = []
     for seq, plddt in plddt_dict.items():
         plddt_list_of_tuples.append((seq, plddt))
     return plddt_list_of_tuples
 
 
-def get_chimera_boundaries(chimera_seq, seq_spliced_into_ref):
+def get_chimera_boundaries(chimera_seq:str, seq_spliced_into_ref:str):
     if chimera_seq.find(seq_spliced_into_ref) != -1:
         splice_start = chimera_seq.find(seq_spliced_into_ref)
     else:
@@ -192,14 +190,11 @@ def relative_stability(native_plddt, native_boundary_tuple, chimera_plddt, chime
 
 
 # TODO compare sequences before lloking at relative stability
-def revamped_rs(native_plddt_dict, chimera_plddt_dict, reference_plddt_dict, seq_spliced_into_ref):
+def revamped_rs(native_plddt_dict:dict, chimera_plddt_dict:dict, reference_plddt_dict:dict, seq_spliced_into_ref:str):
     raw_stability = 0
-    native_seq = turn_plddt_dict_into_tuples(native_plddt_dict)[0][0]
-    native_plddt = turn_plddt_dict_into_tuples(native_plddt_dict)[0][1]
-    chi_seq = turn_plddt_dict_into_tuples(chimera_plddt_dict)[0][0]
-    chi_plddt = turn_plddt_dict_into_tuples(chimera_plddt_dict)[0][1]
-    reference_seq = turn_plddt_dict_into_tuples(reference_plddt_dict)[0][0]
-    reference_plddt = turn_plddt_dict_into_tuples(reference_plddt_dict)[0][1]
+    native_seq,native_plddt = native_plddt_dict.items()
+    chi_seq,chi_plddt = chimera_plddt_dict.items()
+    reference_seq,reference_plddt = reference_plddt_dict.items()
     chimera_boundaries = get_chimera_boundaries(chi_seq, seq_spliced_into_ref)
     for boundary in chimera_boundaries:
         seq_chunk = chi_seq[boundary[1]:boundary[2]]

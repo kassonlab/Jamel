@@ -1,6 +1,6 @@
 import math
 from Bio import Seq
-import Analysis
+from Chimeragenesis import Analysis
 from Chimeragenesis.AccessiontoAlignment import get_alignment_indexing, no_gap_sequence_from_alignment, alignment_finder,create_dictionary_from_alignment
 from numpy import zeros, savetxt, save,load
 from scipy.stats import rankdata,spearmanr

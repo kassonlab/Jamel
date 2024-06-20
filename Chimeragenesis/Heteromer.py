@@ -4,11 +4,11 @@ from os import system, path
 from pathlib import Path
 from sys import exit
 from time import perf_counter
-from numpy import empty, savetxt, array
-import Analysis
+from numpy import empty, savetxt
+from Chimeragenesis import Analysis
 from setup import create_alphafold_slurm
 from AccessiontoAlignment import alignment_finder
-from ChimeraGenerator import fasta_creation, chimeracls, update_json
+from Chimeragenesis.ChimeraGenerator import fasta_creation, chimeracls, update_json
 from itertools import product
 import argparse
 
@@ -372,7 +372,8 @@ if prime_container.operation_toggles['run_analysis_operation?'] == 'True':
         if column_choices['relative_stability'][0]== 'True':
             data_columns[column_choices['relative_stability'][1]]=tuple(chimera.rel_stability for chimera in container.chimeras)
         if column_choices['overall_chimera_stability'][0]== 'True':
-            data_columns[column_choices['overall_chimera_stability'][1]]=tuple(Analysis.overall_confidence(chimera.plddt) for chimera in container.chimeras)
+            data_columns[column_choices['overall_chimera_stability'][1]]=tuple(
+                Analysis.overall_confidence(chimera.plddt) for chimera in container.chimeras)
 
     data_array = empty(((num_of_chis + 1), len(data_columns)), dtype=object)
     for column_count, (column_name, data) in enumerate(data_columns.items()):

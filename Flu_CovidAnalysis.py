@@ -1,5 +1,6 @@
 from numpy import empty,savetxt
-from Analysis import relative_stability,overall_confidence,averaging_multimer_plddt
+from Chimeragenesis.Analysis import relative_stability,overall_confidence
+
 protein_list=[line.split()[-1] for line in open("/gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/Flu_CovidList", 'r').readlines()]
 PDB=[x +'.pdb' for x in protein_list]
 plddt_files=[x + '.plddt' for x in protein_list]

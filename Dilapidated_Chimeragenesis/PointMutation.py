@@ -1,4 +1,4 @@
-from ChimeraGenerator import chimeracls,general_attr_set,fasta_creation
+from Chimeragenesis.ChimeraGenerator import chimeracls,general_attr_set,fasta_creation
 from Chimeragenesis.AccessiontoAlignment import no_gap_sequence_from_alignment
 from ColorCoding import create_dictionary_from_alignment
 import argparse

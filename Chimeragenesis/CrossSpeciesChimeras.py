@@ -3,10 +3,9 @@ from os import path
 from pathlib import Path
 from sys import exit
 import AccessiontoAlignment
-import Analysis
+from Chimeragenesis import Analysis, ChimeraGenerator
 from setup import alphafold_submission_for_chimera_container
 from AccessiontoAlignment import alignment_finder, accession_to_fasta, multiple_sequence_alignment
-import ChimeraGenerator
 import argparse
 
 # TODO add autocomplete for changing keys?? readline

@@ -1,6 +1,6 @@
 ProteinList=open('List','r').readlines()
 import numpy as np
-import ChimeraGenerator
+from Chimeragenesis import ChimeraGenerator
 import os
 CommandStart='python /scratch/jws6pq/CMfiles/multimeralpha_list.py -s='
 CommandEnd=' -o=/scratch/jws6pq/Notebook/Finished\n'
@@ -13,8 +13,10 @@ for line in ProteinList:
     AccessiontoFasta.accession_to_fasta(ProteinInfo[-1], ProteinInfo[0])
     AccessiontoFasta.fasta_to_alignment(ProteinInfo[-1])
     SpliceBoundary=RBDFinder.alignment_finder('/scratch/jws6pq/Notebook/Alignment/' + ProteinInfo[-1] + 'onSARS2.aln', sequence_of_interest='AYTNSFTRGVYYPDKVFRSSVLHSTQDLFLPFFSNVTWFHNPVLPFNDGVYFASTEKSNIIRGWIFGTTLDSKTQSLLIVNNATNVVIKVCEFQFCNDPFLSEFRVYSSANNCTFEYVSQPFLKNLREFVFKNIDGYFKIYSKHTPPQGFSALEPLVDLPIGINITRFQTLLAAYYVGYLQPRTFLLKYNENGTITDAVDCALDPLSETKCTLKSFTVEKGIYQTSNFRVQPTESIVRFPNITNLCPFGEVFNATRFASVYAWNRKRISNCVADYSVLYNSASFSTFKCYGVSPTKLNDLCFTNVYADSFVIRGDEVRQIAPGQTGKIADYNYKLPDDFTGCVIAWNSNNLDSYNYLYRNLKPFERDISTEIYNCYFPLQSYGFQPTVGYQPYRVVVLSFELLHAPATVCGPKKSTNLVKNKCVNFNFNGLTGTGVLTESNKKFLPFQQFGRDIADTTDAVRDPQTLEILDITPCSFGGVSVITPGTNTSNQVAVLYQDVNCTEVTGSNVFQTRAGCLIGAEHVNNSYECDIPIGAGICA')
-    FastasforRun[k]=ChimeraGenerator.DomainExchange('SARS2.fasta',ProteinInfo[-1]+'.fasta',SpliceBoundary[0],SpliceBoundary[1],Boundary1=1,Boundary2=540,Domain='S1')[0]
-    FastasforRun[k+1]=ChimeraGenerator.DomainExchange('SARS2.fasta',ProteinInfo[-1]+'.fasta',SpliceBoundary[0],SpliceBoundary[1],Boundary1=1,Boundary2=540,Domain='S1')[1]
+    FastasforRun[k]= \
+    ChimeraGenerator.DomainExchange('SARS2.fasta', ProteinInfo[-1] + '.fasta', SpliceBoundary[0], SpliceBoundary[1], Boundary1=1, Boundary2=540, Domain='S1')[0]
+    FastasforRun[k+1]= \
+    ChimeraGenerator.DomainExchange('SARS2.fasta', ProteinInfo[-1] + '.fasta', SpliceBoundary[0], SpliceBoundary[1], Boundary1=1, Boundary2=540, Domain='S1')[1]
     k+=2
 Proteinindex=0
 Slurmfilenumber=0

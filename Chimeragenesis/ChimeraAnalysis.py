@@ -10,7 +10,7 @@ from sys import argv
 from json import load
 from pathlib import Path
 from numpy import savetxt, empty, delete
-import Analysis
+from Chimeragenesis import Analysis
 from AccessiontoAlignment import alignment_finder
 
 
@@ -58,7 +58,7 @@ emboss_files=[argument_dict['emboss_names'][1].replace(character_to_replace,prot
 # SAME NAMING CONVENTIONS AND THAT ALL NECESSARY ALPHAFOLD FOLDERS ARE IN THE SAME PLACE
 if argument_dict['native_plddt'][0]=='':
     alphafold_folders=[argument_dict['alphafold_outputs_directory']+Path(file).stem+'/' for file in plddt_files]
-    list(map(Analysis.generate_alphafold_files,alphafold_folders,plddt_files))
+    list(map(Analysis.generate_alphafold_files, alphafold_folders, plddt_files))
     Analysis.generate_alphafold_files(argument_dict['alphafold_outputs_directory'] + argument_dict['reference_alphafold_folder_name'] + '/',
                                       argument_dict['reference_plddt'])
     reference_plddt=[argument_dict['reference_plddt'] for x in chimera_plddt]
@@ -67,7 +67,7 @@ if argument_dict['native_plddt'][0]=='':
 if number_of_subunits!=1 and argument_dict['averaged_native_plddt'][0]=="":
     averaged_native_plddt = [argument_dict['averaged_native_plddt'][1].replace(character_to_replace,protein) for protein in protein_list]
     averaged_chimera_plddt = [argument_dict['averaged_chimera_plddt'].replace(character_to_replace,protein) for protein in protein_list]
-    list(map(Analysis.averaging_multimer_plddt,native_plddts,averaged_native_plddt,number_of_subunits))
+    list(map(Analysis.averaging_multimer_plddt, native_plddts, averaged_native_plddt, number_of_subunits))
     list(map(Analysis.averaging_multimer_plddt, chimera_plddt, averaged_chimera_plddt, number_of_subunits))
     Analysis.averaging_multimer_plddt(argument_dict['reference_plddt'], argument_dict['averaged_reference'],
                                       number_of_subunits[0])
@@ -86,11 +86,11 @@ else:
     splice_info=[x[1] for x in splice_info]
 # Averaged relative stability for all chimeras are calculated
 if number_of_subunits==1:
-    average_relative_stability=list(map(Analysis.average_relative_stability_full_chimera,native_plddts,splice_info,chimera_plddt,
-                                        reference_plddt,sequence_of_interest,msa_file,reference_protein_name))
+    average_relative_stability=list(map(Analysis.average_relative_stability_full_chimera, native_plddts, splice_info, chimera_plddt,
+                                        reference_plddt, sequence_of_interest, msa_file, reference_protein_name))
 else:
-    average_relative_stability=list(map(Analysis.average_relative_stability_full_chimera,averaged_native_plddt,splice_info,averaged_chimera_plddt,
-                                        averaged_reference_plddt,sequence_of_interest,msa_file,reference_protein_name))
+    average_relative_stability=list(map(Analysis.average_relative_stability_full_chimera, averaged_native_plddt, splice_info, averaged_chimera_plddt,
+                                        averaged_reference_plddt, sequence_of_interest, msa_file, reference_protein_name))
 # Absolute stability which averages plddt scores across all residue positions will be calculated for the native splice partners
 # and their chimeras
 overall_stability = list(map(Analysis.overall_confidence, native_plddts))

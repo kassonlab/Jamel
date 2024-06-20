@@ -1,4 +1,4 @@
-import ChimeraGenerator
+from Chimeragenesis import ChimeraGenerator
 from os import system
 SpliceLength1=200
 # Protein1=['Chimera_sequeincing.fasta' for x in range(15)]

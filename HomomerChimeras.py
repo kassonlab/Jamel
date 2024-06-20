@@ -2,10 +2,8 @@ from json import load
 from os import path
 from pathlib import Path
 from sys import exit
-from Chimeragenesis import AccessiontoAlignment
-import Analysis
+from Chimeragenesis import AccessiontoAlignment, Analysis, ChimeraGenerator
 from setup import alphafold_submission_for_chimera_container
-import ChimeraGenerator
 import argparse
 
 # TODO add autocomplete for changing keys?? readline
@@ -291,7 +289,7 @@ if container.operation_toggles['run_fasta_operation']:
         for chimera in list_of_chis:
             if hasattr(chimera,'native_seq'):
                 ChimeraGenerator.fasta_creation(chimera.monomer_fasta,
-                                            [tuple((chimera.native_seq, 1, chimera.multimer_stem))])
+                                                [tuple((chimera.native_seq, 1, chimera.multimer_stem))])
                 ChimeraGenerator.fasta_creation(chimera.multimer_fasta,
                                                 [tuple((chimera.native_seq, subunits, chimera.multimer_stem))])
             else:
@@ -345,7 +343,7 @@ if container.operation_toggles['run_analysis_operation']:
         chimera.chi_plddt = {chimera.chi_seq: Analysis.get_plddt_dict_from_pdb(chimera.chi_pdb)[chimera.chi_seq]}
         chimera.overall_native_stability = Analysis.overall_confidence(chimera.native_plddt[chimera.native_seq])
         chimera.overall_chimera_stability = Analysis.overall_confidence(chimera.chi_plddt[chimera.chi_seq])
-        chimera.sequence_similarity=Analysis.get_sequence_similarity(container.naming_args.emboss_naming.replace(name_placeholder, chimera.file_stem))
+        chimera.sequence_similarity= Analysis.get_sequence_similarity(container.naming_args.emboss_naming.replace(name_placeholder, chimera.file_stem))
 
     if analysis_toggles['make_plddts']:
         for chimera in list_of_chis:
@@ -357,7 +355,7 @@ if container.operation_toggles['run_analysis_operation']:
     for chimera in list_of_chis:
         homologous_splice = AccessiontoAlignment.alignment_finder(msa, seq_of_interest, chimera.file_stem,
                                                                   container.fasta_args.reference_identifier)[0]
-        chimera.rel_stability = Analysis.revamped_rs(chimera.native_plddt, chimera.chi_plddt,ref_plddt,
+        chimera.rel_stability = Analysis.revamped_rs(chimera.native_plddt, chimera.chi_plddt, ref_plddt,
                                                      homologous_splice)
 
     data_columns = Analysis.determine_columns_from_container(container)

@@ -1,4 +1,4 @@
-import ChimeraGenerator
+from Chimeragenesis import ChimeraGenerator
 from os import system
 
 SpliceLength1=200
@@ -23,8 +23,8 @@ for i in range(len(Boundary1)):
         native_fasta_one=f'/gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/HA{Boundary1[i] + 1}to{Boundary2[i]+1}.fasta'
         native_fasta_two=f'/gpfs/gpfs0/scratch/jws6pq/BridNotebook/Fastas/Spike{Boundary3[j] + 1}to{Boundary4[j]+1}.fasta'
         # ChimeraGenerator.fasta_creation(Filename, ChimeraSequence)
-        ChimeraGenerator.fasta_creation(native_fasta_one,SequenceList1[i])
-        ChimeraGenerator.fasta_creation(native_fasta_two,SequenceList2[j])
+        ChimeraGenerator.fasta_creation(native_fasta_one, SequenceList1[i])
+        ChimeraGenerator.fasta_creation(native_fasta_two, SequenceList2[j])
         # Filenames.append(Filename,native_fasta_one,native_fasta_two)
         Filenames.extend([native_fasta_one, native_fasta_two])
 Filenames=list(set(Filenames))
