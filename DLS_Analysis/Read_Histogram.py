@@ -1,7 +1,15 @@
+import os
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-
+from os import listdir,path
+temp_dict={'B':'25','C':'35','D':'55','E':'75'}
+virus_dict={'6':'bat2006','7':'bat25','8':'bloom','2':'eid','5':'GCC','4':'sorex','3':'swine','1':'zhe'}
+file_labels={}
+for letter,temp in temp_dict.items():
+    for number,virus in virus_dict.items():
+        file_labels[letter+number]=f'{virus}_{temp}C'
 def read_DLS_histo(csv_file):
     histogram=pd.read_csv(csv_file,skiprows=2,skipfooter=2,engine='python')
     # Getting rid of the second half DLS Histo than transitions into a different histogram
@@ -22,31 +30,21 @@ def condense_intensity(diameter_array):
     info_array=np.array([['Range','Max Intensity','High Inten. Diameter','Std Dev'],
                          [diameter_range,max_internsity,prominent_diameter,std_dev]],dtype=object)
     return info_array
-#look at range, stddev, translate to diameter
-# histo_grandpa_direc='C:\\Users\jamel\Downloads\\attachments'
-# temp_dict={'B':'25','C':'35','D':'55','E':'75'}
-# bulk_histo=pd.DataFrame()
-# for virus in listdir(histo_grandpa_direc):
-#     virus_direc=path.join(histo_grandpa_direc, virus)
-#     for file in listdir(virus_direc):
-#         if file.endswith('histo.csv'):
-#             virus_histo_csv=path.join(virus_direc, file)
-#             temperature=temp_dict[file.split('-')[1][0]]
-#             label=f'{virus}_{temperature}'
-#             histogram=dls.read_DLS_histo(virus_histo_csv)
-#             histogram['Virus']=virus
-#             histogram['Temperature']=temperature
-#             bulk_histo=pd.concat([bulk_histo,histogram])
-# bulk_histo.to_csv("C:\\Research\\DLS_data.csv",index=False)
+
+def manage_DLS_files(file_label_dict:dict,DLS_directory:str):
+    for file in [path.join(DLS_directory,file) for file in listdir(DLS_directory)]:
+        for key,value in file_label_dict.items():
+            if key in file:
+                os.rename(file,file.replace(key,value))
+                break
 
 
-import pandas as pd
 
-radius_column='Radius (nm)'
-intensity_column='Intensity'
-particle_histo=pd.read_csv(r"C:\Research\DLS_data.csv")
-temp_dict={25: 'green', 35: 'blue', 55: 'pink', 75: 'red'}
-viruses=particle_histo['Virus'].unique()
+# radius_column='Radius (nm)'
+# intensity_column='Intensity'
+# particle_histo=pd.read_csv(r"C:\Research\DLS_data.csv")
+# temp_dict={25: 'green', 35: 'blue', 55: 'pink', 75: 'red'}
+# viruses=particle_histo['Virus'].unique()
 # For creating a pseudo ridge plot where each temperature has its radius intensity stacked on top of each other as its own plot
 # for virus in viruses:
 #     virus_data=particle_histo[particle_histo['Virus']==virus]
@@ -66,18 +64,18 @@ viruses=particle_histo['Virus'].unique()
 # we need bald DLS
 # we need newer data with fresher samples
 
-good_radius_cutoff=38.28
-fraction_good_DLS:dict[str,list]={virus:[] for virus in viruses}
+# good_radius_cutoff=38.28
+# fraction_good_DLS:dict[str,list]={virus:[] for virus in viruses}
 # For mapping Temperature with fraction of intensity under cutoff thats based on the bottom 90% of SARS data at 25Celsius
-for virus in viruses:
-    virus_data = particle_histo[particle_histo['Virus'] == virus]
-    temp_split_data = [(virus_data[virus_data['Temperature'] == x], x) for x in temp_dict.keys()]
-    plot_data={}
-    for i, (data, temp) in enumerate(temp_split_data):
-        good=data[data[radius_column]<=good_radius_cutoff]['Intensity'].sum()
-        bad=data[data[radius_column] > good_radius_cutoff]['Intensity'].sum()
-        fraction_good_DLS[virus].append(good/(good+bad) if (good+bad)>0 else 0)
-pd.DataFrame(fraction_good_DLS).to_csv(r'C:\Research\fraction_good_dls.csv',index=False)
+# for virus in viruses:
+#     virus_data = particle_histo[particle_histo['Virus'] == virus]
+#     temp_split_data = [(virus_data[virus_data['Temperature'] == x], x) for x in temp_dict.keys()]
+#     plot_data={}
+#     for i, (data, temp) in enumerate(temp_split_data):
+#         good=data[data[radius_column]<=good_radius_cutoff]['Intensity'].sum()
+#         bad=data[data[radius_column] > good_radius_cutoff]['Intensity'].sum()
+#         fraction_good_DLS[virus].append(good/(good+bad) if (good+bad)>0 else 0)
+# pd.DataFrame(fraction_good_DLS).to_csv(r'C:\Research\fraction_good_dls.csv',index=False)
 #         plot_data[temp]=good/(good+bad) if (good+bad)>0 else 0
 #     plt.plot(plot_data.keys(),plot_data.values())
 # plt.legend(viruses)
