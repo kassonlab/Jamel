@@ -1,13 +1,12 @@
 #! python
 #
 # Code 2023 by Jamel Simpson
-
-
+import re
 from pickle import load as p_load
 from json import load as j_load
 from os import system, path, strerror, listdir, makedirs
 from shutil import copy
-from numpy import savetxt, empty,zeros,array
+from numpy import savetxt, empty, zeros, array
 from errno import ENOENT
 from Bio import PDB
 from collections import defaultdict
@@ -34,9 +33,12 @@ def convert_data_dict_to_csv(data_dict, container):
         data_array[1:, column_count] = data
     savetxt(container.analysis_args.analysis_output_csv, data_array, fmt=','.join('%s' for x in data_dict))
 
-def convert_array_to_file(arr,delimiter,file_name):
+
+def convert_array_to_file(arr, delimiter, file_name):
     savetxt(file_name, arr, fmt=delimiter.join(('%s' for x in arr)))
-def get_plddt_dict_from_pdb(pdb_file):
+
+
+def get_plddt_dict_from_pdb(pdb_file) -> dict:
     pdb = PDB.PDBParser().get_structure('pdb', pdb_file)[0]
     homomeric = defaultdict(tuple)
     chains = tuple(chain for chain in pdb)
@@ -49,14 +51,21 @@ def get_plddt_dict_from_pdb(pdb_file):
     return homomeric
 
 
+def get_info_from_plddt_file(plddt_file: str):
+    with open(plddt_file, 'r') as plddt:
+        plddt_text = plddt.read()
+        sequence = re.search(r'[a-zA-Z]+', plddt_text).group()
+        return sequence, tuple(float(score) for score in re.findall(r'\d+\.\d+', plddt_text))
+
+
 def get_plddt_file_from_pdb(pdb_file, new_plddt_file):
     pdb = PDB.PDBParser().get_structure('pdb', pdb_file)[0]
     chains = tuple(chain for chain in pdb)
     sequence = ''.join(PDB.Polypeptide.three_to_one(resi.get_resname()) for resi in pdb[0])
-    plddts=[]
+    plddts = []
     for chain in chains:
-        plddts.append( array(resi['CA'].bfactor for resi in chain))
-    plddt=sum(plddts)/len(plddts)
+        plddts.append(array(resi['CA'].bfactor for resi in chain))
+    plddt = sum(plddts) / len(plddts)
     with open(new_plddt_file, 'w') as new_plddt:
         new_plddt.write(
             '>{0}\n{1}'.format(sequence, "\n".join(plddt)))
@@ -144,14 +153,15 @@ def overall_confidence(plddt_tuple):
     average_plddt = sum(plddt_tuple) / len(plddt_tuple)
     return average_plddt
 
-def turn_plddt_dict_into_tuples(plddt_dict:dict):
+
+def turn_plddt_dict_into_tuples(plddt_dict: dict):
     plddt_list_of_tuples = []
     for seq, plddt in plddt_dict.items():
         plddt_list_of_tuples.append((seq, plddt))
     return plddt_list_of_tuples
 
 
-def get_chimera_boundaries(chimera_seq:str, seq_spliced_into_ref:str):
+def get_chimera_boundaries(chimera_seq: str, seq_spliced_into_ref: str):
     if chimera_seq.find(seq_spliced_into_ref) != -1:
         splice_start = chimera_seq.find(seq_spliced_into_ref)
     else:
@@ -190,11 +200,12 @@ def relative_stability(native_plddt, native_boundary_tuple, chimera_plddt, chime
 
 
 # TODO compare sequences before lloking at relative stability
-def revamped_rs(native_plddt_dict:dict, chimera_plddt_dict:dict, reference_plddt_dict:dict, seq_spliced_into_ref:str):
+def revamped_rs(native_plddt_dict: dict, chimera_plddt_dict: dict, reference_plddt_dict: dict,
+                seq_spliced_into_ref: str):
     raw_stability = 0
-    native_seq,native_plddt = native_plddt_dict.items()
-    chi_seq,chi_plddt = chimera_plddt_dict.items()
-    reference_seq,reference_plddt = reference_plddt_dict.items()
+    native_seq, native_plddt = native_plddt_dict.items()
+    chi_seq, chi_plddt = chimera_plddt_dict.items()
+    reference_seq, reference_plddt = reference_plddt_dict.items()
     chimera_boundaries = get_chimera_boundaries(chi_seq, seq_spliced_into_ref)
     for boundary in chimera_boundaries:
         seq_chunk = chi_seq[boundary[1]:boundary[2]]
@@ -221,6 +232,7 @@ def revamped_rs(native_plddt_dict:dict, chimera_plddt_dict:dict, reference_plddt
             break
     return raw_stability / len(chi_seq)
 
+
 def averaging_multimer_plddt(plddt_file, new_plddt_file, subunits):
     """This function takes a plddt and averages the scores
     for each residue position across the number of subunints specified"""
@@ -236,9 +248,3 @@ def averaging_multimer_plddt(plddt_file, new_plddt_file, subunits):
     # creating a file to input the averaged scores
     with open(new_plddt_file, 'w') as new_plddt:
         new_plddt.write('\n'.join(str(score) for score in averaged_scores))
-
-
-
-
-
-
