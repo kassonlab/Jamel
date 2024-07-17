@@ -1,13 +1,14 @@
 from Chimeragenesis.Analysis import get_info_from_plddt_file
 from os import path,listdir
-from Chimeragenesis.AccessiontoAlignment import create_dictionary_from_alignment
+from Chimeragenesis.AccessiontoAlignment import create_dictionary_from_alignment,extract_seq_from_fasta
 import pandas as pd
-def raw_confidence_alignment(native_naming:str,chimera_naming:str,alignment_file:str,plddt_folder):
+def raw_confidence_alignment(native_naming:str,chimera_naming:str,alignment_file:str,plddt_folder:str,recombination_sequence_fasta,):
     plddt_files=tuple(path.join(plddt_folder,file) for file in listdir(plddt_folder))
     native_scores={}
     chimera_scores={}
-    with open(alignment_file,'r') as aln:
-        aln_dict=create_dictionary_from_alignment(alignment_file)
+    aln_dict=create_dictionary_from_alignment(alignment_file)
+    ref_recombined_site=extract_seq_from_fasta(recombination_sequence_fasta)
+
     for name,alnment in aln_dict.items():
         native_name=native_naming.replace('*',name)
         native_file=next((file for file in plddt_files if native_name in file),None)
@@ -21,5 +22,7 @@ def raw_confidence_alignment(native_naming:str,chimera_naming:str,alignment_file
         chimera_scores[name] = tuple(next(chimera_score,None) if acid.isalpha() else acid for acid in alnment)
 
     print(pd.DataFrame(chimera_scores))
+def replace_residue_w_score(recombined_sequence:str,):
+
 if __name__=='__main__':
-    raw_confidence_alignment('3mer*','3mer6vsbw*S1','6vsb_MSA.aln',r"C:\Research\Plddt")
+    raw_confidence_alignment('3mer*','3mer6vsbw*S1','6vsb_MSA.aln',r"C:\Research\Plddt",'Full_6vsb_S1.fasta')

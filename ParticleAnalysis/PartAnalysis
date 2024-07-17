@@ -1,0 +1,11 @@
+import os
+parent_directory=r"C:\Research\immunofluorescence"
+for root, dirs, files in os.walk(parent_directory):
+    if not dirs:
+        file=next((file for file in files if file.endswith('tif')))
+        old_path=os.path.join(root,file)
+        _,_,_,virus,temperature,fov=root.split('\\')
+        temperature=temperature[0:2]
+        virus=virus.split('_')[-1]
+        new_path=os.path.join(parent_directory,f'{virus}_{temperature}_{fov}.ome.tif')
+        os.system(f'copy {old_path} {new_path}')
