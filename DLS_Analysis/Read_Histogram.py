@@ -1,5 +1,7 @@
 import os
 from collections.abc import Iterable
+import random
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -61,7 +63,6 @@ def stacked_histo_plots(dataframe: pd.DataFrame, subplot_variable_name: str, x_c
         axes[i].set_title(f'{variable}')
         axes[i].set_xlabel(x_column)
         axes[i].set_ylabel(y_column)
-        # axes[i].set_xlim(0, 150)
     plt.title(virus)
     plt.tight_layout()
     plt.show()
@@ -107,17 +108,19 @@ def DLS_summary_to_pandas(csv_file: str) -> pd.DataFrame:
     dataframe = pd.read_csv(csv_file, skiprows=1)
     return dataframe.iloc[1:]
 
+def get_random_color():
+    return "#"+''.join([random.choice('0123456789ABCDEF') for _ in range(6)])
 
-def overlapping_line_plot(dataframes: list[pd.DataFrame] | tuple[pd.DataFrame], legend: list[str], x_column: str,
-                          y_column: str, save_fig: str = ''):
 
-    for plt_num,dataframe in enumerate(dataframes):
-        # plt.figure(plt_num)
-        plt.plot(dataframe[x_column], dataframe[y_column])
-        plt.legend(legend)
+def overlapping_line_plot(dataframe:pd.DataFrame, x_column: str,
+                          y_column: str,sort_column:str, save_fig: str = ''):
+    legend=[]
+    for label, sorted_data in dataframe.groupby(sort_column):
+        legend.append(label)
         plt.xlabel(x_column)
         plt.ylabel(y_column)
-    plt.gca().xaxis.set_major_locator(MaxNLocator(nbins=5))
+        plt.plot(sorted_data[x_column],sorted_data[y_column],color=get_random_color())
+    plt.legend(legend)
     plt.savefig(save_fig) if save_fig else plt.show()
     plt.clf()
 
