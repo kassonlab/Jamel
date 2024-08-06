@@ -55,7 +55,7 @@ if __name__ == '__main__':
     # test for variance homogeneity and it passed
     # virus_areas=[df for label,df in particle_data.groupby('Virus')['Area']]
     # w,alp=levene(*virus_areas,center='median')
-
+    nanosight_data=pd.read_csv()
 
     # for virus,virus_data in antibody_intensities.groupby('Virus'):
     #     virus_data.plot(kind='hist',y='IntensityBackSub',title=virus)
