@@ -88,6 +88,7 @@ if __name__ == '__main__':
     # plt.xticks(range(0,900,100),range(0,900,100))
     # plt.show()
 
+    nanosight_data=pd.read_csv()
 
     # for virus,virus_data in antibody_intensities.groupby('Virus'):
     #     virus_data.plot(kind='hist',y='IntensityBackSub',title=virus)
