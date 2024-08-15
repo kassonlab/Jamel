@@ -8,11 +8,16 @@ import numpy as np
 import random
 import DLS_Analysis.Read_Histogram
 from scipy.stats import levene
-def cum_dis_func(single_column_data: pd.DataFrame):
-    x = single_column_data.sort_values()
+
+
+def cum_dis_func(series_data: pd.Series,percentile_cutoff:float=0.9):
+    x = series_data.sort_values()
     y = np.arange(len(x)) / float(len(x))
     plt.plot(x, y)
-    plt.show()
+    # plt.show()
+    for index,num in enumerate(y):
+        if percentile_cutoff<num:
+            return x[index]
 
 
 def flatten_microscopy_files(grand_parent_directory, target_directory):
@@ -36,7 +41,8 @@ def filter_temp_from_particle_table(particle_data: pd.DataFrame, temperature: in
 
 particle_data = pd.read_csv(r"C:\Users\jamel\OneDrive\Documents\Stats Meeting\v200globe_total_bulk_particles.csv")
 fov_intensities=pd.read_csv(r"C:\Research\immunofluorescence\fov_antibody_intensity.csv")
-antibody_intensities=pd.read_csv(r"C:\Research\immunofluorescence\200_global_bulk_antibody_intensity.csv")
+antibody_intensities=pd.read_csv(r"C:\Research\immunofluorescence\0_5_percent_threshold_antibody_particles.csv")
+nanosight_size_cutoff=343.5
 # Performing two-way ANOVA
 def two_way_anova(dataframe: pd.DataFrame, variable_one, variable_2, result_column):
     model = ols(f'{result_column} ~ {variable_one} + {variable_2} + {variable_one}:{variable_2}',
@@ -49,19 +55,47 @@ def two_way_anova(dataframe: pd.DataFrame, variable_one, variable_2, result_colu
     mc_results_two = mc.pairwise_tukeyhsd(dataframe[result_column], dataframe[variable_2])
     print(mc_results_two)
 
+def nanosight_csv_to_dataframe(summary_csv:str):
+    dataframe = pd.read_csv(summary_csv, skiprows=78)
+    dataframe = dataframe.drop(
+        columns=['Standard Error', 'Unnamed: 8', 'Concentration (particles / ml)', 'Concentration (particles / ml).1',
+                 'Concentration (particles / ml).2', 'Concentration (particles / ml).3',
+                 'Concentration (particles / ml).4'])
+    dataframe = dataframe.dropna()
+    dataframe['Bin centre (nm)']=dataframe['Bin centre (nm)'].astype(float)
+    aggregation_sum=dataframe[dataframe['Bin centre (nm)'] > nanosight_size_cutoff]['Concentration average'].sum()
+    return dataframe,aggregation_sum
+
+def nanosight_aggregation_sum(summary_files:list):
+    for file in summary_files:
+        virus=file.split()[0]
+        virus_data,aggregate_sum=nanosight_csv_to_dataframe(file)
+        max_size=virus_data[virus_data['Concentration average']>0]['Bin centre (nm)'].max()
+        print(virus,aggregate_sum,max_size)
+
 #Antibody fluorescence analysis
+#343.5nm nanosight SARS 90th percentile
 
 if __name__ == '__main__':
     # test for variance homogeneity and it passed
     # virus_areas=[df for label,df in particle_data.groupby('Virus')['Area']]
     # w,alp=levene(*virus_areas,center='median')
+    for csv in os.listdir('room_temp_nanosight'):
+
+
+
+    # nanosight_data.plot(x='Bin centre (nm)',y='Concentration average')
+    # plt.xticks(range(0,900,100),range(0,900,100))
+    # plt.show()
+
     nanosight_data=pd.read_csv()
 
     # for virus,virus_data in antibody_intensities.groupby('Virus'):
     #     virus_data.plot(kind='hist',y='IntensityBackSub',title=virus)
     #     plt.show()
-    # filtered_inten=filter_temp_from_particle_table(antibody_intensities,55)
+    filtered_inten=filter_temp_from_particle_table(antibody_intensities,25)
     # print(filtered_inten['IntensityBackSub'].sum())
+    print(filtered_inten.count())
     # DLS_Analysis.Read_Histogram.overlapping_line_plot(antibody_intensities,'Temperature','IntensityBackSub','Virus')
     # fov_intensities=fov_intensities[fov_intensities['Temperature'] == 25]
     # print(fov_intensities.groupby("Virus")['BG_Sub_Inten'].mean())
