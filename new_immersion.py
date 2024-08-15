@@ -2,6 +2,10 @@ from Chimeragenesis.Analysis import get_info_from_plddt_file
 from os import path,listdir
 from Chimeragenesis.AccessiontoAlignment import create_dictionary_from_alignment,extract_seq_from_fasta
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
 def raw_confidence_alignment(native_naming:str,chimera_naming:str,alignment_file:str,plddt_folder:str,recombination_sequence_fasta,):
     plddt_files=tuple(path.join(plddt_folder,file) for file in listdir(plddt_folder))
     native_scores={}
@@ -23,6 +27,13 @@ def raw_confidence_alignment(native_naming:str,chimera_naming:str,alignment_file
 
     print(pd.DataFrame(chimera_scores))
 def replace_residue_w_score(recombined_sequence:str,):
+    pass
+def PCA_sequence(dataframe:pd.DataFrame):
+
+    # distributing the dataset into two components X and Y
+    X = dataset.iloc[:, 0:13].values
+    y = dataset.iloc[:, 13].values
+
 
 if __name__=='__main__':
-    raw_confidence_alignment('3mer*','3mer6vsbw*S1','6vsb_MSA.aln',r"C:\Research\Plddt",'Full_6vsb_S1.fasta')
+    # raw_confidence_alignment('3mer*','3mer6vsbw*S1','6vsb_MSA.aln',r"C:\Research\Plddt",'Full_6vsb_S1.fasta')
