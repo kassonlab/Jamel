@@ -8,6 +8,9 @@ from pathlib import Path
 from Bio import Entrez, Phylo, AlignIO, SeqIO
 from random import choice
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
+
 from Chimeragenesis.ChimeraGenerator import fasta_creation
 
 
@@ -119,12 +122,13 @@ def create_dictionary_from_alignment(alignment_file):
             sequence_dictionary[seq.id] = str(seq.seq)
     return sequence_dictionary
 
+def dictionary_to_fasta(seq_dict:dict[str:str],new_fasta_file):
+    seq_records = [SeqRecord(Seq(sequence), id=seq_id, description="") for seq_id, sequence in seq_dict.items()]
+    with open(new_fasta_file, "w") as output_handle:
+        SeqIO.write(seq_records, output_handle, "fasta")
 
-def multiple_sequence_fasta(new_fasta_file, list_of_sequences='', list_of_fastas=''):
+def multiple_sequence_fasta(new_fasta_file, list_of_fastas=''):
     from Bio import SeqIO
-    if list_of_sequences:
-        with open(new_fasta_file, "w") as output_handle:
-            SeqIO.write(list_of_sequences, output_handle, "fasta")
     if list_of_fastas:
         list_of_sequences = []
         for fasta in list_of_fastas:

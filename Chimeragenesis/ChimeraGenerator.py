@@ -22,7 +22,7 @@ def general_attr_set(class_obj, dict_of_attrs):
     return class_obj
 
 
-def sequence_splice(sequence, boundaries: tuple[2], python_index='Yes'):
+def sequence_splice(sequence, boundaries: tuple[2],splice_marker:str='#', python_index='Yes'):
     """Takes a fasta sequence and returns the section of the sequence between indexes specified by the boundary one and two,
     as well as the sequence with the specified section replaced with a '-'.
     ABCDEFGH, boundary_one=0, boundary_two=3 Returns ABC and -DEFGH
@@ -35,15 +35,15 @@ def sequence_splice(sequence, boundaries: tuple[2], python_index='Yes'):
         boundary_two = boundaries[1]
 
     # The spliced region between the 2 specified boundaries is the first sequence
-    # in the list followed by the sequence with the spliced region replace by a '-'
+    # in the list followed by the sequence with the spliced region replace by a str marker like '#'
     spliced_region = ''.join(sequence[boundary_one:boundary_two])
-    non_spliced_region = sequence.replace(spliced_region, '-')
+    non_spliced_region = sequence.replace(spliced_region, splice_marker)
     return spliced_region, non_spliced_region
 
 
-def chimera_sequence_creation(section_being_spliced_in, marked_sequence, mark_in_the_sequence='-'):
+def chimera_sequence_creation(section_being_spliced_in, marked_sequence, splice_marker='#'):
     """Returns a completed sequence after replacing the '-' in a marked sequence with another sequence fragment"""
-    chimera_sequence = marked_sequence.replace(mark_in_the_sequence, section_being_spliced_in)
+    chimera_sequence = marked_sequence.replace(splice_marker, section_being_spliced_in)
     return chimera_sequence
 
 
