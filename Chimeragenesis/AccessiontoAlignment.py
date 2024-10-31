@@ -10,8 +10,7 @@ from random import choice
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-
-from Chimeragenesis.ChimeraGenerator import fasta_creation
+from ChimeraGenerator import fasta_creation
 
 
 def all_parents(tree):
@@ -62,6 +61,9 @@ def create_tree_from_aln(msa_file, new_tree_file='', new_tree_type='newick', new
             Phylo.draw_ascii(tree, file=handle)
     return tree
 
+
+def translate_dna_to_protein(dna_seq):
+    return Seq(dna_seq).translate()
 
 def accession_to_fasta(monomer_file_name, accession, email_for_Bio, subunits, multimer_name='NA'):
     """Takes an accession number and creates a fasta file with the sequence that corresponds with the accession given.

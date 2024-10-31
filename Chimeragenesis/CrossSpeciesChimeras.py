@@ -10,8 +10,8 @@ import argparse
 
 # TODO add autocomplete for changing keys?? readline
 # TODO be able to designate multiple seq_of_interest
-# TODO test accession route
-# TODO test this between homologous proteins
+# TODO test.csv accession route
+# TODO test.csv this between homologous proteins
 # TODO be able tos swap into the constant
 parser = argparse.ArgumentParser(
     description='Creating chimeric proteins where a region from a constant protein is spliced into a list of '

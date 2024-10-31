@@ -8,8 +8,8 @@ import argparse
 
 # TODO add autocomplete for changing keys?? readline
 # TODO be able to designate multiple seq_of_interest
-# TODO test accession route
-# TODO test this between Homomer proteins
+# TODO test.csv accession route
+# TODO test.csv this between Homomer proteins
 # TODO be able tos swap into the constant
 #TODO turn parser into function??
 parser = argparse.ArgumentParser(

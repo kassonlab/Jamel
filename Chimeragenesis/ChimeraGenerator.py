@@ -22,7 +22,7 @@ def general_attr_set(class_obj, dict_of_attrs):
     return class_obj
 
 
-def sequence_splice(sequence, boundaries: tuple[2],splice_marker:str='#', python_index='Yes'):
+def sequence_splice(sequence, boundaries: tuple[2], splice_marker: str = '#', python_index='Yes'):
     """Takes a fasta sequence and returns the section of the sequence between indexes specified by the boundary one and two,
     as well as the sequence with the specified section replaced with a '-'.
     ABCDEFGH, boundary_one=0, boundary_two=3 Returns ABC and -DEFGH
@@ -176,3 +176,31 @@ def assign_file_attrs_to_chimeras(container):
 
         chimera.native_pdb = path.join(f'{alphafold_dir}{chimera.multimer_stem}', 'ranked_0.pdb')
         chimera.chi_pdb = path.join(f'{alphafold_dir}{chimera.chimera_stem}', 'ranked_0.pdb')
+
+
+def create_chimera_combinations(two_seq_dict: dict, scanner_length, scanner_start=0, scanner_rate=1, new_fasta_file='') -> dict[str, str]:
+    """Takes two sequence dictionary and creates all possible chimeras with given splice length.
+    Returns dict[parent1#parent2#splice1#splice2, chimera_sequence]"""
+    from AccessiontoAlignment import dictionary_to_fasta
+    new_chimera_dict = {label.replace('-',''):seq for label,seq in two_seq_dict.items()}
+
+    def scanning_chimera_generator(base_sequence, partner_seq, base_label, partner_label):
+        splice_boundaries: list[tuple] = [(x, x + scanner_length) for x in
+                                          range(scanner_start, len(base_sequence) - scanner_length, scanner_rate) if
+                                          x + scanner_length < len(base_sequence)]
+        for boundary in splice_boundaries:
+            # This is the sequence to be spliced into by the partner seq, the residues between a given boundary have
+            # been cut and replaced with a marker character '-' for the aligned sequence from the partner to replace it
+            marked_base_sequence = sequence_splice(base_sequence, boundary)[1]
+            partner_replacement = sequence_splice(partner_seq, boundary)[0]
+            chimeric_seq = chimera_sequence_creation(partner_replacement, marked_base_sequence)
+            new_chimera_dict['-'.join((base_label,partner_label,boundary[0],boundary[1]))] = chimeric_seq
+        return new_chimera_dict
+
+    seq1, seq2 = new_chimera_dict.values()
+    seq1_label, seq2_label = new_chimera_dict.keys()
+    scanning_chimera_generator(seq1, seq2, seq1_label, seq2_label)
+    scanning_chimera_generator(seq2, seq1, seq2_label, seq1_label)
+    if new_fasta_file:
+        dictionary_to_fasta(new_chimera_dict, new_fasta_file)
+    return new_chimera_dict

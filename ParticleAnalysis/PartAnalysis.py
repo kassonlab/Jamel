@@ -49,7 +49,7 @@ def two_way_anova(dataframe: pd.DataFrame, variable_one, variable_2, result_colu
                 data=dataframe).fit()
     results = sm.stats.anova_lm(model, typ=2)
     print(results)
-    # Perform Tukey's HSD test for multiple comparisons
+    # Perform Tukey's HSD test.csv for multiple comparisons
     mc_results_one = mc.pairwise_tukeyhsd(dataframe[result_column], dataframe[variable_one])
     print(mc_results_one)
     mc_results_two = mc.pairwise_tukeyhsd(dataframe[result_column], dataframe[variable_2])
@@ -77,7 +77,7 @@ def nanosight_aggregation_sum(summary_files:list):
 #343.5nm nanosight SARS 90th percentile
 
 if __name__ == '__main__':
-    # test for variance homogeneity and it passed
+    # test.csv for variance homogeneity and it passed
     # virus_areas=[df for label,df in particle_data.groupby('Virus')['Area']]
     # w,alp=levene(*virus_areas,center='median')
     for csv in os.listdir('room_temp_nanosight'):

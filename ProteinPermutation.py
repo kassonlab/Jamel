@@ -1,13 +1,13 @@
-def Permutation(Protein):
-    import numpy as np
-    import numpy.random.mtrand
+import random
 
-    Fasta=open(Protein+'.fasta',"r").readlines()
-    Sequence=list(''.join([x for x in Fasta if  x[0]!='>'  if x!='']).rstrip().strip().replace('\n','').replace(' ',''))
-    RandomizedSequence=''.join(numpy.random.mtrand.per)
-    NewSequence=np.empty((2), dtype=object)
-    NewSequence[0]='>Chimera'
-    NewSequence[1]=RandomizedSequence
-    print(NewSequence[1])
-    np.savetxt('Permuted'+Protein+'.fasta',NewSequence,fmt="%s",delimiter=" ")
-Permutation('SARS2')
+
+def permutate_protein(protein_seq:str):
+    seq_list=list(protein_seq)
+    random.shuffle(seq_list)
+    return ''.join(seq_list)
+
+
+def create_random_protein(protein_len:int):
+    amino_acids=['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L','M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
+    return ''.join(random.choices(amino_acids, k=protein_len))
+
