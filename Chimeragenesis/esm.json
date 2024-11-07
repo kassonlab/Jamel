@@ -1,11 +1,11 @@
 {
     "parent_aln_file": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\riffChr_data\\Riff_CHrim.aln",
     "splice_size": 60,
-    "chimera_seq_output": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\riffChr_data\\Riff_CHrim_chi.fa",
+    "chimera_seq_fasta": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\riffChr_data\\Riff_CHrim_chi.fa",
     "step_size": 1,
     "esm_output_directory": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\riffChr_data",
-    "embeddings_dimension": 1,
+    "embeddings_dimension": 2,
     "esm_model": "esm2_t30_150M_UR50D",
-    "distance_score_csv": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\riffChr_data\\test_test.csv"
-
+    "distance_score_csv": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\riffChr_data\\test_test.csv",
+    "extract_py_file": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\esm\\scripts\\extract.py"
 }

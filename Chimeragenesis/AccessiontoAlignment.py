@@ -65,6 +65,7 @@ def create_tree_from_aln(msa_file, new_tree_file='', new_tree_type='newick', new
 def translate_dna_to_protein(dna_seq):
     return Seq(dna_seq).translate()
 
+
 def accession_to_fasta(monomer_file_name, accession, email_for_Bio, subunits, multimer_name='NA'):
     """Takes an accession number and creates a fasta file with the sequence that corresponds with the accession given.
     A monomeric file is always created by default for alignment purposes even if a multimer file is requested"""
@@ -124,10 +125,12 @@ def create_dictionary_from_alignment(alignment_file):
             sequence_dictionary[seq.id] = str(seq.seq)
     return sequence_dictionary
 
-def dictionary_to_fasta(seq_dict:dict[str:str],new_fasta_file):
+
+def dictionary_to_fasta(seq_dict: dict[str:str], new_fasta_file):
     seq_records = [SeqRecord(Seq(sequence), id=seq_id, description="") for seq_id, sequence in seq_dict.items()]
     with open(new_fasta_file, "w") as output_handle:
         SeqIO.write(seq_records, output_handle, "fasta")
+
 
 def multiple_sequence_fasta(new_fasta_file, list_of_fastas=''):
     from Bio import SeqIO

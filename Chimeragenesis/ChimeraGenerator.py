@@ -12,7 +12,10 @@ from Bio import SeqIO
 
 
 class chimeracls:
-    pass
+    def __init__(self,base_protein,partner_protein,splice_site):
+        self.base_protein=base_protein
+        self.partner_protein=partner_protein
+        self.splice_site=splice_site
 
 
 def general_attr_set(class_obj, dict_of_attrs):
@@ -194,7 +197,7 @@ def create_chimera_combinations(two_seq_dict: dict, scanner_length, scanner_star
             marked_base_sequence = sequence_splice(base_sequence, boundary)[1]
             partner_replacement = sequence_splice(partner_seq, boundary)[0]
             chimeric_seq = chimera_sequence_creation(partner_replacement, marked_base_sequence)
-            new_chimera_dict['-'.join((base_label,partner_label,boundary[0],boundary[1]))] = chimeric_seq
+            new_chimera_dict['-'.join((base_label,partner_label,str(boundary[0]),str(boundary[1])))] = chimeric_seq
         return new_chimera_dict
 
     seq1, seq2 = new_chimera_dict.values()
