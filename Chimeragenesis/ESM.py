@@ -61,7 +61,7 @@ class ESMArguments:
             self.pt_file = pt_file
             self.dimensions = dimensions
             self.label = Path(pt_file).stem
-            self.embedding = pt_to_tensor(pt_file, dimensions, flatten_by_sum=True)
+            self.embedding = pt_to_tensor(pt_file, dimensions)
             self.embedding = self.add_beg_of_seq(self.embedding)
             self.distance = None
             self.is_parent = False
@@ -90,9 +90,8 @@ class ESMArguments:
             boundaries = tuple((boundaries[index], boundaries[index + 1]) for index in range(len(boundaries) - 1))
             self.distance = 0
 
-            base_pt = pt_to_tensor(label_to_file(pt_direc, self.base_protein), self.dimensions, flatten_by_sum=True)
-            partner_pt = pt_to_tensor(label_to_file(pt_direc, self.partner_protein), self.dimensions,
-                                      flatten_by_sum=True)
+            base_pt = pt_to_tensor(label_to_file(pt_direc, self.base_protein), self.dimensions)
+            partner_pt = pt_to_tensor(label_to_file(pt_direc, self.partner_protein), self.dimensions)
             base_pt = add_beg_of_seq(base_pt)
             partner_pt = add_beg_of_seq(partner_pt)
             for boundary in boundaries:
@@ -129,15 +128,13 @@ class ESMArguments:
         self.create_embedding_container()
 
 
-def pt_to_tensor(pt_file, dim1_or_dim2: EmbedDims = EmbedDims.Dim1, repr_layer: int = 30,
-                 flatten_by_sum=False) -> torch.Tensor:
+def pt_to_tensor(pt_file, dim1_or_dim2: EmbedDims = EmbedDims.Dim1, model='esm2_t30_150M_UR50D') -> torch.Tensor:
     dim1_or_dim2 = dim1_or_dim2.value
+    repr_layer=int(re.search(r't(\d*)_',model).group(1))
     if dim1_or_dim2 == 'mean':
         tensor = torch.load(pt_file)['mean_representations'][repr_layer]
     else:
         tensor = torch.load(pt_file)['representations'][repr_layer]
-        if flatten_by_sum:
-            tensor: torch.Tensor = add_beg_of_seq(tensor.sum(dim=1))
     return tensor
 
 

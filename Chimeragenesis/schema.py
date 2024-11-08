@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import torch
 from matplotlib import pyplot as plt
-
+import ESM
 from AccessiontoAlignment import create_dictionary_from_alignment, dictionary_to_fasta
 from Chimeragenesis.ESM import label_to_file, pt_to_tensor, EmbedDims
 
@@ -13,16 +13,17 @@ parent_ids = {'0': 'c0000000000', '1': 'c1111111111', '2': 'c2222222222'}
 SCHEMA_ALN = r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\esm\schema_msa.aln'
 schema_data = pd.read_csv(r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\schema_data.csv').set_index(
         'chimera_block_ID')
-schema_data['residue_dist']=np.nan
+schema_data[['residue_dist_1d','residue_dist_2d']]=np.nan
 class SchemaScorer:
-    def __init__(self, chimera_label, aln_file, pt_direc):
+    def __init__(self, chimera_label, aln_file, pt_direc,model):
+        self.model=model
         self.distance = None
         self.chimera_label = chimera_label
         self.aln_file = aln_file
         self.seq_df = self.aln_to_pd()
         self.similarity_dict = {}
         self.residue_similarity_cipher()
-        self.embed_dict = self.aln_to_embedding(pt_direc)
+        # self.embed_dict = self.aln_to_embedding(pt_direc)
         self.pt_direc = pt_direc
         
 
@@ -41,20 +42,29 @@ class SchemaScorer:
                                               position[self.chimera_label] == position[parent]]
         return self.similarity_dict
 
-    def aln_to_embedding(self, pt_direc):
-        seq_dict = create_dictionary_from_alignment(self.aln_file)
-        embed_dict = {label:list(torch.unbind(pt_to_tensor(label_to_file(pt_direc, label), EmbedDims.Dim2), dim=0))
-                      for label in seq_dict.keys()}
-        return embed_dict
-    #use actual distance formula
-    def score_distance(self):
-        self.distance = 0
-        for position, parents in self.similarity_dict.items():
-            for parent in parents:
-                res_dist=self.embed_dict[parent][position] - self.embed_dict[self.chimera_label][position]
-                self.distance += abs(torch.linalg.vector_norm(res_dist))
-        return self.distance
+    # def aln_to_embedding(self, pt_direc):
+    #     seq_dict = create_dictionary_from_alignment(self.aln_file)
+    #     embed_dict = {label:pt_to_tensor(label_to_file(pt_direc, label), EmbedDims.Dim2,self.mo) for label in seq_dict.keys()}
+    #     return embed_dict
 
+    def score_2d_distance(self):
+        #can use ternary operator to make this one function
+        seq_dict = create_dictionary_from_alignment(self.aln_file)
+        embed_dict = {label: pt_to_tensor(label_to_file(self.pt_direc, label), EmbedDims.Dim2,self.model) for label in
+                      seq_dict.keys()}
+        parent1,parent2=(label for label in embed_dict if label!=self.chimera_label)
+        paren1_dist = abs(torch.linalg.matrix_norm(embed_dict[self.chimera_label] - embed_dict[parent1]))
+        paren2_dist = abs(torch.linalg.matrix_norm(embed_dict[self.chimera_label] - embed_dict[parent2]))
+        return paren1_dist+paren2_dist
+    def score_1d_distance(self):
+        seq_dict = create_dictionary_from_alignment(self.aln_file)
+        embed_dict = {label: pt_to_tensor(label_to_file(self.pt_direc, label), EmbedDims.Dim1, self.model) for label
+                      in
+                      seq_dict.keys()}
+        parent1,parent2=(label for label in embed_dict if label!=self.chimera_label)
+        paren1_dist=abs(torch.linalg.vector_norm(embed_dict[self.chimera_label]-embed_dict[parent1]))
+        paren2_dist=abs(torch.linalg.vector_norm(embed_dict[self.chimera_label]-embed_dict[parent2]))
+        return paren1_dist+paren2_dist
 # print(SchemaScorer('n2222222221',r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\n2222222221_paretns.aln',r'C:\Users\jamel\PycharmProjects\Jamel\esm\150M_model\2d_schema_data').score_distance())
 def separate_aln():
     schema_data['parent_label']=schema_data['parent_label'].apply(lambda label: ast.literal_eval(label))
@@ -69,14 +79,19 @@ def separate_aln():
 
 
 if __name__ == '__main__':
+    ESM.ESMArguments('schema.json').get_esm_embeddings()
     # separate_aln()
-    aln_direc=r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\schema_individs'
-    for aln in os.listdir(aln_direc):
-        label=Path(aln).stem
-        # print(label)
-        chimera=SchemaScorer(label,os.path.join(aln_direc,aln),r'C:\Users\jamel\PycharmProjects\Jamel\esm\150M_model\2d_schema_data')
+    # model='esm2_t6_8M_UR50D'
+    # aln_direc=r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\schema_individs'
+    # for aln in os.listdir(aln_direc):
+    #     label=Path(aln).stem
+    #     chimera=SchemaScorer(label,os.path.join(aln_direc,aln),r'C:\Users\jamel\PycharmProjects\Jamel\esm\8M_model\1d_schema_data',model)
+    #     twod_chimera = SchemaScorer(label, os.path.join(aln_direc, aln),
+    #                            r'C:\Users\jamel\PycharmProjects\Jamel\esm\8M_model\2d_schema_data', model)
+    #     schema_data.loc[label,'residue_dist_1d']=chimera.score_1d_distance().item()
+    #     schema_data.loc[label, 'residue_dist_2d'] = twod_chimera.score_2d_distance().item()
         # plt.scatter(chimera.embed_df.index,chimera.embed_df['distance'])
         # plt.show()
-        schema_data.loc[label,'residue_dist']=chimera.score_distance().item()
+
     # print(schema_data['residue_dist'])
-    schema_data.to_csv('test.csv')
+    # schema_data.to_csv('8.csv')
