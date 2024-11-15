@@ -10,7 +10,6 @@ from random import choice
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-from ChimeraGenerator import fasta_creation
 
 
 def all_parents(tree):
@@ -66,18 +65,23 @@ def translate_dna_to_protein(dna_seq):
     return Seq(dna_seq).translate()
 
 
-def accession_to_fasta(monomer_file_name, accession, email_for_Bio, subunits, multimer_name='NA'):
+def fasta_creation(file_name, sequences: list[SeqRecord]):
+    """Creates a fasta file with the given file_name, and replicates the sequence within it the specified number of times
+    to create a homo multimer if subunits is greater than 1."""
+    with open(file_name, 'w') as outfile:
+        SeqIO.write(sequences, outfile, "fasta")
+
+
+def accession_to_fasta(monomer_file_name, accession, email_for_bio, subunits, multimer_name='NA'):
     """Takes an accession number and creates a fasta file with the sequence that corresponds with the accession given.
     A monomeric file is always created by default for alignment purposes even if a multimer file is requested"""
-    Entrez.email = email_for_Bio
+    Entrez.email = email_for_bio
     # Pulling the sequence corresponding with accession numer specified
     handle = Entrez.efetch(db='protein', id=accession, retmode='text', rettype='fasta')
     # Turning the retrieved sequence into a single string with no breaks
     sequence = SeqIO.read(handle, "fasta").seq
     # Creating a monomer file by default for alignment purposes, if a multimer is requested it's made later
-    fasta_creation(monomer_file_name, [(sequence, 1, Path(monomer_file_name).stem)])
-    if subunits != 1:
-        fasta_creation(multimer_name, [(sequence, subunits, Path(multimer_name).stem)])
+    fasta_creation(multimer_name, [SeqRecord()])
 
 
 def get_accession_sequence(accession, email_for_Bio):
@@ -132,24 +136,11 @@ def dictionary_to_fasta(seq_dict: dict[str:str], new_fasta_file):
         SeqIO.write(seq_records, output_handle, "fasta")
 
 
-def multiple_sequence_fasta(new_fasta_file, list_of_fastas=''):
-    from Bio import SeqIO
-    if list_of_fastas:
-        list_of_sequences = []
-        for fasta in list_of_fastas:
-            with open(fasta, "r") as handle:
-                seq_rec = SeqIO.read(handle, "fasta")
-                seq_rec.description = ''
-                list_of_sequences.append(seq_rec)
-        with open(new_fasta_file, "w") as outfile:
-            SeqIO.write(list_of_sequences, outfile, "fasta")
-
-
-def multiple_sequence_alignment(list_of_fastas, fasta_for_alignment, new_alignment_file, muscle_command):
+def multiple_sequence_alignment(sequences:list[SeqRecord], fasta_for_alignment, new_alignment_file, muscle_command):
     """Creates a multiple sequence alignment using muscle and a concatenated fasta file with a reference fasta as the base,
      joined with all fastas specified in list_of_fastas."""
     # Creating a copy of the fasta file of a reference_protein_fasta to be added into
-    multiple_sequence_fasta(fasta_for_alignment, list_of_fastas=list_of_fastas)
+    fasta_creation(fasta_for_alignment, sequences)
     # Using muscle to perform the alignment
     system(f'{muscle_command} -in {fasta_for_alignment} -out {new_alignment_file}')
 
@@ -192,7 +183,6 @@ def alignment_finder(alignment_file, sequence_of_interest, comparison_protein,
     # Pulling the section of the comparison_sequence that overlaps with the sequence_of_interest
     found_alignment = comparison_sequence[alignment_reference_start:alignment_reference_end].replace('-', '')
     no_gap_reference_start = no_gap_reference_sequence.find(sequence_of_interest)
-    no_gap_reference_end = no_gap_reference_start + len(sequence_of_interest)
     # Recording the indexes of the found_alignment
     # Additionally the splice_start is the first residue that is spliced,
     # and splice_end is the first residue that's not spliced
@@ -200,7 +190,7 @@ def alignment_finder(alignment_file, sequence_of_interest, comparison_protein,
     splice_end = splice_start + len(found_alignment)
     if run_emboss != '':
         run_emboss_needle(new_emboss_file, found_alignment, sequence_of_interest, run_emboss)
-    return found_alignment, (splice_start, splice_end), (no_gap_reference_start, no_gap_reference_end)
+    return found_alignment, (splice_start, splice_end), (no_gap_reference_start, no_gap_reference_start + len(sequence_of_interest))
 
 
 def truncate_alignmnent(alignment_file, sequence_of_interest, new_aln_file):

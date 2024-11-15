@@ -11,11 +11,7 @@ from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
 
 
-class chimeracls:
-    def __init__(self,base_protein,partner_protein,splice_site):
-        self.base_protein=base_protein
-        self.partner_protein=partner_protein
-        self.splice_site=splice_site
+
 
 
 def general_attr_set(class_obj, dict_of_attrs):
@@ -25,23 +21,14 @@ def general_attr_set(class_obj, dict_of_attrs):
     return class_obj
 
 
-def sequence_splice(sequence, boundaries: tuple[2], splice_marker: str = '#', python_index='Yes'):
-    """Takes a fasta sequence and returns the section of the sequence between indexes specified by the boundary one and two,
-    as well as the sequence with the specified section replaced with a '-'.
-    ABCDEFGH, boundary_one=0, boundary_two=3 Returns ABC and -DEFGH
+def sequence_splice(sequence:str, splice_region:str, splice_marker: str = '#'):
+    """Takes a protein sequence and Returns ABC and -DEFGH
     The residue at boundary_two is the first residue not included in the splice. If you're using alignment_finder, this is already accounted for."""
-    if python_index == 'No':
-        boundary_two = boundaries[1] - 1
-        boundary_one = boundaries[0] - 1
-    else:
-        boundary_one = boundaries[0]
-        boundary_two = boundaries[1]
 
     # The spliced region between the 2 specified boundaries is the first sequence
     # in the list followed by the sequence with the spliced region replace by a str marker like '#'
-    spliced_region = ''.join(sequence[boundary_one:boundary_two])
-    non_spliced_region = sequence.replace(spliced_region, splice_marker)
-    return spliced_region, non_spliced_region
+    non_spliced_region = sequence.replace(splice_region, splice_marker)
+    return non_spliced_region
 
 
 def chimera_sequence_creation(section_being_spliced_in, marked_sequence, splice_marker='#'):
@@ -49,20 +36,10 @@ def chimera_sequence_creation(section_being_spliced_in, marked_sequence, splice_
     chimera_sequence = marked_sequence.replace(splice_marker, section_being_spliced_in)
     return chimera_sequence
 
-
-def fasta_creation(file_name, sequence_subunits_fastaid_tuples: list[tuple]):
-    """Creates a fasta file with the given file_name, and replicates the sequence within it the specified number of times
-    to create a homo multimer if subunits is greater than 1."""
-    sequences = []
-    with open(file_name, 'w') as outfile:
-
-        for (sequence, subunits, fasta_id) in sequence_subunits_fastaid_tuples:
-            for replicates in range(subunits):
-                sequences.append(SeqRecord(Seq(sequence), id=fasta_id, description=""))
-        SeqIO.write(sequences, outfile, "fasta")
+def get_chimera():
 
 
-# TODO create a separate functionality file???
+
 def update_json(default_json, dilapidated_json, overwrite=False):
     try:
         with open(default_json, 'r') as f:
@@ -80,7 +57,6 @@ def update_json(default_json, dilapidated_json, overwrite=False):
                 dilapidated_dict[key] = value
 
     # TODO question marks ruin this
-
     def reduce_dict(default_dict, dilapidated_dict):
         for key, value in dilapidated_dict.copy().items():
             if key not in default_dict:
@@ -98,9 +74,10 @@ def update_json(default_json, dilapidated_json, overwrite=False):
             dump(dilapidated, f, indent=4)
 
 
-def change_json_value(json, noted_key='', new_value='', overwrite=False, find_n_replace_tuple=''):
+def change_json_value(json_file, noted_key='', new_value='', overwrite=False, find_n_replace_tuple=''):
+    """Iterates through json keys and replaces their value accordingly"""
     try:
-        with open(json, 'r') as f:
+        with open(json_file, 'r') as f:
             json_dict = load(f)
     except FileNotFoundError:
         pass
@@ -127,10 +104,11 @@ def change_json_value(json, noted_key='', new_value='', overwrite=False, find_n_
     else:
         change(json_dict)
     if overwrite:
-        with open(json, 'w') as f:
+        with open(json_file, 'w') as f:
             dump(json_dict, f, indent=4)
     else:
-        with open(str(Path(json).parent) + '/new' + str(Path(json).name), 'w') as f:
+        stem=Path(json_file).stem
+        with open(json_file.replace(stem,f'new_{stem}'), 'w') as f:
             dump(json_dict, f, indent=4)
 
 
@@ -152,33 +130,6 @@ def print_keys(dictionary, key_of_interest=''):
     else:
         for key, value in sorted(list(dict_of_keys.items())):
             print(key)
-
-
-def assign_file_attrs_to_chimeras(container):
-    for chimera in container.chimeras:
-        name_placeholder = container.naming_args.nickname_placeholder
-        file_placeholder = container.naming_args.file_placeholder
-        subunits = container.fasta_args.number_of_subunits
-        alphafold_dir = container.naming_args.alphafold_outputs_dir
-        chimera.monomer_stem = container.naming_args.monomer_naming_convention.replace(name_placeholder,
-                                                                                       chimera.file_stem)
-        chimera.chimera_stem = container.naming_args.chimera_naming_convention.replace(name_placeholder,
-                                                                                       chimera.file_stem)
-        chimera.chi_pdb = path.join(f'{alphafold_dir}{chimera.chimera_stem}', 'ranked_0.pdb')
-        chimera.monomer_fasta = container.naming_args.fasta_naming.replace(file_placeholder, chimera.monomer_stem)
-        chimera.chimera_fasta = container.naming_args.fasta_naming.replace(file_placeholder, chimera.chimera_stem)
-
-        if subunits == 1:
-            chimera.multimer_stem = container.naming_args.monomer_naming_convention.replace(name_placeholder,
-                                                                                            chimera.file_stem)
-            chimera.multimer_fasta = container.naming_args.fasta_naming.replace(file_placeholder, chimera.monomer_stem)
-        else:
-            chimera.multimer_stem = container.naming_args.multimer_naming_convention.replace(name_placeholder,
-                                                                                             chimera.file_stem)
-            chimera.multimer_fasta = container.naming_args.fasta_naming.replace(file_placeholder, chimera.multimer_stem)
-
-        chimera.native_pdb = path.join(f'{alphafold_dir}{chimera.multimer_stem}', 'ranked_0.pdb')
-        chimera.chi_pdb = path.join(f'{alphafold_dir}{chimera.chimera_stem}', 'ranked_0.pdb')
 
 
 def create_chimera_combinations(two_seq_dict: dict, scanner_length, scanner_start=0, scanner_rate=1, new_fasta_file='') -> dict[str, str]:

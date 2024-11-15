@@ -272,7 +272,7 @@ with open(variant_seq_of_interest, 'r') as fasta:
     variant_seq_of_interest = ''.join(x for x in fasta if x[0] != '>' if x != '').strip().replace('\n', '')
 
 variant_container.get_dict_args(CrossFastaArguments, 'naming_args', 'naming_arguments')
-placeholder = variant_container.naming_args.placeholder
+placeholder = variant_container.naming_args.PLACEHOLDER
 msa = variant_container.fasta_args.msa_file_name
 subunits = variant_container.fasta_args.number_of_subunits
 alphafold_dir = variant_container.naming_args.alphafold_outputs_dir

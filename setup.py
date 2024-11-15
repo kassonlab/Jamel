@@ -63,7 +63,7 @@ def create_alphafold_slurm(iter_of_fastas,slurm_filename,template_slurm,output_f
 def alphafold_submission_for_chimera_container(container,list_of_fastas):
     # fasta list is a separate input for control
     fasta_to_run = ()
-    placeholder = container.naming_args.placeholder
+    placeholder = container.naming_args.PLACEHOLDER
     output_directory = container.naming_args.alphafold_outputs_dir
     submission_toggles = container.submission_args.submission_toggles
     proteins_per_slurm = container.submission_args.proteins_per_slurm

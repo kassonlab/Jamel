@@ -2,36 +2,19 @@
     "operation_toggles": {
         "run_fasta_operation": true, "alphafold_submission":false,"run_analysis_operation": false,"run_gromacs_operation": false
     },
-    "naming_arguments": {"nickname_placeholder": "*",
-        "monomer_naming_convention": "*",
-        "multimer_naming_convention": "3mer*",
-        "chimera_naming_convention": "3merNTDw*HA2",
-        "fasta_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Fastas/NTD-HA_Fastas/",
-        "emboss_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Fastas/NTD-HA_Fastas/",
-        "pdb_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Analysis_Folders/NTD_HA/",
-        "plddt_directory": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Analysis_Folders/NTD_HA/",
-        "alphafold_outputs_dir": "/gpfs/gpfs0/scratch/jws6pq/Notebook/AlphaFold_Outputs/NTD_HA/",
-        "gromacs_slurm_dir": "/gpfs/gpfs0/scratch/jws6pq/Gromacs/",
-        "fasta_extension": ".fasta",
-        "plddt_extension": ".plddt",
-        "gmx_setup_extension": ".setup",
-        "gmx_production_extension": ".prod",
-        "pdb_extension": ".pdb"
+    "naming_arguments": {
+        "file_stem_placeholder": "*",
+        "WT_fasta_convention": "*",
+        "chimera_fasta_convention": "NO",
+        "output_directory": ""
     },
     "fasta_arguments": {
-        "fasta_toggles": {"Make_a_list_of_created_fasta_files": true,
-            "Create_an_alignment": false, "make_native_fastas": true},
-        "protein_list": "",
-        "reference_identifier": "A_Victoria_2023_2017",
-        "muscle_command_for_msa": "module load gcc/9.2.0 && module load muscle/3.8.31 && muscle",
-        "number_of_subunits": 3,
+        "reference_identifier": "c0000000000",
+        "number_of_subunits": 1,
         "sequence_of_interest": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Analysis_Folders/NTD_HA/H3N2_partial_HA1.fasta",
         "fasta_list_file_name": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Fastas/NTD-HA_Fastas/NTDs_to_run",
-        "full_reference_seq_fasta": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Analysis_Folders/NTD_HA/A_Victoria_H3N2.fasta",
         "msa_file_name": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Analysis_Folders/NTD_HA/second_inclusion_flu.aln",
-        "email_for_accession": "example@outlook.com",
-        "msa_fasta": "",
-        "fasta_for_alphafold": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/3merOmicron.fasta"
+        "email_for_accession": "example@outlook.com"
     },
     "alphafold_submission_args": {
         "submission_toggles": {"create_slurms":false,"sbatch_slurms": false,"stragglers_or_custom_or_all": "stragglers","create_file_of_stragglers": false},
