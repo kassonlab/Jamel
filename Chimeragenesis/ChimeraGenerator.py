@@ -2,7 +2,7 @@
 #
 # Code 2023 by Jamel Simpson
 """Routines to generate chimeric sequences."""
-
+import AccessiontoAlignment
 from pathlib import Path
 from json import load, dump
 from os import path
@@ -36,7 +36,9 @@ def chimera_sequence_creation(section_being_spliced_in, marked_sequence, splice_
     chimera_sequence = marked_sequence.replace(splice_marker, section_being_spliced_in)
     return chimera_sequence
 
-def get_chimera():
+def get_chimera(base_aln_seq,seq_to_splice:str):
+    marked_base=sequence_splice(AccessiontoAlignment.no_gap_sequence_from_alignment(base_aln_seq),seq_to_splice)
+    splice_region=AccessiontoAlignment.alignment_finder()
 
 
 

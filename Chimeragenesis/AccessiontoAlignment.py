@@ -1,7 +1,7 @@
 #! python
 #
 #  Code 2023 by Jamel Simpson
-
+import re
 from os import system
 import json
 from pathlib import Path
@@ -160,58 +160,32 @@ def get_alignment_indexing_w_dashes(alignment_seq):
     return [ind if x != '-' else '-' for ind, x in enumerate(alignment_seq)]
 
 
-def alignment_finder(alignment_file, sequence_of_interest, comparison_protein,
-                     reference_protein, run_emboss='', new_emboss_file=''):
+def alignment_finder(sequence_of_interest, comparison_aln_seq,
+                     reference_aln_seq, run_emboss='', new_emboss_file=''):
     """Takes a fasta style alignment and a sequence_of_interest from a reference_protein and returns the sequence of the
     comparison_protein that is outlined in the boundaries of the sequence_of_interest, as well as the python index boundaries
      for the found_alignment of the comparison_protein. reference_protein and comparison_protein must the names following
       '>' in the alignment file"""
-    #Must be in fasta format
-    sequence_dictionary = create_dictionary_from_alignment(alignment_file)
-    # Recording the specified sequences as variables
-    reference_sequence = sequence_dictionary[reference_protein]
-    comparison_sequence = sequence_dictionary[comparison_protein]
     # Matching python indexing for the indexing from the alignment with some amount of '-' and indexing in the regular sequence
-    reference_alignment_indexing = tuple(get_alignment_indexing(reference_sequence))
+    reference_alignment_indexing = get_alignment_indexing(reference_aln_seq)
     # Creating a regular sequence without '-'
-    no_gap_reference_sequence = ''.join(x for ind, x in enumerate(reference_sequence) if x.isalpha())
+    no_gap_reference_sequence = no_gap_sequence_from_alignment(reference_aln_seq)
     # Boundaries are given in python index
     alignment_reference_start = reference_alignment_indexing[no_gap_reference_sequence.find(sequence_of_interest)]
     # Because indexing doesnt include the ending index, the final index is put up one
     alignment_reference_end = reference_alignment_indexing[no_gap_reference_sequence.find(sequence_of_interest) + len(
         sequence_of_interest) - 1] + 1
     # Pulling the section of the comparison_sequence that overlaps with the sequence_of_interest
-    found_alignment = comparison_sequence[alignment_reference_start:alignment_reference_end].replace('-', '')
+    found_alignment = no_gap_sequence_from_alignment(comparison_aln_seq[alignment_reference_start:alignment_reference_end])
     no_gap_reference_start = no_gap_reference_sequence.find(sequence_of_interest)
     # Recording the indexes of the found_alignment
     # Additionally the splice_start is the first residue that is spliced,
     # and splice_end is the first residue that's not spliced
-    splice_start = comparison_sequence.replace('-', '').find(found_alignment)
-    splice_end = splice_start + len(found_alignment)
+    splice_start = no_gap_sequence_from_alignment(comparison_aln_seq).find(found_alignment)
     if run_emboss != '':
         run_emboss_needle(new_emboss_file, found_alignment, sequence_of_interest, run_emboss)
-    return found_alignment, (splice_start, splice_end), (no_gap_reference_start, no_gap_reference_start + len(sequence_of_interest))
 
-
-def truncate_alignmnent(alignment_file, sequence_of_interest, new_aln_file):
-    """Might be dilapidated"""
-    with open(alignment_file, 'r') as alignment:
-        alignment = alignment.read().split('>')
-        sequence_dictionary = {sequence.split('\n')[0]: ''.join(sequence.split('\n')[1:]) for sequence in alignment
-                               if
-                               len(sequence) != 0}
-        reference_sequence = sequence_dictionary['6vsb_adjacent']
-        # Matching python indexing for the indexing from the alignment with some amount of '-' and indexing in the regular sequence
-        reference_alignment_indexing = tuple((ind for ind, x in enumerate(reference_sequence) if x.isalpha()))
-        no_gap_reference_sequence = ''.join(x for ind, x in enumerate(reference_sequence) if x.isalpha())
-        alignment_reference_start = reference_alignment_indexing[no_gap_reference_sequence.find(sequence_of_interest)]
-        alignment_reference_end = reference_alignment_indexing[
-                                      no_gap_reference_sequence.find(sequence_of_interest) + len(
-                                          sequence_of_interest) - 1] + 1
-        list_of_tuples = []
-        for stem, sequence in sequence_dictionary.items():
-            list_of_tuples.append((sequence[alignment_reference_start:alignment_reference_end], 1, stem))
-            fasta_creation(new_aln_file, list_of_tuples)
+    return found_alignment, (splice_start, splice_start + len(found_alignment)), (no_gap_reference_start, no_gap_reference_start + len(sequence_of_interest))
 
 
 def check_mutation_cutoff(cutoff, seq_1, seq_2):
@@ -260,7 +234,7 @@ def create_list_of_fasta_files(list_of_fastas, file_name):
 
 def no_gap_sequence_from_alignment(alignment_seq):
     """Removes gaps from an alignment sequence"""
-    return alignment_seq.replace('-', '')
+    return re.sub(r'[^a-zA-Z]','',alignment_seq)
 
 
 def clustalw_to_fasta(clustal_aln_file, new_fasta_aln_file):
