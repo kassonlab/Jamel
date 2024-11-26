@@ -1,5 +1,5 @@
 from MDAnalysis.analysis import distances as MDdist
-from MDAnalysis import Universe # test.csv trajectory
+from MDAnalysis import Universe # labeled_schema_aln.csv trajectory
 from numpy import any as npany
 from numpy import save,load, where,  zeros
 from os.path import exists

@@ -11,7 +11,6 @@ import pandas as pd
 import torch
 import umap
 import argparse
-
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
@@ -42,11 +41,12 @@ def tensor_distance(tensor1, tensor2):
 
 class SequenceDataframe(pd.DataFrame):
     def __init__(self):
-        super().__init__(columns=['sequence', 'description'])
+        super().__init__(columns=['aln_sequence', 'sequence', 'description'])
 
     def dataframe_to_fa(self, new_fasta_file):
-        seq_records = [SeqRecord(Seq(seq_info['sequence']), description=str(seq_info['description']), id=str(seq_id))
-                       for seq_id, seq_info in self.iterrows()]
+        seq_records = [
+            SeqRecord(Seq(seq_info['aln_sequence']), description=str(seq_info['description']), id=str(seq_id))
+            for seq_id, seq_info in self.iterrows()]
         with open(new_fasta_file, "w") as output_handle:
             SeqIO.write(seq_records, output_handle, "fasta")
 
@@ -55,11 +55,24 @@ class SequenceDataframe(pd.DataFrame):
         and the value is the sequence with no spaces"""
         with open(alignment_file) as handle:
             for seq in SeqIO.parse(handle, "fasta"):
-                self.loc[seq.id] = {'sequence': str(seq.seq), 'description': seq.description.replace(f'{seq.id} ', '')}
+                self.loc[seq.id] = {'sequence': str(seq.seq).replace('-', ''), 'aln_sequence': str(seq.seq),
+                                    'description': seq.description.replace(f'{seq.id} ', '')}
         return self
+
+    def create_column(self, column_name):
+        self[column_name] = np.nan
+
+    def add_value(self, label, column, value):
+        self.loc[label, column] = value
 
     def get_parents(self, chimera_label):
         return ast.literal_eval(self.loc[chimera_label, 'description'])
+
+    def get_sequence(self, chimera_label):
+        return self.loc[chimera_label, 'sequence']
+
+    def get_aln(self, chimera_label):
+        return self.loc[chimera_label, 'aln_sequence']
 
 
 # with open(arg_json, 'rb') as jfile:
@@ -107,13 +120,24 @@ class EmbeddingAnalysis:
         if self.aln_df.get('distance') is not None and not self.aln_df.empty:
             self.aln_df.loc[chi_label, 'distance'] = distance
         return distance
-    def per_residue_distance(self, chi_label, parent_labels):
+
+    def per_residue_distance_for_val_set(self, chi_label, parent_labels):
+        if self.EMBEDDINGS_DICT[chi_label].shape[0] != len(self.aln_df.loc[chi_label, 'sequence']):
+            return
         distance = 0
-        for parent in parent_labels:
-            distance += tensor_distance(self.EMBEDDINGS_DICT[chi_label], self.EMBEDDINGS_DICT[parent])
-        if self.aln_df.get('distance') is not None and not self.aln_df.empty:
+
+        for parent, aln_positions in residue_inheritance.items():
+            for pos in aln_positions:
+                distance += tensor_distance(self.EMBEDDINGS_DICT[chi_label][pos, :],
+                                            self.EMBEDDINGS_DICT[parent][pos, :])
+        if self.aln_df.get('distance') is not None:
             self.aln_df.loc[chi_label, 'distance'] = distance
         return distance
+
+    def score_all_per_res(self):
+        self.aln_df['distance'] = np.nan
+        for label, chi_tensor in self.EMBEDDINGS_DICT.items():
+            self.per_residue_distance_for_val_set(label, self.aln_df.get_parents(label))
 
     def score_all_embeddings(self):
         self.aln_df['distance'] = np.nan
@@ -128,20 +152,24 @@ def pt_to_tensor(pt_file, dim1_or_dim2: EmbedDims = EmbedDims.Dim1, model='esm2_
         tensor = torch.load(pt_file)['mean_representations'][repr_layer]
     else:
         tensor = torch.load(pt_file)['representations'][repr_layer]
+        tensor = add_row_of_zeroes(tensor)
     return tensor
 
 
-def add_beg_of_seq(tensor: torch.Tensor):
-    return torch.cat((torch.tensor([0]), tensor))
+def add_row_of_zeroes(tensor: torch.Tensor):
+    return torch.cat((torch.zeros(1, tensor.size(1)), tensor), dim=0)
 
-def pickle_embed_dict_schema(directory,new_pkl_file):
-    embed_dict={}
+
+def pickle_embed_dict_schema(directory, new_pkl_file):
+    embed_dict = {}
     for file in Path.iterdir(directory):
-        embed_dict[file.stem]=torch.load(file)
-    torch.save(embed_dict,new_pkl_file)
-def embedding_umap(embed_pkl_file:str):
+        embed_dict[file.stem] = torch.load(file)
+    torch.save(embed_dict, new_pkl_file)
+
+
+def embedding_umap(embed_pkl_file: str):
     reducer = umap.UMAP(n_components=2)
-    embed_dict:dict[str,torch.Tensor]=torch.load(embed_pkl_file)
+    embed_dict: dict[str, torch.Tensor] = torch.load(embed_pkl_file)
     # rows in umap matrix are samples/proteins
     embedding_matrix = np.vstack(tuple(embed_dict.values()))
     umap_vectors = reducer.fit_transform(embedding_matrix)
@@ -149,12 +177,20 @@ def embedding_umap(embed_pkl_file:str):
     return plt.gcf()
 
 
-
 if __name__ == '__main__':
-    schema_data = pd.read_csv(r"C:\Users\jamel\Downloads\schema_data.csv",index_col='chimera_block_ID')
-    test = EmbeddingAnalysis(r'prost.pkl', r'test')
-    test.score_all_embeddings()
-    pd.concat((schema_data, test.aln_df), axis=1)
+    schema_data = pd.read_csv(r"C:\Users\jamel\Downloads\schema_data.csv", index_col='chimera_block_ID')
+    test = EmbeddingAnalysis(r'large_ankh.pkl', r'labeled_schema_aln')
+    test.score_all_per_res()
+    # pd.concat((schema_data, test.aln_df), axis=1).to_csv('large_ankh_res.csv')
+    # ankh = torch.load('large_ankh.pkl')
+    #
+    # prost={label:tensor.transpose(0,1) for label,tensor in prost.items()}
+    # print(ankh['c0000000000'].shape)
+    # prost=torch.load('prost.pkl')
+    #
+    # prost={label:tensor.transpose(0,1) for label,tensor in prost.items()}
+    # print(prost['c0000000000'].shape)
+    # torch.save(prost,'prost.pkl')
     # plt.title('Riff CsChrim UMAP')
     # plt.xlabel('Component 1')
     # plt.ylabel('Component 2')

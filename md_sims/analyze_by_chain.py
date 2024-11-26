@@ -15,15 +15,15 @@ def analyze_one(basename):
   Args: basename: basename for trajectory
   Rets: RMSD aligned by chain
   """
-  os.system('rm test.csv*ndx')
+  os.system('rm labeled_schema_aln.csv*ndx')
   rmsd = []
   for chain_idx in range(3):
-    os.system('%s select -s %s -on test.csv%d '
+    os.system('%s select -s %s -on labeled_schema_aln.csv%d '
               '-select "molindex %d; molindex %d and name CA"'
               % (gmxbin, basename, chain_idx, chain_idx+1, chain_idx+1))
-    os.system('echo %s| %s rms -f %s.xtc -s %s -dt 1000 -n test.csv%d -o %s_rmsd_%d'
+    os.system('echo %s| %s rms -f %s.xtc -s %s -dt 1000 -n labeled_schema_aln.csv%d -o %s_rmsd_%d'
               % ('1 1', gmxbin, basename, basename, chain_idx, basename, chain_idx))
-    os.system('echo %s |%s rmsf -s %s -f %s.xtc -dt 1000 -fit -n test.csv%d -o %s_rmsf_%d -res'
+    os.system('echo %s |%s rmsf -s %s -f %s.xtc -dt 1000 -fit -n labeled_schema_aln.csv%d -o %s_rmsf_%d -res'
               % ('1 1', gmxbin, basename, basename, chain_idx, basename, chain_idx))
     tmpdat = numpy.loadtxt('%s_rmsd_%d.xvg' % (basename, chain_idx),
                            comments=['#','@'])

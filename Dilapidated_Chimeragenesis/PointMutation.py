@@ -5,7 +5,7 @@ import argparse
 from sys import exit
 from json import load
 from os import path
-from setup import alphafold_submission_for_chimera_container
+from Chimeragenesis.setup import alphafold_submission_for_chimera_container
 parser = argparse.ArgumentParser(
     description='')
 parser.add_argument('-i', '--jsoninput', dest='arg_jsons', required=False, type=str,

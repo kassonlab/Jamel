@@ -36,10 +36,11 @@ def chimera_sequence_creation(section_being_spliced_in, marked_sequence, splice_
     chimera_sequence = marked_sequence.replace(splice_marker, section_being_spliced_in)
     return chimera_sequence
 
-def get_chimera(base_aln_seq,seq_to_splice:str):
-    marked_base=sequence_splice(AccessiontoAlignment.no_gap_sequence_from_alignment(base_aln_seq),seq_to_splice)
-    splice_region=AccessiontoAlignment.alignment_finder()
-
+def get_chimera(aln_file,base_label,partner_label,seq_to_splice):
+    aln=AccessiontoAlignment.create_dictionary_from_alignment(aln_file)
+    marked_base=sequence_splice(AccessiontoAlignment.no_gap_sequence_from_alignment(aln[base_label]),seq_to_splice)
+    partner_splice=AccessiontoAlignment.alignment_finder(seq_to_splice,partner_label,base_label,aln_file)
+    return chimera_sequence_creation(partner_splice,marked_base)
 
 
 def update_json(default_json, dilapidated_json, overwrite=False):

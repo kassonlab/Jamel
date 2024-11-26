@@ -6,7 +6,7 @@ from sys import exit
 from time import perf_counter
 from numpy import empty, savetxt
 from Chimeragenesis import Analysis
-from setup import create_alphafold_slurm
+from Chimeragenesis.setup import create_alphafold_slurm
 from AccessiontoAlignment import alignment_finder
 from Chimeragenesis.ChimeraGenerator import fasta_creation, chimeracls, update_json
 from itertools import product
@@ -362,10 +362,10 @@ if prime_container.operation_toggles['run_analysis_operation']:
 
     if analysis_toggles['make_plddts']:
         for chimera_group in groupings:
-            Analysis.get_plddt_file_from_pdb(chimera_group[0].pdb,
-                                             path.join(plddt_direc, chimera_group[0].file_stem + plddt_ext))
-        Analysis.get_plddt_file_from_pdb(reference_pdb, path.join(plddt_direc, reference_stem + plddt_ext))
-        Analysis.get_plddt_file_from_pdb(partner_pdb, path.join(plddt_direc, partner_stem + plddt_ext))
+            Analysis.create_plddt_file_from_pdb(chimera_group[0].pdb,
+                                                path.join(plddt_direc, chimera_group[0].file_stem + plddt_ext))
+        Analysis.create_plddt_file_from_pdb(reference_pdb, path.join(plddt_direc, reference_stem + plddt_ext))
+        Analysis.create_plddt_file_from_pdb(partner_pdb, path.join(plddt_direc, partner_stem + plddt_ext))
 
     if analysis_toggles["make_pdbs"]:
         for chimera_group in groupings:

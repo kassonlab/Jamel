@@ -5,9 +5,8 @@ import numpy as np
 import pandas as pd
 import torch
 from matplotlib import pyplot as plt
-import ESM
 from AccessiontoAlignment import create_dictionary_from_alignment, dictionary_to_fasta
-from Chimeragenesis.ESM import label_to_file, pt_to_tensor, EmbedDims
+from ESM import label_to_file, pt_to_tensor, EmbedDims
 
 parent_ids = {'0': 'c0000000000', '1': 'c1111111111', '2': 'c2222222222'}
 SCHEMA_ALN = r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\esm\schema_msa.aln'
@@ -25,7 +24,6 @@ class SchemaScorer:
         self.seq_df = self.aln_to_pd()
         self.similarity_dict = {}
         self.residue_similarity_cipher()
-        # self.embed_dict = self.aln_to_embedding(pt_direc)
         self.pt_direc = pt_direc
 
     def aln_to_pd(self):

@@ -4,14 +4,14 @@ from pathlib import Path
 from sys import exit
 import AccessiontoAlignment
 from Chimeragenesis import Analysis, ChimeraGenerator
-from setup import alphafold_submission_for_chimera_container
+from Chimeragenesis.setup import alphafold_submission_for_chimera_container
 from AccessiontoAlignment import alignment_finder, accession_to_fasta, multiple_sequence_alignment
 import argparse
 
 # TODO add autocomplete for changing keys?? readline
 # TODO be able to designate multiple seq_of_interest
-# TODO test.csv accession route
-# TODO test.csv this between homologous proteins
+# TODO labeled_schema_aln.csv accession route
+# TODO labeled_schema_aln.csv this between homologous proteins
 # TODO be able tos swap into the constant
 parser = argparse.ArgumentParser(
     description='Creating chimeric proteins where a region from a constant protein is spliced into a list of '
@@ -351,11 +351,11 @@ if variant_container.operation_toggles['run_analysis_operation'] or args.analysi
 
     if analysis_toggles['make_plddts']:
         for chimera in list_of_chis:
-            Analysis.get_plddt_file_from_pdb(chimera.native_pdb,
-                                             path.join(plddt_direc, chimera.multimer_stem + plddt_ext))
-            Analysis.get_plddt_file_from_pdb(chimera.chi_pdb,
-                                             path.join(plddt_direc, chimera.chimera_stem + plddt_ext))
-        Analysis.get_plddt_file_from_pdb(constant_pdb, path.join(plddt_direc, constant_stem + plddt_ext))
+            Analysis.create_plddt_file_from_pdb(chimera.native_pdb,
+                                                path.join(plddt_direc, chimera.multimer_stem + plddt_ext))
+            Analysis.create_plddt_file_from_pdb(chimera.chi_pdb,
+                                                path.join(plddt_direc, chimera.chimera_stem + plddt_ext))
+        Analysis.create_plddt_file_from_pdb(constant_pdb, path.join(plddt_direc, constant_stem + plddt_ext))
 
     if analysis_toggles["make_pdbs"]:
         for chimera in list_of_chis:

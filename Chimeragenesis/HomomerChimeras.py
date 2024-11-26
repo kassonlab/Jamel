@@ -3,18 +3,17 @@ from os import path
 from pathlib import Path
 from sys import exit
 
-import pandas as pd
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-from Chimeragenesis import AccessiontoAlignment, Analysis, ChimeraGenerator
+import AccessiontoAlignment, Analysis, ChimeraGenerator
 from setup import alphafold_submission_for_chimera_container
 import argparse
 
 # TODO add autocomplete for changing keys?? readline
 # TODO be able to designate multiple seq_of_interest
-# TODO test.csv accession route
-# TODO test.csv this between Homomer proteins
+# TODO labeled_schema_aln.csv accession route
+# TODO labeled_schema_aln.csv this between Homomer proteins
 # TODO be able tos swap into the constant
 #TODO turn parser into function??
 parser = argparse.ArgumentParser(
@@ -201,16 +200,22 @@ class HomomerChimeraArgs:
         self.chimeras = ()
         self.get_dict_args(HomomerFastaArguments, 'fasta_args', 'fasta_arguments')
         self.get_dict_args(HomomerNamingArguments, 'naming_args', 'naming_arguments')
+        self.get_dict_args(HomomerSubmissionArguments, 'submission_args', 'submission_arguments')
 
     def get_dict_args(self, dict_class, attr_name, arg_key):
         dict_args = self.argument_dict[arg_key]
         setattr(self, attr_name, dict_class(dict_args))
 
 
-def create_file_path(directory, naming_convention, fasta_id, extension=''):
-    file_stem = naming_convention.replace(PLACEHOLDER, fasta_id)
+def create_file_path(directory, file_stem, extension=''):
     return Path(directory).joinpath(file_stem, extension)
 
+def msa_to_fastas(msa_file,output,subunits):
+    for label, sequence in AccessiontoAlignment.create_dictionary_from_alignment(msa_file).items():
+        fasta_file = create_file_path(output, label+'.fa')
+        AccessiontoAlignment.fasta_creation(fasta_file,
+                                            [SeqRecord(Seq(AccessiontoAlignment.no_gap_sequence_from_alignment(sequence)), id=label, description="")
+                                             for x in range(subunits)])
 
 if __name__ == '__main__':
     TOTAL_ARGS = HomomerChimeraArgs(args.arg_jsons)
@@ -225,23 +230,20 @@ if __name__ == '__main__':
     PLACEHOLDER = TOTAL_ARGS.naming_args.filestem_placeholder
     msa = TOTAL_ARGS.fasta_args.msa_file_name
     subunits = TOTAL_ARGS.fasta_args.number_of_subunits
+    TOTAL_ARGS.naming_args.output_directory = Path(TOTAL_ARGS.naming_args.output_directory)
+
 
     if TOTAL_ARGS.operation_toggles['run_fasta_operation']:
         email = TOTAL_ARGS.fasta_args.email_for_accession
         # checking if all wild-type and non-reference fastas exist or that there creation was toggled
-        for label, sequence in AccessiontoAlignment.create_dictionary_from_alignment(msa):
-            fasta_file = create_file_path(TOTAL_ARGS.naming_args, TOTAL_ARGS.naming_args.WT_fasta_convention, label,
-                                          '.fa')
-            AccessiontoAlignment.fasta_creation(fasta_file,
-                                                [SeqRecord(Seq(sequence.replace('-', '')), id=label, description="")
-                                                 for x in range(TOTAL_ARGS.fasta_args.number_of_subunits)])
 
-            fasta_file = create_file_path(TOTAL_ARGS.naming_args, TOTAL_ARGS.naming_args.chimera_fasta_convention,
-                                          label,
-                                          '.fa')
-            AccessiontoAlignment.fasta_creation(fasta_file,
-                                                [SeqRecord(Seq(sequence.replace('-', '')), id=label, description="")
-                                                 for x in range(TOTAL_ARGS.fasta_args.number_of_subunits)])
+
+            # fasta_file = create_file_path(TOTAL_ARGS.naming_args, TOTAL_ARGS.naming_args.chimera_fasta_convention,
+            #                               label,
+            #                               '.fa')
+            # AccessiontoAlignment.fasta_creation(fasta_file,
+            #                                     [SeqRecord(Seq(sequence.replace('-', '')), id=label, description="")
+            #                                      for x in range(TOTAL_ARGS.fasta_args.number_of_subunits)])
 
     # TODO easy msa creation
 
@@ -251,7 +253,6 @@ if __name__ == '__main__':
 
     if TOTAL_ARGS.operation_toggles['run_analysis_operation']:
         seq_of_interest = AccessiontoAlignment.extract_seq_from_fasta(TOTAL_ARGS.fasta_args.sequence_of_interest)
-        alphafold_dir = TOTAL_ARGS.naming_args.alphafold_outputs_dir
 
         for chimera in list_of_chis:
             homologous_splice = AccessiontoAlignment.alignment_finder(msa, seq_of_interest, chimera.file_stem,
@@ -260,7 +261,7 @@ if __name__ == '__main__':
         TOTAL_ARGS.get_dict_args(HomomerAnalysisArguments, 'analysis_args', 'analysis_arguments')
         analysis_toggles = TOTAL_ARGS.analysis_args.analysis_toggles
         ref_file_stem = Path(TOTAL_ARGS.fasta_args.fasta_for_alphafold).stem
-        ref_pdb = path.join(f'{alphafold_dir}3mer6VSB', 'ranked_0.pdb')
+        ref_pdb = path.join(str(alphafold_dir),'3mer6VSB', 'ranked_0.pdb')
         ref_plddt = {ref_sequence: Analysis.get_plddt_dict_from_pdb(ref_pdb)[ref_sequence]}
         if analysis_toggles['make_emboss_files']:
             for chimera in list_of_chis:
@@ -292,14 +293,14 @@ if __name__ == '__main__':
 
         if analysis_toggles['make_plddts']:
             for chimera in list_of_chis:
-                Analysis.get_plddt_file_from_pdb(chimera.native_pdb,
-                                                 TOTAL_ARGS.naming_args.plddt_naming.replace(file_placeholder,
+                Analysis.create_plddt_file_from_pdb(chimera.native_pdb,
+                                                    TOTAL_ARGS.naming_args.plddt_naming.replace(file_placeholder,
                                                                                              chimera.multimer_stem))
-                Analysis.get_plddt_file_from_pdb(chimera.chi_pdb,
-                                                 TOTAL_ARGS.naming_args.plddt_naming.replace(file_placeholder,
+                Analysis.create_plddt_file_from_pdb(chimera.chi_pdb,
+                                                    TOTAL_ARGS.naming_args.plddt_naming.replace(file_placeholder,
                                                                                              chimera.chimera_stem))
-            Analysis.get_plddt_file_from_pdb(ref_pdb,
-                                             TOTAL_ARGS.naming_args.plddt_naming.replace(file_placeholder,
+            Analysis.create_plddt_file_from_pdb(ref_pdb,
+                                                TOTAL_ARGS.naming_args.plddt_naming.replace(file_placeholder,
                                                                                          ref_file_stem))
         for chimera in list_of_chis:
             homologous_splice = AccessiontoAlignment.alignment_finder(msa, seq_of_interest, chimera.file_stem,

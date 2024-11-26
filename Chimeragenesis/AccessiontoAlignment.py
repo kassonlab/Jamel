@@ -72,7 +72,7 @@ def fasta_creation(file_name, sequences: list[SeqRecord]):
         SeqIO.write(sequences, outfile, "fasta")
 
 
-def accession_to_fasta(monomer_file_name, accession, email_for_bio, subunits, multimer_name='NA'):
+def accession_to_fasta(accession, email_for_bio, subunits, fasta_id):
     """Takes an accession number and creates a fasta file with the sequence that corresponds with the accession given.
     A monomeric file is always created by default for alignment purposes even if a multimer file is requested"""
     Entrez.email = email_for_bio
@@ -81,9 +81,11 @@ def accession_to_fasta(monomer_file_name, accession, email_for_bio, subunits, mu
     # Turning the retrieved sequence into a single string with no breaks
     sequence = SeqIO.read(handle, "fasta").seq
     # Creating a monomer file by default for alignment purposes, if a multimer is requested it's made later
-    fasta_creation(multimer_name, [SeqRecord()])
+    fasta_creation(fasta_id + '.fa', [SeqRecord(Seq(sequence), id=fasta_id, description='') for x in range(subunits)])
 
 
+def create_seq_record(id,seq,description=''):
+    return SeqRecord(Seq(seq),id=id,description=description)
 def get_accession_sequence(accession, email_for_Bio):
     Entrez.email = email_for_Bio
     # Pulling the sequence corresponding with accession numer specified
@@ -136,7 +138,7 @@ def dictionary_to_fasta(seq_dict: dict[str:str], new_fasta_file):
         SeqIO.write(seq_records, output_handle, "fasta")
 
 
-def multiple_sequence_alignment(sequences:list[SeqRecord], fasta_for_alignment, new_alignment_file, muscle_command):
+def multiple_sequence_alignment(sequences: list[SeqRecord], fasta_for_alignment, new_alignment_file, muscle_command):
     """Creates a multiple sequence alignment using muscle and a concatenated fasta file with a reference fasta as the base,
      joined with all fastas specified in list_of_fastas."""
     # Creating a copy of the fasta file of a reference_protein_fasta to be added into
@@ -160,32 +162,65 @@ def get_alignment_indexing_w_dashes(alignment_seq):
     return [ind if x != '-' else '-' for ind, x in enumerate(alignment_seq)]
 
 
-def alignment_finder(sequence_of_interest, comparison_aln_seq,
-                     reference_aln_seq, run_emboss='', new_emboss_file=''):
-    """Takes a fasta style alignment and a sequence_of_interest from a reference_protein and returns the sequence of the
+def alignment_finder(sequence_of_interest, partner_label,
+                     base_label, aln_file, run_emboss='', new_emboss_file=''):
+    """Takes a fasta style alignment and a sequence_of_interest from a base_protein and returns the sequence of the
     comparison_protein that is outlined in the boundaries of the sequence_of_interest, as well as the python index boundaries
-     for the found_alignment of the comparison_protein. reference_protein and comparison_protein must the names following
+     for the found_alignment of the comparison_protein. base_protein and comparison_protein must the names following
       '>' in the alignment file"""
     # Matching python indexing for the indexing from the alignment with some amount of '-' and indexing in the regular sequence
-    reference_alignment_indexing = get_alignment_indexing(reference_aln_seq)
+    aln = create_dictionary_from_alignment(aln_file)
+    base_aln = aln[base_label]
+    partner_aln = aln_file[partner_label]
+    base_aln_indexing = get_alignment_indexing(base_aln)
     # Creating a regular sequence without '-'
-    no_gap_reference_sequence = no_gap_sequence_from_alignment(reference_aln_seq)
+    base_seq = no_gap_sequence_from_alignment(base_aln)
     # Boundaries are given in python index
-    alignment_reference_start = reference_alignment_indexing[no_gap_reference_sequence.find(sequence_of_interest)]
+    alignment_base_start = base_aln_indexing[base_seq.find(sequence_of_interest)]
     # Because indexing doesnt include the ending index, the final index is put up one
-    alignment_reference_end = reference_alignment_indexing[no_gap_reference_sequence.find(sequence_of_interest) + len(
+    alignment_base_end = base_aln_indexing[base_seq.find(sequence_of_interest) + len(
         sequence_of_interest) - 1] + 1
     # Pulling the section of the comparison_sequence that overlaps with the sequence_of_interest
-    found_alignment = no_gap_sequence_from_alignment(comparison_aln_seq[alignment_reference_start:alignment_reference_end])
-    no_gap_reference_start = no_gap_reference_sequence.find(sequence_of_interest)
+    found_alignment = no_gap_sequence_from_alignment(partner_aln[alignment_base_start:alignment_base_end])
     # Recording the indexes of the found_alignment
     # Additionally the splice_start is the first residue that is spliced,
     # and splice_end is the first residue that's not spliced
-    splice_start = no_gap_sequence_from_alignment(comparison_aln_seq).find(found_alignment)
+    splice_start = no_gap_sequence_from_alignment(partner_aln).find(found_alignment)
+    splice_end = splice_start + len(found_alignment)
     if run_emboss != '':
         run_emboss_needle(new_emboss_file, found_alignment, sequence_of_interest, run_emboss)
+    return found_alignment, (alignment_base_start, alignment_base_end)
 
-    return found_alignment, (splice_start, splice_start + len(found_alignment)), (no_gap_reference_start, no_gap_reference_start + len(sequence_of_interest))
+
+def map_plddt_to_aln(aln_seq,plddt):
+    aln_index=get_alignment_indexing(aln_seq)
+    aln_plddt=[]
+    for aln_pos,res in enumerate(aln_seq):
+        score=plddt[aln_index.index(aln_pos)] if aln_pos in aln_index else res
+        aln_plddt.append(score)
+    return aln_plddt
+
+def contiguous_inheritance_dict(chi_label: str, parent_labels, aln_file):
+    """Mostly designed for the SCHEMA dataset, It finds all overlapping amino acids between parents sequences of a chimera,
+    as opposed to the inheritance dict from block_swap_inheritance that is used for single continuous block splices"""
+    residue_inheritance = {parent: set() for parent in parent_labels}
+    seq_dict=create_dictionary_from_alignment(aln_file)
+    for parent in parent_labels:
+        chi_aln=seq_dict[chi_label]
+        residue_inheritance[parent] = {aln_pos for aln_pos, (chi_res, par_res) in enumerate(
+            zip(chi_aln, seq_dict[parent])) if chi_res == par_res if chi_res!='-'}
+    return residue_inheritance
+
+
+def block_swap_inheritance(splice_seq, chimera_seq, base_label, partner_label):
+    # TODO base on alignment
+    splice_start = chimera_seq.find(splice_seq)
+    splice_end = splice_start + len(splice_seq)
+    inheritance_dict = {partner_label: set(), base_label: set()}
+    inheritance_dict[partner_label] += set(range(splice_start, splice_end))
+    inheritance_dict[base_label] += set(range(len(chimera_seq))) - inheritance_dict[partner_label]
+    print(inheritance_dict[partner_label], inheritance_dict[base_label])
+    return inheritance_dict
 
 
 def check_mutation_cutoff(cutoff, seq_1, seq_2):
@@ -234,7 +269,7 @@ def create_list_of_fasta_files(list_of_fastas, file_name):
 
 def no_gap_sequence_from_alignment(alignment_seq):
     """Removes gaps from an alignment sequence"""
-    return re.sub(r'[^a-zA-Z]','',alignment_seq)
+    return re.sub(r'[^a-zA-Z]', '', alignment_seq)
 
 
 def clustalw_to_fasta(clustal_aln_file, new_fasta_aln_file):
