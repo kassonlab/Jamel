@@ -1,34 +1,30 @@
 {
     "operation_toggles": {
-        "run_fasta_operation": true, "alphafold_submission":false,"run_analysis_operation": false,"run_gromacs_operation": false
+        "run_fasta_operation": false, "alphafold_submission":false,"run_analysis_operation": true,"run_gromacs_operation": false
     },
     "naming_arguments": {
         "file_stem_placeholder": "*",
-        "WT_fasta_convention": "*",
-        "chimera_fasta_convention": "NO",
-        "output_directory": ""
+        "WT_convention": "*",
+        "chimera_convention": "c000w*",
+        "output_directory": "C:\\Users\\jamel\\PycharmProjects\\Jamel"
     },
     "fasta_arguments": {
-        "reference_identifier": "c0000000000",
+        "base_identifier": "c0000000000",
         "number_of_subunits": 1,
-        "sequence_of_interest": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Analysis_Folders/NTD_HA/H3N2_partial_HA1.fasta",
-        "fasta_list_file_name": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Fastas/NTD-HA_Fastas/NTDs_to_run",
-        "msa_file_name": "/gpfs/gpfs0/scratch/jws6pq/Notebook/Analysis_Folders/NTD_HA/second_inclusion_flu.aln",
+        "sequence_of_interest": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\c000000000_scetion",
+        "fasta_list_file_name": "homo_test",
+        "msa_file_name": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\labeled_schema_aln",
         "email_for_accession": "example@outlook.com"
     },
-    "alphafold_submission_args": {
+    "submission_arguments": {
         "submission_toggles": {"create_slurms":false,"sbatch_slurms": false,"stragglers_or_custom_or_all": "stragglers","create_file_of_stragglers": false},
         "custom_list_to_run": "",
         "proteins_per_slurm": 9,
         "slurm_naming": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/*P_M_ShiftedAlphaFold.slurm",
         "template_slurm": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/Omicron_Alphafold_Template.slurm",
-        "alphafold_shell_script": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/MultimerAlphaFold.sh",
-        "slurm_output": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/*P_M.out",
-        "slurm_error": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/*P_M.err"
+        "alphafold_shell_script": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/MultimerAlphaFold.sh"
     },
     "analysis_arguments": {
-        "analysis_toggles": {"make_plddts": false,"make_pdbs": true,"make_emboss_files": false},
-        "emboss_command": "/scratch/jws6pq/EMBOSS-6.6.0/emboss/needle",
         "analysis_output_csv": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/ntd-ha_analysis.csv",
         "column_names": {"file_stem": [true,"Protein"], "rel_stability": [true,"Relative Stability (%)"], "overall_native_stability": [true,"Native Stability"], "overall_chimera_stability": [true,"Chimera Stability"]}
     },

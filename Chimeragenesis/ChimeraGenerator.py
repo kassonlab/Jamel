@@ -11,9 +11,6 @@ from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
 
 
-
-
-
 def general_attr_set(class_obj, dict_of_attrs):
     """All non-nested keys from the json are set as attributes to be called later"""
     for key, value in dict_of_attrs.items():
@@ -21,12 +18,8 @@ def general_attr_set(class_obj, dict_of_attrs):
     return class_obj
 
 
-def sequence_splice(sequence:str, splice_region:str, splice_marker: str = '#'):
-    """Takes a protein sequence and Returns ABC and -DEFGH
-    The residue at boundary_two is the first residue not included in the splice. If you're using alignment_finder, this is already accounted for."""
-
-    # The spliced region between the 2 specified boundaries is the first sequence
-    # in the list followed by the sequence with the spliced region replace by a str marker like '#'
+def sequence_splice(sequence: str, splice_region: str, splice_marker: str = '#'):
+    """Takes a protein sequence ABCDEFGH and splice_region ABC and Returns -DEFGH"""
     non_spliced_region = sequence.replace(splice_region, splice_marker)
     return non_spliced_region
 
@@ -36,11 +29,12 @@ def chimera_sequence_creation(section_being_spliced_in, marked_sequence, splice_
     chimera_sequence = marked_sequence.replace(splice_marker, section_being_spliced_in)
     return chimera_sequence
 
-def get_chimera(aln_file,base_label,partner_label,seq_to_splice):
-    aln=AccessiontoAlignment.create_dictionary_from_alignment(aln_file)
-    marked_base=sequence_splice(AccessiontoAlignment.no_gap_sequence_from_alignment(aln[base_label]),seq_to_splice)
-    partner_splice=AccessiontoAlignment.alignment_finder(seq_to_splice,partner_label,base_label,aln_file)
-    return chimera_sequence_creation(partner_splice,marked_base)
+
+def get_chimera_sequence(aln_file, base_label, partner_label, base_splice):
+    aln = AccessiontoAlignment.create_dictionary_from_alignment(aln_file)
+    marked_base = sequence_splice(AccessiontoAlignment.no_gap_sequence_from_alignment(aln[base_label]), base_splice)
+    partner_splice, _ = AccessiontoAlignment.alignment_finder(base_splice, partner_label, base_label, aln_file)
+    return chimera_sequence_creation(partner_splice, marked_base)
 
 
 def update_json(default_json, dilapidated_json, overwrite=False):
@@ -110,8 +104,8 @@ def change_json_value(json_file, noted_key='', new_value='', overwrite=False, fi
         with open(json_file, 'w') as f:
             dump(json_dict, f, indent=4)
     else:
-        stem=Path(json_file).stem
-        with open(json_file.replace(stem,f'new_{stem}'), 'w') as f:
+        stem = Path(json_file).stem
+        with open(json_file.replace(stem, f'new_{stem}'), 'w') as f:
             dump(json_dict, f, indent=4)
 
 
@@ -135,29 +129,27 @@ def print_keys(dictionary, key_of_interest=''):
             print(key)
 
 
-def create_chimera_combinations(two_seq_dict: dict, scanner_length, scanner_start=0, scanner_rate=1, new_fasta_file='') -> dict[str, str]:
+def create_chimera_combinations(two_parent_aln_file: str, scanner_length, scanner_start=0, scanner_rate=1,
+                                new_fasta_file=''):
     """Takes two sequence dictionary and creates all possible chimeras with given splice length.
     Returns dict[parent1#parent2#splice1#splice2, chimera_sequence]"""
     from AccessiontoAlignment import dictionary_to_fasta
-    new_chimera_dict = {label.replace('-',''):seq for label,seq in two_seq_dict.items()}
+    from ESM import SequenceDataframe
+    aln_df = SequenceDataframe(two_parent_aln_file)
+    parent1, parent2 = aln_df.index
 
-    def scanning_chimera_generator(base_sequence, partner_seq, base_label, partner_label):
+    def scanning_chimera_generator(base_label, partner_label):
+        base_seq=aln_df.get_sequence(base_label)
         splice_boundaries: list[tuple] = [(x, x + scanner_length) for x in
-                                          range(scanner_start, len(base_sequence) - scanner_length, scanner_rate) if
-                                          x + scanner_length < len(base_sequence)]
+                                          range(scanner_start, len(base_seq) - scanner_length, scanner_rate) if
+                                          x + scanner_length < len(base_seq)]
         for boundary in splice_boundaries:
-            # This is the sequence to be spliced into by the partner seq, the residues between a given boundary have
-            # been cut and replaced with a marker character '-' for the aligned sequence from the partner to replace it
-            marked_base_sequence = sequence_splice(base_sequence, boundary)[1]
-            partner_replacement = sequence_splice(partner_seq, boundary)[0]
-            chimeric_seq = chimera_sequence_creation(partner_replacement, marked_base_sequence)
-            new_chimera_dict['-'.join((base_label,partner_label,str(boundary[0]),str(boundary[1])))] = chimeric_seq
-        return new_chimera_dict
+            base_splice=base_seq[slice(*boundary)].replace('-','')
+            chi_seq=get_chimera_sequence(two_parent_aln_file,base_label,partner_label,base_splice)
+            aln_df.add_protein(f'{base_label}_{partner_label}_{"_".join((str(x) for x in boundary))}',chi_seq,str(boundary))
 
-    seq1, seq2 = new_chimera_dict.values()
-    seq1_label, seq2_label = new_chimera_dict.keys()
-    scanning_chimera_generator(seq1, seq2, seq1_label, seq2_label)
-    scanning_chimera_generator(seq2, seq1, seq2_label, seq1_label)
+    scanning_chimera_generator(parent1, parent2)
+    scanning_chimera_generator(parent2, parent1)
     if new_fasta_file:
-        dictionary_to_fasta(new_chimera_dict, new_fasta_file)
-    return new_chimera_dict
+        aln_df.dataframe_to_aln(new_fasta_file)
+    return aln_df

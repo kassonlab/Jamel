@@ -84,8 +84,10 @@ def accession_to_fasta(accession, email_for_bio, subunits, fasta_id):
     fasta_creation(fasta_id + '.fa', [SeqRecord(Seq(sequence), id=fasta_id, description='') for x in range(subunits)])
 
 
-def create_seq_record(id,seq,description=''):
-    return SeqRecord(Seq(seq),id=id,description=description)
+def create_seq_records(label, seq, description='',subunit_count=1):
+    return [SeqRecord(Seq(seq), id=label, description=description) for x in range(subunit_count)]
+
+
 def get_accession_sequence(accession, email_for_Bio):
     Entrez.email = email_for_Bio
     # Pulling the sequence corresponding with accession numer specified
@@ -171,7 +173,7 @@ def alignment_finder(sequence_of_interest, partner_label,
     # Matching python indexing for the indexing from the alignment with some amount of '-' and indexing in the regular sequence
     aln = create_dictionary_from_alignment(aln_file)
     base_aln = aln[base_label]
-    partner_aln = aln_file[partner_label]
+    partner_aln = aln[partner_label]
     base_aln_indexing = get_alignment_indexing(base_aln)
     # Creating a regular sequence without '-'
     base_seq = no_gap_sequence_from_alignment(base_aln)
@@ -192,23 +194,24 @@ def alignment_finder(sequence_of_interest, partner_label,
     return found_alignment, (alignment_base_start, alignment_base_end)
 
 
-def map_plddt_to_aln(aln_seq,plddt):
-    aln_index=get_alignment_indexing(aln_seq)
-    aln_plddt=[]
-    for aln_pos,res in enumerate(aln_seq):
-        score=plddt[aln_index.index(aln_pos)] if aln_pos in aln_index else res
+def map_plddt_to_aln(aln_seq, plddt):
+    aln_index = get_alignment_indexing(aln_seq)
+    aln_plddt = []
+    for aln_pos, res in enumerate(aln_seq):
+        score = plddt[aln_index.index(aln_pos)] if aln_pos in aln_index else res
         aln_plddt.append(score)
     return aln_plddt
+
 
 def contiguous_inheritance_dict(chi_label: str, parent_labels, aln_file):
     """Mostly designed for the SCHEMA dataset, It finds all overlapping amino acids between parents sequences of a chimera,
     as opposed to the inheritance dict from block_swap_inheritance that is used for single continuous block splices"""
     residue_inheritance = {parent: set() for parent in parent_labels}
-    seq_dict=create_dictionary_from_alignment(aln_file)
+    seq_dict = create_dictionary_from_alignment(aln_file)
     for parent in parent_labels:
-        chi_aln=seq_dict[chi_label]
+        chi_aln = seq_dict[chi_label]
         residue_inheritance[parent] = {aln_pos for aln_pos, (chi_res, par_res) in enumerate(
-            zip(chi_aln, seq_dict[parent])) if chi_res == par_res if chi_res!='-'}
+            zip(chi_aln, seq_dict[parent])) if chi_res == par_res if chi_res != '-'}
     return residue_inheritance
 
 

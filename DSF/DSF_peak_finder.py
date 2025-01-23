@@ -19,24 +19,35 @@ def find_inflection_temperatures(data_column, dt, raw_smooth_window, derivative_
     peaks=find_peaks(smooth_first_derrivative_w_na,distance=peak_distance,height=smooth_first_derrivative_w_na.max()/2)[0]
     return smoothed_data,raw_derivative_from_smooth,smooth_first_derrivative_w_na,raw_derivative_from_raw,peaks
 
-dsf_data=pd.read_csv(r"C:\Research\Total_DSF_30ug - Sheet1.csv")
+def combine_dsf_sheets(list_xlsx_files:list[str]) -> pd.DataFrame:
+    list_of_df=[]
+    for file in list_xlsx_files:
+        file=pd.read_excel(file, 'Profiles_raw',header=6,usecols=range(0,7))
+        file['Temperature [°C]'] = file['Temperature [°C]'].round()
+        file = file[file['Temperature [°C]'] <= 95.0]
+        file=file.set_index('Temperature [°C]')
+        list_of_df.append(file)
+    return pd.concat(list_of_df,axis=1)
+combine_dsf_sheets([r"C:\Research\DSF\2024-05-14_1546EDT_T6-143\raw and processed data\spreadsheets with charts\SAR",r"C:\Research\DSF\2024-05-14_1557EDT_T6-143\raw and processed data\spreadsheets with charts\2024-05-14_1557EDT_T6-143.xlsx"]).drop(columns=['Time [s]','Sample5']).to_csv('30ug_DSF.csv')
+# dsf_data=pd.read_csv(r"C:\Research\Total_DSF_30ug - Sheet1.csv")
 # dsf_data.iloc[:,2:]=dsf_data.iloc[:,2:].sub(dsf_data['BALD'],axis=0)
 # dsf_data.to_csv(r'C:\Research\dsf_data_subtracted.csv',index=False)
-smoothed_data=dsf_data.copy(True)
-raw_derivative_from_smoothed=dsf_data.copy(True)
-smooth_derivative_from_smoothed=dsf_data.copy(True)
-raw_derivative_from_raw=dsf_data.copy(True)
-for x in range(2,11):
-    test=dsf_data.iloc[:,x]
-    column_name=dsf_data.columns[x]
-    peaks=find_inflection_temperatures(test,0.2,40,40)
-    smoothed_data.iloc[:, x]=peaks[0]
-    raw_derivative_from_smoothed.iloc[:, x]=peaks[1]
-    plt.plot(dsf_data.iloc[:, 1], raw_derivative_from_smoothed.iloc[:,x], label='Smoothed Data', color='red')
-    smooth_derivative_from_smoothed.iloc[:, x]=peaks[2]
-    plt.plot(dsf_data.iloc[:, 1], smooth_derivative_from_smoothed.iloc[:, x], label='Smoothed Data', color='blue')
-    raw_derivative_from_raw.iloc[:, x]=peaks[3]
-    plt.show()
+# smoothed_data=dsf_data.copy(True)
+# raw_derivative_from_smoothed=dsf_data.copy(True)
+# smooth_derivative_from_smoothed=dsf_data.copy(True)
+# raw_derivative_from_raw=dsf_data.copy(True)
+# for x in range(2,11):
+#     test=dsf_data.iloc[:,x]
+#     column_name=dsf_data.columns[x]
+#     peaks=find_inflection_temperatures(test,0.2,40,40)
+#     smoothed_data.iloc[:, x]=peaks[0]
+#     raw_derivative_from_smoothed.iloc[:, x]=peaks[1]
+#     plt.plot(dsf_data.iloc[:, 1], raw_derivative_from_smoothed.iloc[:,x], label='Smoothed Data', color='red')
+#     smooth_derivative_from_smoothed.iloc[:, x]=peaks[2]
+#     plt.plot(dsf_data.iloc[:, 1], smooth_derivative_from_smoothed.iloc[:, x], label='Smoothed Data', color='blue')
+#     raw_derivative_from_raw.iloc[:, x]=peaks[3]
+#     plt.show()
+
 # smoothed_data.to_csv(r'C:\Research\smoothed_data_subtracted.csv',index=False)
 # smooth_derivative_from_smoothed.to_csv(r'C:\Research\smoothed_derivative_from_smooth_subtracted.csv',index=False)
 # raw_derivative_from_smoothed.to_csv(r'C:\Research\raw_derivative_from_smoothed_subtracted.csv',index=False)

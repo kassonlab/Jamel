@@ -3,7 +3,6 @@
 # Script to take AlphaFold output PDBs and set them up for production simulations.
 # Code 2022 by Peter Kasson
 
-from glob import glob
 from os import system, path
 from pathlib import Path
 
@@ -79,37 +78,4 @@ def create_alphafold_slurm(iter_of_fastas, slurm_filename, output_directory,subu
         slurm_file.write(f'{SH_TEMPLATE} {proteins_to_run} {subunits} {databases} {output_directory}')
 
 
-def alphafold_submission_for_chimera_container(container, list_of_fastas):
-    # fasta list is a separate input for control
-    fasta_to_run = ()
-    placeholder = container.naming_args.PLACEHOLDER
-    output_directory = container.naming_args.alphafold_outputs_dir
-    submission_toggles = container.submission_args.submission_toggles
-    proteins_per_slurm = container.submission_args.proteins_per_slurm
-    naming_convention = container.submission_args.slurm_naming
-    # Loops through all fastas created and checks if they are complete by looking for their ranking_debug file
-    if submission_toggles['stragglers_or_custom_or_all'] == 'stragglers':
-        for fasta in list_of_fastas:
-            if not path.exists(output_directory + Path(fasta).stem + '/ranking_debug.json'):
-                fasta_to_run += (fasta,)
-        # Puts all fastas in a line separated file specified by custom_list_to_run
-        if submission_toggles['create_file_of_stragglers']:
-            with open(container.submission_args.custom_list_to_run, 'w') as run_list:
-                run_list.write('\n'.join(fasta for fasta in fasta_to_run))
-        # if all of them are complete and fasta_to_run is empty then all slurm actions are toggled off
-        if not fasta_to_run:
-            submission_toggles['create_slurms'] = submission_toggles['sbatch slurms'] = False
-            print('All Done')
-    elif submission_toggles['stragglers_or_custom_or_all'] == 'custom':
-        with open(container.submission_args.custom_list_to_run, 'r') as run_list:
-            run_list = run_list.readlines()
-            fasta_to_run = [x.split()[0] for x in run_list]
-    elif submission_toggles['stragglers_or_custom_or_all'] == 'all':
-        fasta_to_run = list_of_fastas
-    for slurm_index, file_index in enumerate(range(0, len(fasta_to_run), proteins_per_slurm)):
-        current_slurm = naming_convention.replace(placeholder, str(slurm_index))
-        if submission_toggles['create_slurms']:
-            create_alphafold_slurm(fasta_to_run[file_index:file_index + proteins_per_slurm], current_slurm,
-                                   output_directory)
-        if submission_toggles['sbatch_slurms']:
-                system(f'sbatch {current_slurm}')
+

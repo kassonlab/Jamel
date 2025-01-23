@@ -5,7 +5,7 @@ from Chimeragenesis.AccessiontoAlignment import get_alignment_indexing, no_gap_s
 from numpy import zeros, savetxt, save,load
 from scipy.stats import rankdata,spearmanr
 import MDContacts
-import ContactMap
+from Dilapidated_Chimeragenesis import ContactMap
 from pathlib import Path
 
 '''This is very specific code for dilapidated and wrong sectioning of S1 and conversion of individual alignments to 
@@ -120,14 +120,14 @@ def contact_contingency(alignment_file, native_pdb, chimera_pdb, chain_id, label
         native_yes = False
         residue_to_find = '-'
 
-    chi_index = ContactMap.correct_alignment_for_chimera_index(alignment_file, ref_label, alignment_index, label,sequence_of_interest)[0]
+    chi_index = ContactMap.correct_alignment_for_chimera_index(alignment_file, ref_label, alignment_index, label, sequence_of_interest)[0]
     residue_ids = f'{residue}{native_index + 1},{residue}{chi_index + 1}'
     chimera_contacts = \
     MDContacts.get_intra_residue_contact_list(chimera_pdb, chain_id, Path(chimera_pdb).stem+'_matrix')[
         chi_index]
     chimera_contacts += ContactMap.get_inter_protein_contacts(chimera_pdb, chain_id)[chi_index]
     chimera_contacts = [int(str(contacts).split(':')[-1]) for contacts in chimera_contacts]
-    chi_index_to_find = ContactMap.correct_alignment_for_chimera_index(alignment_file, ref_label, contact_to_find_aln_index, label,sequence_of_interest)[0]
+    chi_index_to_find = ContactMap.correct_alignment_for_chimera_index(alignment_file, ref_label, contact_to_find_aln_index, label, sequence_of_interest)[0]
     chi_yes = chi_index_to_find in chimera_contacts
     chi_no = chi_index_to_find not in chimera_contacts
 

@@ -1,0 +1,32 @@
+{
+    "operation_toggles": {
+        "run_fasta_operation": true, "alphafold_submission":false,"run_analysis_operation": false
+    },
+    "naming_arguments": {
+        "output_directory": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\shiffted_test"
+    },
+    "fasta_arguments": {
+        "fasta_toggles": {"Make a list of created fasta files": true, "Manually control number of scanner movements": false,
+            "Create an alignment": false},
+        "fasta_file_list_name": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\shiffted_test\\shifted_fastas",
+        "scanner_start": 0,
+        "scanner_length": 60,
+        "scanner_rate": 1,
+        "parent_aln_file": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\shiffted_test\\2parent",
+        "number_of_subunits": 1
+    },
+    "submission_arguments": {
+        "submission_toggles": {"create_slurms":false,"sbatch_slurms": false,"stragglers_or_custom_or_all": "stragglers","create_file_of_stragglers": false},
+        "custom_list_to_run": "",
+        "proteins_per_slurm": 9,
+        "slurm_naming": "/gpfs/gpfs0/scratch/jws6pq/Notebook/test/*P_M_ShiftedAlphaFold.slurm",
+        "template_slurm": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/Omicron_Alphafold_Template.slurm",
+        "alphafold_shell_script": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/MultimerAlphaFold.sh"
+    },
+    "analysis_arguments": {
+        "analysis_toggles": {"make_plddts": true,
+            "make_pdbs": true},
+        "analysis_output_file": "",
+        "column_names": {"filename_stems": [true,"Protein"], "relative_stability": [true,"Relative Stability (%)"], "overall_chimera_stability": [true,"Chimera Stability"]}
+    }
+}

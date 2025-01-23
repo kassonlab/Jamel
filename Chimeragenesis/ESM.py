@@ -1,22 +1,12 @@
-import ast
-import os
-import re
+import ast, re, torch, umap, argparse, os
 from enum import Enum
-from json import load
 from pathlib import Path
-
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import torch
-import umap
-import argparse
+import pickle
 from Bio import SeqIO
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
-
-from AccessiontoAlignment import create_dictionary_from_alignment, dictionary_to_fasta, \
-    translate_dna_to_protein
+from AccessiontoAlignment import create_seq_records, fasta_creation
 from ChimeraGenerator import sequence_splice, chimera_sequence_creation, \
     create_chimera_combinations
 
@@ -29,35 +19,77 @@ class EmbedDims(Enum):
         return self.name
 
 
+def manhattan_norm(tensor1: torch.Tensor, tensor2: torch.Tensor):
+    tensor = tensor1 - tensor2
+    return tensor.to(torch.float64).flatten().abs().sum().item()
+
+
+def euclidean_norm(tensor1: torch.Tensor, tensor2: torch.Tensor):
+    tensor = tensor1 - tensor2
+    return torch.linalg.vector_norm(tensor.flatten()).item()
+
+
+def cosine_similarity(tensor1: torch.Tensor, tensor2: torch.Tensor):
+    tensor2 = tensor2.flatten()
+    tensor1 = tensor1.flatten()
+    return (torch.dot(tensor1, tensor2) / (
+                torch.linalg.vector_norm(tensor1) * torch.linalg.vector_norm(tensor2))).item()
+
+
+func_dict = {'euclidean_norm': euclidean_norm, 'manhattan_norm': manhattan_norm, 'cosine_similarity': cosine_similarity}
+
+
+class NormType(Enum):
+    euclidean = 'euclidean_norm'
+    manhattan = 'manhattan_norm'
+    cosine = 'cosine_similarity'
+
+    def execute(self, tensor1, tensor2):
+        return func_dict[self.value](tensor1, tensor2)
+
+
+def pkl_a_file(obj, new_pkl_file):
+    with open(new_pkl_file, "wb") as f:
+        pickle.dump(obj, f)
+
+
+def unpkl_a_file(pkl_file):
+    with open(pkl_file, "rb") as f:
+        return pickle.load(f)
+
+
 def label_to_file(pt_directory, label):
     return os.path.join(pt_directory, f'{label}.pt')
 
 
-def tensor_distance(tensor1, tensor2):
-    dim = len(tuple(dim for dim in tensor1.shape if dim != 1))
-    dist_func = torch.linalg.matrix_norm if dim == 2 else torch.linalg.vector_norm
-    return abs(dist_func(tensor1[0] - tensor2[0])).item()
+def tensor_distance(tensor1, tensor2, dist_func=NormType.euclidean):
+    return dist_func.execute(tensor1, tensor2)
 
 
 class SequenceDataframe(pd.DataFrame):
-    def __init__(self):
+    def __init__(self, alignment_file):
         super().__init__(columns=['aln_sequence', 'sequence', 'description'])
+        self.alignment_file = alignment_file
+        self.create_dataframe_from_alignment()
 
-    def dataframe_to_fa(self, new_fasta_file):
-        seq_records = [
-            SeqRecord(Seq(seq_info['aln_sequence']), description=str(seq_info['description']), id=str(seq_id))
-            for seq_id, seq_info in self.iterrows()]
-        with open(new_fasta_file, "w") as output_handle:
-            SeqIO.write(seq_records, output_handle, "fasta")
+    def dataframe_to_aln(self, new_fasta_file):
+        seq_records = [create_seq_records(str(seq_id), seq_info['aln_sequence'], str(seq_info['description'])) for
+                       seq_id, seq_info in self.iterrows()]
+        fasta_creation(new_fasta_file, seq_records)
 
-    def create_dataframe_from_alignment(self, alignment_file):
+    def create_dataframe_from_alignment(self):
         """Takes a fasta style alignment and makes a dictionary where the key is whatever signifier follows '>'
         and the value is the sequence with no spaces"""
-        with open(alignment_file) as handle:
+        with open(self.alignment_file) as handle:
             for seq in SeqIO.parse(handle, "fasta"):
                 self.loc[seq.id] = {'sequence': str(seq.seq).replace('-', ''), 'aln_sequence': str(seq.seq),
                                     'description': seq.description.replace(f'{seq.id} ', '')}
         return self
+
+    def make_individual_fasta(self, output_direc, subunit_count):
+        for protein, info in self.iterrows():
+            fasta_creation(Path(output_direc).joinpath(str(protein)).with_suffix('.fasta'),
+                           create_seq_records(protein, info['sequence'], info['description'], subunit_count))
 
     def create_column(self, column_name):
         self[column_name] = np.nan
@@ -68,6 +100,11 @@ class SequenceDataframe(pd.DataFrame):
     def get_parents(self, chimera_label):
         return ast.literal_eval(self.loc[chimera_label, 'description'])
 
+    def add_protein(self, label, aln_seq, description):
+        self.add_value(label, 'aln_sequence', aln_seq)
+        self.add_value(label, 'sequence', aln_seq.replace('-', ''))
+        self.add_value(label, 'description', description)
+
     def get_sequence(self, chimera_label):
         return self.loc[chimera_label, 'sequence']
 
@@ -75,53 +112,24 @@ class SequenceDataframe(pd.DataFrame):
         return self.loc[chimera_label, 'aln_sequence']
 
 
-# with open(arg_json, 'rb') as jfile:
-#     arg_dict = load(jfile)
-# for key, value in arg_dict.items():
-#     setattr(self, key, value)
-#     def get_esm_embeddings(self):
-#         if not os.path.exists(self.esm_output_directory):
-#             os.makedirs(self.esm_output_directory)
-#         os.system(
-#             rf'python3 {self.extract_py_file} {self.esm_model} {self.chimera_seq_fasta}  {self.esm_output_directory} --include {self.embeddings_dimension.value}')
-#         self.create_embedding_container()
-# embeddings_dimension = 1
-#     '''The ESM embeddings can be made per residue (2-dimensional) or just per sequence (1-dimensional)'''
-# parent_aln_file: str
-#     '''An fasta alignment file with your two parent proteins'''
-#     splice_size: int
-#     '''The size of the splice site that will move down the alignment at some step size x and recombine the two parent sequences'''
-#     chimera_seq_fasta: str
-#     '''A single fasta file that contains all the chimeric sequences created by some splice and step size. (Including the parents)'''
-#     step_size: int = 1
-#     '''How much the splice site steps over after a recombination'''
-#  extract_py_file: str
-#     '''Path to the python script file from esm scripts called extract.py'''
-# esm_output_directory: str
-#     '''Directory in create all esm outputs (.pt files) and the chimera_seq_output. If the directory doesn't exist it'll be created for you.'''
-# esm_model: str = 'esm2_t30_150M_UR50D'
-#     '''There are multiple different esm models with increasing amount of network layers and parameters. This
-#     prediction models uses 150M parameter model for greatest performance (esm2_t48_15B_UR50D,esm2_t36_3B_UR50D,
-#     esm2_t33_650M_UR50D,esm2_t30_150M_UR50D,esm2_t12_35M_UR50D,esm2_t6_8M_UR50D)'''
 class EmbeddingAnalysis:
     distance_score_csv: str
     '''Csv file that contains the embedding distances'''
     EMBEDDINGS_DICT: dict[str:torch.Tensor]
 
     def __init__(self, embed_dict_pkl: str, aln_file):
-        self.EMBEDDINGS_DICT: dict = torch.load(embed_dict_pkl)
-        self.aln_df = SequenceDataframe()
-        self.aln_df.create_dataframe_from_alignment(aln_file)
+        self.EMBEDDINGS_DICT: dict = torch.load(embed_dict_pkl, map_location=torch.device('cpu'))
+        self.aln_df = SequenceDataframe(aln_file)
 
-    def score_embedding_distance(self, chi_label, parent_labels):
+    def score_embedding_distance(self, chi_label, parent_labels, dist_func=None):
         distance = 0
         for parent in parent_labels:
-            distance += tensor_distance(self.EMBEDDINGS_DICT[chi_label], self.EMBEDDINGS_DICT[parent])
+            distance += tensor_distance(self.EMBEDDINGS_DICT[chi_label], self.EMBEDDINGS_DICT[parent], dist_func)
         if self.aln_df.get('distance') is not None and not self.aln_df.empty:
             self.aln_df.loc[chi_label, 'distance'] = distance
         return distance
 
-    def per_residue_distance_for_val_set(self, chi_label, parent_labels):
+    def per_residue_distance_for_val_set(self, chi_label):
         if self.EMBEDDINGS_DICT[chi_label].shape[0] != len(self.aln_df.loc[chi_label, 'sequence']):
             return
         distance = 0
@@ -135,14 +143,15 @@ class EmbeddingAnalysis:
         return distance
 
     def score_all_per_res(self):
-        self.aln_df['distance'] = np.nan
+        self.aln_df.create_column('distance')
         for label, chi_tensor in self.EMBEDDINGS_DICT.items():
             self.per_residue_distance_for_val_set(label, self.aln_df.get_parents(label))
 
-    def score_all_embeddings(self):
-        self.aln_df['distance'] = np.nan
+    def score_all_embeddings(self, dist_func):
+        self.aln_df.create_column('distance')
         for label, chi_tensor in self.EMBEDDINGS_DICT.items():
-            self.score_embedding_distance(label, self.aln_df.get_parents(label))
+            if len(parent_label := self.aln_df.get_parents(label)) == 2:
+                self.score_embedding_distance(label, parent_label, dist_func)
 
 
 def pt_to_tensor(pt_file, dim1_or_dim2: EmbedDims = EmbedDims.Dim1, model='esm2_t30_150M_UR50D') -> torch.Tensor:
@@ -160,42 +169,57 @@ def add_row_of_zeroes(tensor: torch.Tensor):
     return torch.cat((torch.zeros(1, tensor.size(1)), tensor), dim=0)
 
 
-def pickle_embed_dict_schema(directory, new_pkl_file):
+def save_embedding_directory(directory, new_pkl_file):
     embed_dict = {}
-    for file in Path.iterdir(directory):
+    for file in Path(directory).iterdir():
         embed_dict[file.stem] = torch.load(file)
-    torch.save(embed_dict, new_pkl_file)
-
+    torch.save(embed_dict,new_pkl_file)
 
 def embedding_umap(embed_pkl_file: str):
     reducer = umap.UMAP(n_components=2)
     embed_dict: dict[str, torch.Tensor] = torch.load(embed_pkl_file)
+    embed_dict = {label: torch.sum(tensor, dim=0) for label, tensor in embed_dict.items()}
     # rows in umap matrix are samples/proteins
     embedding_matrix = np.vstack(tuple(embed_dict.values()))
     umap_vectors = reducer.fit_transform(embedding_matrix)
-    plt.scatter(umap_vectors[:, 0], umap_vectors[:, 1], cmap='viridis', marker='+')
+    plt.scatter(umap_vectors[:, 0], umap_vectors[:, 1], marker='+')
+    plt.show()
     return plt.gcf()
 
 
+def combine_w_schema(embed_pkl_file, aln_file, dist_func: list[NormType], new_distance_file=''):
+    schema_data = pd.read_csv(r"/scratch/jws6pq/Notebook/ESM/Schema_valdation/Chimeragenesis/schema_data.csv", index_col='chimera_block_ID')
+    combined_df = schema_data
+    for func in dist_func:
+        embeddings = EmbeddingAnalysis(embed_pkl_file, aln_file)
+        embeddings.score_all_embeddings(func)
+        dist_type = func.name
+        combined_df = pd.concat((combined_df, embeddings.aln_df), axis=1)
+        combined_df = combined_df.rename(columns={"distance": dist_type})
+        combined_df['exp_rank'] = combined_df['mKate_mean'].rank(ascending=False)
+        combined_df[f'{dist_type}_rank'] = combined_df[dist_type].rank(ascending=func!=NormType.cosine)
+    combined_df = combined_df.loc[:, ~combined_df.columns.duplicated()]
+
+    if new_distance_file:
+        combined_df.to_csv(new_distance_file)
+    return combined_df
+
+
 if __name__ == '__main__':
-    schema_data = pd.read_csv(r"C:\Users\jamel\Downloads\schema_data.csv", index_col='chimera_block_ID')
-    test = EmbeddingAnalysis(r'large_ankh.pkl', r'labeled_schema_aln')
-    test.score_all_per_res()
-    # pd.concat((schema_data, test.aln_df), axis=1).to_csv('large_ankh_res.csv')
-    # ankh = torch.load('large_ankh.pkl')
-    #
-    # prost={label:tensor.transpose(0,1) for label,tensor in prost.items()}
-    # print(ankh['c0000000000'].shape)
-    # prost=torch.load('prost.pkl')
-    #
-    # prost={label:tensor.transpose(0,1) for label,tensor in prost.items()}
-    # print(prost['c0000000000'].shape)
-    # torch.save(prost,'prost.pkl')
-    # plt.title('Riff CsChrim UMAP')
-    # plt.xlabel('Component 1')
-    # plt.ylabel('Component 2')
-    # plt.colorbar(label='Embedding Distance')
-    # plt.show()
+    # save_embedding_directory('/scratch/jws6pq/Notebook/ESM/Schema_valdation/Chimeragenesis/15B_model/2d_schema_data/','/scratch/jws6pq/Notebook/ESM/Schema_valdation/Chimeragenesis/15B_2d.pkl')
+    # TODO do per res with 3di sequence and cosine similarity
+    # TODO turn esm embeddings into pkl and put in rivanna
+    # l1 = combine_w_schema(r'full_schema_3di1.pkl', 'labeled_schema_aln',
+    #                       [NormType.cosine,NormType.manhattan,NormType.euclidean],'full_schema_3di.csv')
+    # l1 = combine_w_schema(r'large_ankh.pkl', 'labeled_schema_aln',
+    #                       [NormType.cosine, NormType.manhattan, NormType.euclidean], 'large_ankh.csv')
+    # l1 = combine_w_schema(r'prost.pkl', 'labeled_schema_aln',
+    #                       [NormType.cosine, NormType.manhattan, NormType.euclidean], 'prost.csv')
+    # l1 = combine_w_schema(r'alpha_full_3di.pkl', 'labeled_schema_aln',
+    #                       [NormType.cosine, NormType.manhattan, NormType.euclidean], 'alpha_3di.csv')
+    l1 = combine_w_schema(r"/scratch/jws6pq/Notebook/ESM/Schema_valdation/Chimeragenesis/15B_2d.pkl", '/scratch/jws6pq/Notebook/ESM/Schema_valdation/Chimeragenesis/labeled_schema_aln',
+                          [NormType.cosine, NormType.manhattan, NormType.euclidean], '15B_2d.csv')
+    # embedding_umap(r'alpha_full_3di.pkl').show()
     # parser = argparse.ArgumentParser(
     #     description='Creating a fasta file of all potential chimeric proteins between two parents based on a sliding splice site')
     # parser.add_argument('-in', '--inputjson', type=str, required=True,
@@ -203,10 +227,7 @@ if __name__ == '__main__':
     # args = parser.parse_args()
     # if args.inputjson:
     #     esm_args = EmbeddingAnalysis(args.inputjson)
-    #     parent_seq_dict = create_dictionary_from_alignment(esm_args.parent_aln_file)
-    #     chi_combo_dict = create_chimera_combinations(parent_seq_dict, esm_args.splice_size,
-    #                                                  scanner_rate=esm_args.step_size,
-    #                                                  new_fasta_file=esm_args.chimera_seq_fasta)
+
     #     if os.path.exists(esm_args.chimera_seq_fasta):
     #         # esm_args.get_esm_embeddings()
     #         esm_args.create_embedding_container()
