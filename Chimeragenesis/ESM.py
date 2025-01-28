@@ -186,9 +186,9 @@ def embedding_umap(embed_pkl_file: str):
     plt.show()
     return plt.gcf()
 
-
-def combine_w_schema(embed_pkl_file, aln_file, dist_func: list[NormType], new_distance_file=''):
-    schema_data = pd.read_csv(r"/scratch/jws6pq/Notebook/ESM/Schema_valdation/Chimeragenesis/schema_data.csv", index_col='chimera_block_ID')
+# r"/scratch/jws6pq/Notebook/ESM/Schema_valdation/Chimeragenesis/schema_data.csv"
+def combine_w_schema(embed_pkl_file, aln_file, dist_func: list[NormType], schema_data_file:str,new_distance_file=''):
+    schema_data = pd.read_csv(schema_data_file, index_col='chimera_block_ID')
     combined_df = schema_data
     for func in dist_func:
         embeddings = EmbeddingAnalysis(embed_pkl_file, aln_file)
@@ -217,8 +217,9 @@ if __name__ == '__main__':
     #                       [NormType.cosine, NormType.manhattan, NormType.euclidean], 'prost.csv')
     # l1 = combine_w_schema(r'alpha_full_3di.pkl', 'labeled_schema_aln',
     #                       [NormType.cosine, NormType.manhattan, NormType.euclidean], 'alpha_3di.csv')
-    l1 = combine_w_schema(r"/scratch/jws6pq/Notebook/ESM/Schema_valdation/Chimeragenesis/15B_2d.pkl", '/scratch/jws6pq/Notebook/ESM/Schema_valdation/Chimeragenesis/labeled_schema_aln',
-                          [NormType.cosine, NormType.manhattan, NormType.euclidean], '15B_2d.csv')
+    # l1 = combine_w_schema(r"/scratch/jws6pq/Notebook/ESM/Schema_valdation/Chimeragenesis/15B_2d.pkl", '/scratch/jws6pq/Notebook/ESM/Schema_valdation/Chimeragenesis/labeled_schema_aln',
+    #                       [NormType.cosine, NormType.manhattan, NormType.euclidean], '15B_2d.csv')
+
     # embedding_umap(r'alpha_full_3di.pkl').show()
     # parser = argparse.ArgumentParser(
     #     description='Creating a fasta file of all potential chimeric proteins between two parents based on a sliding splice site')
