@@ -1,0 +1,11 @@
+{
+    "parent_aln_file": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\esm\\schema_msa.aln",
+    "splice_size": 60,
+    "chimera_seq_fasta": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\esm\\schema_msa.aln",
+    "step_size": 1,
+    "esm_output_directory": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\esm\\3B_model\\1d_schema_data",
+    "embeddings_dimension": 1,
+    "esm_model": "esm2_t36_3B_UR50D",
+    "distance_score_csv": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\esm\\3B_model\\1d_schema_data\\3B.csv",
+    "extract_py_file": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\esm\\scripts\\extract.py"
+}
