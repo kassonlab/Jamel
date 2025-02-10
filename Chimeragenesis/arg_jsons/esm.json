@@ -1,5 +1,6 @@
 {
-    "parent_aln_file": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\riffChr_data\\Riff_CHrim.aln",
+    "provided_full_aln": true,
+    "aln_file": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\riffChr_data\\Riff_CHrim.aln",
     "splice_size": 60,
     "chimera_seq_fasta": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\riffChr_data\\Riff_CHrim_chi.fa",
     "step_size": 1,
