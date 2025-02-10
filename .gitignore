@@ -1,0 +1,8 @@
+*.pt
+esm/
+/Chimeragenesis/schema_individs
+/Chimeragenesis/Data
+*.pyc
+/Chimeragenesis/riffChr_data
+*.pkl
+/Chimeragenesis/scrambled_data
