@@ -2,6 +2,7 @@
 #
 #  Code 2023 by Jamel Simpson
 import re
+import subprocess
 from os import system
 import json
 from pathlib import Path
@@ -149,12 +150,13 @@ def multiple_sequence_alignment(sequences: list[SeqRecord], fasta_for_alignment,
     system(f'{muscle_command} -in {fasta_for_alignment} -out {new_alignment_file}')
 
 
-def run_emboss_needle(new_emboss_file, sequence_one, sequence_two, needle_directory):
+def run_emboss_needle(new_emboss_file, sequence_one:str, sequence_two:str, emboss_command='needle'):
     """This runs EMBOSS on the command line."""
-    system(f'{needle_directory}  -sprotein -gapopen 10 -gapextend 0.5 '
-           f'-outfile {new_emboss_file} -asequence asis:{sequence_one} -bsequence asis:{sequence_two}')
-
-
+    subprocess.run(f'{emboss_command}  -sprotein -gapopen 10 -gapextend 0.5 '
+           f'-outfile {new_emboss_file} -asequence asis:{sequence_one} -bsequence asis:{sequence_two}', shell=True)
+def calculate_sequence_identity(aln_seq_1,aln_seq_2):
+    identical_count=[(resb==resa and resa!='-' and resb!='-') for resa,resb in zip(aln_seq_1,aln_seq_2)]
+    return identical_count.count(True)/len(identical_count)
 def get_alignment_indexing(alignment_seq):
     """Creating a list of alignment indexes for non '-' characters"""
     return [ind for ind, x in enumerate(alignment_seq) if x != '-']
@@ -164,11 +166,10 @@ def get_alignment_indexing_w_dashes(alignment_seq):
     return [ind if x != '-' else '-' for ind, x in enumerate(alignment_seq)]
 
 
-def alignment_finder(sequence_of_interest, partner_label,
-                     base_label, aln_file, run_emboss='', new_emboss_file=''):
+def alignment_finder(sequence_of_interest, partner_label,base_label, aln_file):
     """Takes a fasta style alignment and a sequence_of_interest from a base_protein and returns the sequence of the
-    comparison_protein that is outlined in the boundaries of the sequence_of_interest, as well as the python index boundaries
-     for the found_alignment of the comparison_protein. base_protein and comparison_protein must the names following
+    comparison_protein that aligns with the sequence_of_interest in the base sequence, as well as the python index boundaries
+     for the found_alignment of the comparison_protein. base_protein and comparison_protein must be the names following
       '>' in the alignment file"""
     # Matching python indexing for the indexing from the alignment with some amount of '-' and indexing in the regular sequence
     aln = create_dictionary_from_alignment(aln_file)
@@ -177,22 +178,25 @@ def alignment_finder(sequence_of_interest, partner_label,
     base_aln_indexing = get_alignment_indexing(base_aln)
     # Creating a regular sequence without '-'
     base_seq = no_gap_sequence_from_alignment(base_aln)
+    base_start=base_seq.find(sequence_of_interest)
+    base_end=base_start+ len(sequence_of_interest)-1
     # Boundaries are given in python index
-    alignment_base_start = base_aln_indexing[base_seq.find(sequence_of_interest)]
-    # Because indexing doesnt include the ending index, the final index is put up one
-    alignment_base_end = base_aln_indexing[base_seq.find(sequence_of_interest) + len(
-        sequence_of_interest) - 1] + 1
+    alignment_base_start = base_aln_indexing[base_start]
+    # Because indexing is exclusive the final index is put up one
+    alignment_base_end = base_aln_indexing[base_end]+1
     # Pulling the section of the comparison_sequence that overlaps with the sequence_of_interest
     found_alignment = no_gap_sequence_from_alignment(partner_aln[alignment_base_start:alignment_base_end])
     # Recording the indexes of the found_alignment
     # Additionally the splice_start is the first residue that is spliced,
     # and splice_end is the first residue that's not spliced
-    splice_start = no_gap_sequence_from_alignment(partner_aln).find(found_alignment)
-    splice_end = splice_start + len(found_alignment)
-    if run_emboss != '':
-        run_emboss_needle(new_emboss_file, found_alignment, sequence_of_interest, run_emboss)
-    return found_alignment, (alignment_base_start, alignment_base_end)
 
+    partner_start = no_gap_sequence_from_alignment(partner_aln).find(found_alignment)
+    partner_end = partner_start + len(found_alignment)-1
+    chimera_aln_seq=base_aln.replace(base_aln[alignment_base_start:alignment_base_end],partner_aln[alignment_base_start:alignment_base_end])
+    # this inheritance dictionary shows the splice boundaries from a given parent and gives the corresponding boundary in the chimera where that parent sequence is.
+    # data structure is {parent:{parent_splice:chimera_splice}}
+    inheritance={base_label:{(0,base_start):(0,base_start),(base_end,None):(base_start+len(found_alignment),None)},partner_label:{(partner_start,partner_end):(base_start,base_start+len(found_alignment))}}
+    return chimera_aln_seq, inheritance
 
 def map_plddt_to_aln(aln_seq, plddt):
     aln_index = get_alignment_indexing(aln_seq)
@@ -203,7 +207,7 @@ def map_plddt_to_aln(aln_seq, plddt):
     return aln_plddt
 
 
-def contiguous_inheritance_dict(chi_label: str, parent_labels, aln_file):
+def contiguous_inheritance_dict(chi_label: str, parent_labels: tuple, aln_file:str):
     """Mostly designed for the SCHEMA dataset, It finds all overlapping amino acids between parents sequences of a chimera,
     as opposed to the inheritance dict from block_swap_inheritance that is used for single continuous block splices"""
     residue_inheritance = {parent: set() for parent in parent_labels}
@@ -215,14 +219,22 @@ def contiguous_inheritance_dict(chi_label: str, parent_labels, aln_file):
     return residue_inheritance
 
 
-def block_swap_inheritance(splice_seq, chimera_seq, base_label, partner_label):
-    splice_start = chimera_seq.find(splice_seq)
-    splice_end = splice_start + len(splice_seq)
-    inheritance_dict = {partner_label: set(), base_label: set()}
-    inheritance_dict[partner_label] += set(range(splice_start, splice_end))
-    inheritance_dict[base_label] += set(range(len(chimera_seq))) - inheritance_dict[partner_label]
-    print(inheritance_dict[partner_label], inheritance_dict[base_label])
-    return inheritance_dict
+# def block_swap_inheritance(splice_seq:str, chimera_seq:str, base_label:str, partner_label:str):
+#     splice_start = chimera_seq.find(splice_seq)
+#     splice_end = splice_start + len(splice_seq)
+#     inheritance_dict = {partner_label: set(), base_label: set()}
+#     inheritance_dict[partner_label] += set(range(splice_start, splice_end))
+#     inheritance_dict[base_label] += set(range(len(chimera_seq))) - inheritance_dict[partner_label]
+#     print(inheritance_dict[partner_label], inheritance_dict[base_label])
+#     return inheritance_dict
+
+def label_aln_w_inheritance(aln_file:str,base_label:str, partner_label:str,sequence_of_interest):
+    from ESM import SequenceDataframe
+    seq_df=SequenceDataframe()
+    seq_dict=create_dictionary_from_alignment(aln_file)
+    for label,seq in seq_dict.items():
+        seq_df.add_protein(label,seq,alignment_finder(sequence_of_interest,partner_label,base_label,aln_file)[1])
+    seq_df.dataframe_to_aln(Path(aln_file).with_suffix('.inh'))
 
 
 def check_mutation_cutoff(cutoff, seq_1, seq_2):
@@ -273,6 +285,7 @@ def no_gap_sequence_from_alignment(alignment_seq):
     """Removes gaps from an alignment sequence"""
     return re.sub(r'[^a-zA-Z]', '', alignment_seq)
 
+alignment_finder('TVYDPLQPELD','WigeonHKU20','6VSB_B',r'C:\Users\jamel\PycharmProjects\Jamel\SARS2wEverythingstable.aln')
 
 def clustalw_to_fasta(clustal_aln_file, new_fasta_aln_file):
     """Converts clustal w aliignment file into a fasta alignment"""

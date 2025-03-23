@@ -2,7 +2,7 @@
 #SBATCH -p gpu          # partition
 #SBATCH --gres=gpu:v100:2    # number of GPUs
 #SBATCH -N 1            # number of nodes
-#SBATCH -c 16            # number of cores
+#SBATCH -c 5           # number of cores
 #SBATCH -t 72:00:00     # time
 
 # IMPORTANT

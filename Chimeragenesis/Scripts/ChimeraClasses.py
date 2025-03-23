@@ -1,10 +1,13 @@
 import os
 import pathlib
+import subprocess
 from json import load
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
+
 import AccessiontoAlignment, ESM, ChimeraGenerator, Analysis
-from setup import create_alphafold_slurm
 
 
 class HomomerNamingArguments:
@@ -30,8 +33,10 @@ class HomomerFastaArguments:
     interest should be in their own fasta file. All non-reference variant proteins will have the Homomer sequence 
     from an alignment replaced'''
     base_identifier: str
-    msa_file_name: str
-    '''Path to the multiple sequence alignment to be created or a user-generated msa'''
+    parent_msa: str
+    '''Path to the multiple sequence alignment to be created or a user-generated msa of all parent sequences'''
+    collective_fasta: str
+    '''Path to the fasta file to be created containing all sequences to be run on Alphafold (parents+chimeras) and their inheritance dicts. Path must have .inh suffix'''
     email_for_accession: str
     fasta_file_list_name: str
     '''filename to hold the complete list of fastas created in the fasta operation'''
@@ -59,8 +64,8 @@ class HomomerSubmissionArguments:
     '''Path to file that for list that either be created by toggling on create_file_of_stragglers, or user-generated that should contain 
     line separated fastas of proteins you want predicted'''
     proteins_per_slurm: int
-    template_slurm: str
-    '''Path to the file that has the template settings for alphafold slurm jobs'''
+    sbatch_group: str
+    "group needed to access computing resources through slurm/sbatch"
     alphafold_shell_script: str
     '''Path to the shell script that runs alphafold, it must take a list of comma-separated fastas 
     and an output as its arguments. It's recommended you use the on provided in github'''
@@ -117,41 +122,65 @@ class HomomerChimeraArgs:
     fasta_dir: pathlib.Path
 
     def __init__(self, arg_json):
+        self.base_splice = None
         with open(arg_json, 'rb') as jfile:
             self.argument_dict = load(jfile)
+        self.has_inheritance = False
         self.operation_toggles = self.argument_dict['operation_toggles']
         self.get_dict_args(HomomerFastaArguments, 'fasta_args', 'fasta_arguments')
         self.get_dict_args(HomomerNamingArguments, 'naming_args', 'naming_arguments')
         self.get_dict_args(HomomerSubmissionArguments, 'submission_args', 'submission_arguments')
-        self.seq_df = ESM.SequenceDataframe(self.fasta_args.msa_file_name)
-        self.base_splice = AccessiontoAlignment.extract_seq_from_fasta(self.fasta_args.sequence_of_interest)
-        self.seq_df['chi_seq'] = self.seq_df.index.map(
-            lambda label: ChimeraGenerator.get_chimera_sequence(self.fasta_args.msa_file_name,
-                                                                self.fasta_args.base_identifier, label,
-                                                                self.base_splice))
-        self.seq_df['file_stem'] = self.seq_df.index.map(
-            lambda label: self.naming_args.WT_convention.replace(self.naming_args.file_stem_placeholder, label))
-        self.seq_df['chi_file_stem'] = self.seq_df.index.map(
-            lambda label: self.naming_args.chimera_convention.replace(self.naming_args.file_stem_placeholder, label))
-        self.fasta_dir = Path(self.naming_args.output_directory).joinpath('Fasta')
-        self.pdb_dir = Path(self.naming_args.output_directory).joinpath('PDB')
-        self.alphafold_dir = Path(self.naming_args.output_directory).joinpath('AlphaFold')
-        fastas = self.seq_df['file_stem'].map(
-            lambda stem: self.fasta_dir.joinpath(stem).with_suffix('.fa').__str__()).to_list()
-        chi_fastas = self.seq_df['chi_file_stem'].map(
-            lambda stem: self.fasta_dir.joinpath(stem).with_suffix('.fa').__str__()).to_list()
-        self.all_fastas = fastas + chi_fastas
+        self.get_dict_args(HomomerAnalysisArguments, 'analysis_args', 'analysis_arguments')
+        self.naming_args.output_directory = Path(self.naming_args.output_directory)
+
+        self.fasta_args.collective_fasta = Path(self.fasta_args.collective_fasta).with_suffix('.inh')
+        if self.fasta_args.collective_fasta.exists():
+            # TODO this was made incorrectly assuming all the chimeric sequences would be in the msa and not all the partner sequences
+            self.collective_df = ESM.SequenceDataframe(self.fasta_args.collective_fasta)
+            self.has_inheritance = True
+        if Path(self.fasta_args.parent_msa).exists():
+            self.parent_df = ESM.SequenceDataframe(self.fasta_args.parent_msa)
+        # TODO make msa here or turn off program and make them give msa
+        self.fasta_dir = self.naming_args.output_directory.joinpath('Fasta')
+        self.pdb_dir = self.naming_args.output_directory.joinpath('PDB')
+        self.alphafold_dir = self.naming_args.output_directory.joinpath('AlphaFold')
 
     def get_dict_args(self, dict_class, attr_name, arg_key):
         dict_args = self.argument_dict[arg_key]
         setattr(self, attr_name, dict_class(dict_args))
 
+    def make_fasta_paths(self):
+        # TODO can only do this once you have collective msa
+        self.base_splice = AccessiontoAlignment.extract_seq_from_fasta(self.fasta_args.sequence_of_interest)
+        self.parent_df['chi_seq'] = self.parent_df.index.map(
+            lambda label: ChimeraGenerator.get_chimera_sequence(self.fasta_args.parent_msa,
+                                                                self.fasta_args.base_identifier, label,
+                                                                self.base_splice))
+        self.parent_df['file_stem'] = self.parent_df.index.map(
+            lambda label: self.naming_args.WT_convention.replace(self.naming_args.file_stem_placeholder, label))
+        self.parent_df['chi_file_stem'] = self.parent_df.index.map(
+            lambda label: self.naming_args.chimera_convention.replace(self.naming_args.file_stem_placeholder, label))
+
+        fastas = self.parent_df['file_stem'].map(
+            lambda stem: self.fasta_dir.joinpath(stem).with_suffix('.fa').__str__()).to_list()
+        chi_fastas = self.parent_df['chi_file_stem'].map(
+            lambda stem: self.fasta_dir.joinpath(stem).with_suffix('.fa').__str__()).to_list()
+        self.all_fastas = fastas + chi_fastas
+        if not self.has_inheritance:
+            for label, data in self.parent_df.iterrows():
+                self.collective_df.add_protein(label, data['sequence'], {})
+                self.collective_df.add_protein(data['chi_file_stem'],
+                                               *AccessiontoAlignment.alignment_finder(self.base_splice, label,
+                                                                                     self.fasta_args.base_identifier,
+                                                                                     self.fasta_args.parent_msa))
+            self.collective_df.dataframe_to_aln(self.fasta_args.collective_fasta)
+
     def fasta_operations(self):
+        self.make_fasta_paths()
         num_of_subunits = self.fasta_args.number_of_subunits
-        self.naming_args.output_directory = Path(self.naming_args.output_directory)
-        fasta_dir = Path(self.naming_args.output_directory).joinpath('Fasta')
+        fasta_dir = self.naming_args.output_directory.joinpath('Fasta')
         os.makedirs(fasta_dir, exist_ok=True)
-        for label, data in self.seq_df.iterrows():
+        for label, data in self.parent_df.iterrows():
             AccessiontoAlignment.fasta_creation(fasta_dir.joinpath(data['file_stem']).with_suffix('.fa'),
                                                 AccessiontoAlignment.create_seq_records(label, data['sequence'],
                                                                                         subunit_count=num_of_subunits))
@@ -159,16 +188,13 @@ class HomomerChimeraArgs:
                                                 AccessiontoAlignment.create_seq_records(label, data['chi_seq'],
                                                                                         subunit_count=num_of_subunits))
 
-    def alphafold_submission(self):
-        # fasta list is a separate input for control
+    def alphafold_submission(self, fastas: list):
         fasta_to_run = ()
-        placeholder = self.naming_args.file_stem_placeholder
         submission_toggles = self.submission_args.submission_toggles
         proteins_per_slurm = self.submission_args.proteins_per_slurm
-        naming_convention = self.submission_args.slurm_naming
         # Loops through all fastas created and checks if they are complete by looking for their ranking_debug file
         if submission_toggles['stragglers_or_custom_or_all'] == 'stragglers':
-            for fasta in self.all_fastas:
+            for fasta in fastas:
                 if not os.path.exists(Path(self.alphafold_dir).joinpath(Path(fasta).stem, '/ranking_debug.json')):
                     fasta_to_run += (fasta,)
             # Puts all fastas in a line separated file specified by custom_list_to_run
@@ -186,33 +212,43 @@ class HomomerChimeraArgs:
                 fasta_to_run = [x.split()[0] for x in run_list.readlines()]
 
         elif submission_toggles['stragglers_or_custom_or_all'] == 'all':
-            fasta_to_run = self.all_fastas
-        for slurm_index, file_index in enumerate(range(0, len(fasta_to_run), proteins_per_slurm)):
-            current_slurm = naming_convention.replace(placeholder, str(slurm_index))
-            if self.submission_args.submission_toggles['create_slurms']:
-                create_alphafold_slurm(fasta_to_run[file_index:file_index + proteins_per_slurm], current_slurm,
-                                       self.alphafold_dir, self.fasta_args.number_of_subunits)
-            if self.submission_args.submission_toggles['sbatch_slurms']:
-                os.system(f'sbatch {current_slurm}')
+            fasta_to_run = fastas
+        if self.submission_args.submission_toggles['sbatch_slurms']:
+            for slurm_index, file_index in enumerate(range(0, len(fasta_to_run), proteins_per_slurm)):
+                result = subprocess.run(['sbatch', '-J', str(slurm_index) + self.submission_args.slurm_naming, '-A',
+                                         self.submission_args.sbatch_group,
+                                         '-e', Path(self.naming_args.output_directory).joinpath(
+                        self.submission_args.slurm_naming + str(slurm_index)).with_suffix(".err"),
+                                         self.submission_args.alphafold_shell_script,
+                                         ",".join(fasta_to_run[file_index:file_index + proteins_per_slurm]),
+                                         self.alphafold_dir], capture_output=True)
+                print(result.stdout)
 
     def analysis_operations(self):
+        # TODO cant continue without inheritance
+        # TODO add native stability
+        # TODO sync with toggles from json
         Analysis.generate_alphafold_files(self.alphafold_dir, self.naming_args.output_directory)
-        msa_dict = AccessiontoAlignment.create_dictionary_from_alignment(self.fasta_args.msa_file_name)
-        base_plddt = Analysis.get_plddt_dict_from_pdb(
-            self.pdb_dir.joinpath(self.fasta_args.base_identifier).with_suffix('.pdb'))
-        print(base_plddt)
-        # master_plddt_dict = {label: AccessiontoAlignment.map_plddt_to_aln(self.seq_df.get_aln(label), tuple(
-        #
-        #                      for label in msa_dict.keys()}
-        # for label, data in self.seq_df.iterrows():
-
+        # self.collective_df.create_column('Relative Stability (%)')
+        # self.collective_df.create_column('Overall Stability')
+        # self.seq_df.create_column('Chimera Stability')
+        for chi, data in self.collective_df.iterrows():
+            chi_plddt = Analysis.get_plddt_dict_from_pdb(
+                self.pdb_dir.joinpath(str(chi)).with_suffix('.pdb'))[self.collective_df.get_sequence(chi)]
+            self.collective_df.loc[chi, 'Overall Stability'] = Analysis.overall_confidence(chi_plddt)
+            if len(inheritance_dict := self.collective_df.get_description(chi)) == 2:
+                plddt_dict = {}
+                for parent in inheritance_dict.keys():
+                    plddt_dict[parent] = Analysis.get_plddt_dict_from_pdb(
+                        self.pdb_dir.joinpath(parent).with_suffix('.pdb'))[self.collective_df.get_sequence(parent)]
+                plddt_dict[str(chi)] = chi_plddt
+                relative_stability = Analysis.relative_stabilty(plddt_dict, inheritance_dict)
+                self.collective_df.loc[chi, 'Relative Stability (%)'] = relative_stability
         # chimera.overall_native_stability = Analysis.overall_confidence(chimera.native_plddt[chimera.native_seq])
-        # chimera.overall_chimera_stability = Analysis.overall_confidence(chimera.chi_plddt[chimera.chi_seq])
         # chimera.sequence_similarity = Analysis.get_sequence_similarity(
         #     self.naming_args.emboss_naming.replace(name_placeholder, chimera.file_stem))
-        # Analysis.relative_stabilty()
-        data_columns = Analysis.determine_columns_from_container(self)
-        Analysis.convert_data_dict_to_csv(data_columns, self)
+        # data_columns = Analysis.determine_columns_from_container(self)
+        self.collective_df.to_csv(self.analysis_args.analysis_output_csv)
 
 
 class ShiftedFastaArguments:
@@ -227,12 +263,13 @@ class ShiftedFastaArguments:
     is entered in the json file, if "pair" is entered all chimera lists in the per json file will be paired one to 
     one to one etc. or single file list will be created for homomeric proteins. Switch toggle to pair if you one of 
     your unique proteins will not be a chimera'''
-    fasta_file_list_name: str
     scanner_start: int
     scanner_length: int
     scanner_rate: int
     parent_aln_file: str
     number_of_subunits: int
+    output_directory: str
+    collective_fasta: str
 
     def __init__(self, fasta_dict):
         for key, value in fasta_dict.items():
@@ -240,6 +277,36 @@ class ShiftedFastaArguments:
         self.scanner_end = self.scanner_start + self.scanner_length
         if self.scanner_length < 10:
             raise RuntimeError("scanner_length must be at 10 units")
+
+
+class ShiftedSubmissionArguments:
+    submission_toggles: dict
+    '''A dictionary that holds optional operations within the submission operation, they are generally turned on by 
+    placing true within the quotes of their value'''
+    create_slurms: bool
+    sbatch_slurms: bool
+    stragglers_or_custom_or_all: bool = 'stragglers'
+    '''If stragglers is placed in the quotes it will check to see if an alphafold prediction is done for all created 
+    chimeras and making a new the list of incomplete predictions or 'stragglers' to either create a file with their 
+    fastas or put them into a slurm to be submitted again. If custom is placed, all chimeras within the 
+    custom_list_to_run file will be submitted as slurm jobs. If all is selected all chimeras will be run 
+    indiscriminately'''
+    create_file_of_stragglers: bool
+    slurm_naming: str
+    custom_list_to_run: str
+    '''Path to file that for list that either be created by toggling on create_file_of_stragglers, or user-generated that should contain 
+    line separated fastas of proteins you want predicted'''
+    proteins_per_slurm: int
+    sbatch_group: str
+    "group needed to access computing resources through slurm/sbatch"
+    alphafold_shell_script: str
+    '''Path to the shell script that runs alphafold, it must take a list of comma-separated fastas 
+    and an output as its arguments. It's recommended you use the on provided in github'''
+    embedding_script: str
+
+    def __init__(self, fasta_dict):
+        for key, value in fasta_dict.items():
+            setattr(self, key, value)
 
 
 class ShiftedAnalysisArguments:
@@ -272,28 +339,56 @@ class ShiftedChimeraArgs:
     alphafold_submission: str
     run_analysis_operation: str
     fasta_args: ShiftedFastaArguments
-    naming_args: HomomerNamingArguments
-    submission_args: HomomerSubmissionArguments
-    analysis_args: HomomerAnalysisArguments
+    submission_args: ShiftedSubmissionArguments
+    analysis_args: ShiftedAnalysisArguments
 
     def __init__(self, shifted_json_file):
         with open(shifted_json_file, 'rb') as jfile:
             self.argument_dict = load(jfile)
-        self.get_dict_args(HomomerFastaArguments, 'fasta_args', 'fasta_arguments')
-        self.get_dict_args(HomomerNamingArguments, 'naming_args', 'naming_arguments')
-        self.get_dict_args(HomomerSubmissionArguments, 'submission_args', 'submission_arguments')
+        self.get_dict_args(ShiftedFastaArguments, 'fasta_args', 'fasta_arguments')
+        self.get_dict_args(ShiftedSubmissionArguments, 'submission_args', 'submission_arguments')
+        self.get_dict_args(ShiftedAnalysisArguments, 'analysis_args', 'analysis_arguments')
         self.operation_toggles = self.argument_dict['operation_toggles']
-        self.chimeras = ()
 
     def get_dict_args(self, dict_class, attr_name, arg_key):
         dict_args = self.argument_dict[arg_key]
         setattr(self, attr_name, dict_class(dict_args))
 
     def fasta_operations(self):
+        # TODO scanner length has to be 35% of length
+
         chi_aln_df = ChimeraGenerator.create_chimera_combinations(self.fasta_args.parent_aln_file,
                                                                   self.fasta_args.scanner_length,
                                                                   self.fasta_args.scanner_start,
-                                                                  self.fasta_args.scanner_rate)
-        fasta_dir = Path(self.naming_args.output_directory).joinpath('Fasta')
+                                                                  self.fasta_args.scanner_rate,
+                                                                  self.fasta_args.collective_fasta)
+        fasta_dir = Path(self.fasta_args.output_directory).joinpath('Fasta')
         os.makedirs(fasta_dir, exist_ok=True)
         chi_aln_df.make_individual_fasta(fasta_dir, self.fasta_args.number_of_subunits)
+
+    def submission_operations(self):
+        submission_toggles = self.submission_args.submission_toggles
+        if submission_toggles['get_embeddings']:
+            result = subprocess.run(['sbatch',
+                                     '-e', Path(self.fasta_args.output_directory).joinpath(
+                    self.submission_args.slurm_naming).with_suffix(".err"),
+                                     self.submission_args.embedding_script,
+                                     self.fasta_args.collective_fasta,
+                                     Path(self.fasta_args.collective_fasta).with_suffix('.pkl')], capture_output=True)
+            print(result.stdout)
+    def analysis_operations(self):
+        analysis_toggles = self.analysis_args.analysis_toggles
+        print(ESM.SequenceDataframe(Path(self.fasta_args.collective_fasta).__str__(),Path(self.fasta_args.collective_fasta).with_suffix('.pkl').__str__()).EMBEDDINGS_DICT['EidolonBat'].shape)
+        # if analysis_toggles['analyze_embeddings']:
+        #     dfs=[]
+        #     for func in [ESM.NormType.cosine, ESM.NormType.manhattan, ESM.NormType.euclidean, ESM.NormType.dot_product]:
+        #         print(func)
+        #         embeddings = ESM.SequenceDataframe(Path(self.fasta_args.collective_fasta).__str__(),Path(self.fasta_args.collective_fasta).with_suffix('.pkl').__str__())
+        #         embeddings.score_all_embeddings(func, np.mean)
+        #         dist_type = func.name
+        #         embeddings[f'{dist_type}_rank'] = embeddings[dist_type].rank(
+        #             ascending=func != ESM.NormType.cosine and func != ESM.NormType.dot_product)
+        #     combined_df=pd.concat(dfs)
+        #     combined_df = combined_df.loc[:, ~combined_df.columns.duplicated()]
+        #     if self.analysis_args.analysis_output_file:
+        #         combined_df.to_csv(self.analysis_args.analysis_output_file)

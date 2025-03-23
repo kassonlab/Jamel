@@ -1,20 +1,20 @@
-import ast, regex, re, torch, umap, argparse, os
+import ast
 import difflib
+import os
+import pickle
+import re
+import regex
+import torch
+import umap
 from enum import Enum
 from json import load
 from pathlib import Path
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
-import pickle
 from Bio import SeqIO
-from AccessiontoAlignment import create_seq_records, fasta_creation
-from ChimeraGenerator import sequence_splice, chimera_sequence_creation, \
-    create_chimera_combinations
-from prost import prost_embed_aln
-from ankh_chimera import ankh_embed_aln
-from Bio.Align import PairwiseAligner
-from pandasgui import show
+from AccessiontoAlignment import create_seq_records, fasta_creation, run_emboss_needle, calculate_sequence_identity
+from Analysis import get_sequence_identity
 
 
 def word_match(word, choices, cutoff=0.5) -> str:
@@ -38,14 +38,18 @@ class ESMModels(Enum):
     M8 = 'esm2_t6_8M_UR50D'
 
 
+# A set of functions used to aggregate embedding distances in SequenceDataframe
+evaluation_pairs = {min: max, np.mean: np.mean, max: min, sum: sum}
+
+
 def manhattan_norm(tensor1: torch.Tensor, tensor2: torch.Tensor):
     tensor = tensor1 - tensor2
-    return tensor.to(torch.float64).flatten().abs().sum().item()
+    return tensor.flatten().to(torch.float64).abs().sum().item()
 
 
 def euclidean_norm(tensor1: torch.Tensor, tensor2: torch.Tensor):
     tensor = tensor1 - tensor2
-    return torch.linalg.vector_norm(tensor.flatten()).item()
+    return torch.linalg.vector_norm(tensor).item()
 
 
 def cosine_similarity(tensor1: torch.Tensor, tensor2: torch.Tensor):
@@ -55,13 +59,33 @@ def cosine_similarity(tensor1: torch.Tensor, tensor2: torch.Tensor):
             torch.linalg.vector_norm(tensor1) * torch.linalg.vector_norm(tensor2))).item()
 
 
-func_dict = {'euclidean_norm': euclidean_norm, 'manhattan_norm': manhattan_norm, 'cosine_similarity': cosine_similarity}
+def dot_product(tensor1: torch.Tensor, tensor2: torch.Tensor):
+    tensor2 = tensor2.flatten()
+    tensor1 = tensor1.flatten()
+    return torch.dot(tensor1, tensor2).item()
+
+
+def random_thing(tensor1: torch.Tensor, tensor2: torch.Tensor):
+    #I define new and usually temporary distance functions I want to try here
+    # Currently Chebyshev distance
+    tensor_a = tensor2.flatten()
+    tensor_b = tensor1.flatten()
+    c = tensor_b - tensor_a
+
+    return c.max().item()
+
+
+# Used in conjunction with NormType enum for distance function selection
+func_dict = {'euclidean_norm': euclidean_norm, 'manhattan_norm': manhattan_norm, 'cosine_similarity': cosine_similarity,
+             'random': random_thing, 'dot_product': dot_product}
 
 
 class NormType(Enum):
     euclidean = 'euclidean_norm'
     manhattan = 'manhattan_norm'
     cosine = 'cosine_similarity'
+    random = 'random'
+    dot_product = 'dot_product'
 
     def execute(self, tensor1, tensor2):
         return func_dict[self.value](tensor1, tensor2)
@@ -85,9 +109,6 @@ def tensor_distance(tensor1, tensor2, dist_func=NormType.euclidean):
     return dist_func.execute(tensor1, tensor2)
 
 
-r'C:\Users\jamel\PycharmProjects\Jamel\esm\scripts\extract.py'
-
-
 def get_esm_embeddings(fasta_file, extract_py, output_direc, dim1_or_dim2: EmbedDims = EmbedDims.Dim2,
                        esm_model: ESMModels = ESMModels.M150):
     if not os.path.exists(output_direc):
@@ -99,18 +120,27 @@ def get_esm_embeddings(fasta_file, extract_py, output_direc, dim1_or_dim2: Embed
 
 
 class SequenceDataframe(pd.DataFrame):
-    def __init__(self, alignment_file, embed_dict_pkl: str = None):
+    """The SequenceDataframe is a special dataframe used to organize and manipulate sequences from a fasta alignment.
+    Especially for chimeras and in conjunction with llm embeddings. An empty can also be created to add freshly created sequences later.
+    As well as spit out a fasta alignment."""
+
+    def __init__(self, alignment_file=None, embed_dict_pkl: str = None):
         super().__init__(columns=['aln_sequence', 'sequence', 'description'])
+        self.emboss_format = '{0}w{1}.emb'
         self.alignment_file = alignment_file
-        self.create_dataframe_from_alignment()
+        if alignment_file:
+            self.create_dataframe_from_alignment()
         if embed_dict_pkl:
-            self.EMBEDDINGS_DICT: dict[str,torch.Tensor] = torch.load(embed_dict_pkl, map_location=torch.device('cpu'))
+            self.EMBEDDINGS_DICT: dict[str, torch.Tensor] = torch.load(embed_dict_pkl, map_location=torch.device('cpu'))
 
     def dataframe_to_aln(self, new_fasta_file):
-        seq_records = [create_seq_records(str(seq_id), seq_info['aln_sequence'], str(seq_info['description'])) for
-                       seq_id, seq_info in self.iterrows()]
+        seq_records = sum([create_seq_records(str(seq_id), seq_info['aln_sequence'], str(seq_info['description'])) for
+                           seq_id, seq_info in self.iterrows()], [])
         fasta_creation(new_fasta_file, seq_records)
-
+    def dataframe_to_multi_fa(self, new_fasta_file):
+        seq_records = sum([create_seq_records(str(seq_id), seq_info['sequence'], str(seq_info['description'])) for
+                           seq_id, seq_info in self.iterrows()], [])
+        fasta_creation(new_fasta_file, seq_records)
     def create_dataframe_from_alignment(self):
         """Takes a fasta style alignment and makes a dictionary where the key is whatever signifier follows '>'
         and the value is the sequence with no spaces"""
@@ -120,25 +150,27 @@ class SequenceDataframe(pd.DataFrame):
                                     'description': seq.description.replace(f'{seq.id} ', '')}
         return self
 
-    def make_individual_fasta(self, output_direc, subunit_count):
+    def make_individual_fasta(self, output_direc, subunit_count=1):
         for protein, info in self.iterrows():
             fasta_creation(Path(output_direc).joinpath(str(protein)).with_suffix('.fasta'),
-                           create_seq_records(protein, info['sequence'], info['description'], subunit_count))
+                           create_seq_records(protein, info['sequence'], str(info['description']), subunit_count))
 
     def create_column(self, column_name):
         self[column_name] = np.nan
 
     def add_value(self, label, column, value):
-        self.loc[label, column] = value
+        self.at[label, column] = value
 
     def get_description(self, chimera_label):
+        # In this context description should be used for labeling parents as for chimeras they appear in the alignment in dictionary style.
+        # Current style is {parent:{parent_splice:corresponding_chimera_splice}}
+        # you can use it for traditional descriptions but you cannot then use the embedding scoring functions
         if self.loc[chimera_label, 'description']:
             return ast.literal_eval(self.loc[chimera_label, 'description'])
 
     def add_protein(self, label, aln_seq, description):
-        self.add_value(label, 'aln_sequence', aln_seq)
-        self.add_value(label, 'sequence', aln_seq.replace('-', ''))
-        self.add_value(label, 'description', description)
+        self.loc[label] = {'sequence': str(aln_seq).replace('-', ''), 'aln_sequence': str(aln_seq),
+                           'description': description}
 
     def get_sequence(self, chimera_label):
         return self.loc[chimera_label, 'sequence']
@@ -146,29 +178,36 @@ class SequenceDataframe(pd.DataFrame):
     def get_aln(self, chimera_label):
         return self.loc[chimera_label, 'aln_sequence']
 
-    def score_embedding_distance(self, chi_label, parent_labels, dist_func):
+    def score_embedding_distance(self, chi_label, parent_labels, dist_func, evaluation_func=min):
         distance = []
         for parent in parent_labels:
             distance.append(tensor_distance(self.EMBEDDINGS_DICT[chi_label], self.EMBEDDINGS_DICT[parent], dist_func))
-        if dist_func != NormType.cosine:
-            self.loc[chi_label, dist_func.name] = sum(distance)
+        if dist_func == NormType.cosine or dist_func == NormType.dot_product:
+            self.loc[chi_label, dist_func.name] = evaluation_pairs[evaluation_func](distance)
         else:
-            self.loc[chi_label, dist_func.name] = sum(distance)
-        return sum(distance)
+            self.loc[chi_label, dist_func.name] = evaluation_func(distance)
+        return evaluation_func(distance)
 
-    def per_residue_distance_for_schema_set(self, chi_label):
-        if self.EMBEDDINGS_DICT[chi_label].shape[0] != len(self.loc[chi_label, 'sequence']):
-            return
-        distance = 0
+    def compare_confirmations(self, chi_label, parent_labels, dist_func, standards):
+        possible_confirmations = {AA: [] for AA in "ARNDCEQGHILKMFPSTWYV"}
+        distance = []
 
-        for parent, aln_positions in residue_inheritance.items():
-            for pos in aln_positions:
-                distance += tensor_distance(self.EMBEDDINGS_DICT[chi_label][pos, :],
-                                            self.EMBEDDINGS_DICT[parent][pos, :])
+        for standard, tensor in standards.EMBEDDINGS_DICT.items():
+            for residue, vector1 in zip(standards.get_aln(standard), tensor):
+                if residue in possible_confirmations.keys():
+                    possible_confirmations[residue].append(vector1)
+        for residue, vector2 in zip(self.get_aln(chi_label), self.EMBEDDINGS_DICT[chi_label]):
+            if residue in possible_confirmations.keys():
+                res_confirmations = possible_confirmations[residue]
+                if dist_func == NormType.cosine or dist_func == NormType.dot_product:
+                    distance.append(max(tensor_distance(vector2, conf, dist_func) for conf in res_confirmations))
+                else:
+                    distance.append(min(tensor_distance(vector2, conf, dist_func) for conf in res_confirmations))
+        print(distance)
+        distance = np.mean(distance)
+        self.loc[chi_label, dist_func.name] = distance
         return distance
 
-    #TODO Use nested dictionaries or another data struct to show parent splice
-    #TODO also need to account for mid-section splices
     def match_seq_to_parent(self, chi_label, parent, splice: slice):
         pattern = fr"{self.get_aln(chi_label)[splice]}"
         matches = regex.findall(pattern, self.get_aln(parent), overlapped=True)
@@ -177,17 +216,12 @@ class SequenceDataframe(pd.DataFrame):
         raise Exception("Couldn't find matching parent sequence")
 
     def score_per_res(self, chi_label, parent_labels: dict, dist_func):
-        distance=0
+        distance = []
         for parent, splice in parent_labels.items():
-            chimera_slice = slice(*splice)
-            parent_slice = self.match_seq_to_parent(chi_label, parent, chimera_slice)
-            chi_tensor=self.EMBEDDINGS_DICT[chi_label][chimera_slice]
-            parent_tensor=self.EMBEDDINGS_DICT[parent][parent_slice]
-            distance+=tensor_distance(chi_tensor, parent_tensor, dist_func)
-        if dist_func != NormType.cosine:
-            self.loc[chi_label, dist_func.name] = distance
-        else:
-            self.loc[chi_label, dist_func.name] = distance
+            for chi_tensor, parent_tensor in zip(self.EMBEDDINGS_DICT[chi_label][slice(*splice)],
+                                                 self.EMBEDDINGS_DICT[parent][slice(*splice)]):
+                distance.append(tensor_distance(chi_tensor, parent_tensor, dist_func))
+        self.loc[chi_label, dist_func.name] = sum(distance)
         return distance
 
     def score_all_per_res(self, dist_func: NormType):
@@ -195,19 +229,29 @@ class SequenceDataframe(pd.DataFrame):
             if len(parent_label := self.get_description(label)) == 2:
                 self.score_per_res(label, parent_label, dist_func)
 
-    def score_all_embeddings(self, dist_func: NormType):
+    def score_all_confs(self, dist_func: NormType, standards):
+        for label in self.EMBEDDINGS_DICT.keys():
+            if len(parent_label := self.get_description(label)) == 2:
+                self.compare_confirmations(label, parent_label, dist_func, standards)
+
+    def score_all_embeddings(self, dist_func: NormType, evaluation_func=min):
         self.create_column(dist_func.name)
         for label in self.EMBEDDINGS_DICT.keys():
             if len(parent_label := self.get_description(label)) == 2:
-                self.score_embedding_distance(label, parent_label, dist_func)
+                self.score_embedding_distance(label, parent_label, dist_func, evaluation_func)
 
-    def score_alnment_similarity(self):
-        alignment = PairwiseAligner()
-        for chimera, data in self.iterrows():
-            for parent in self.get_description(chimera):
-                self.loc[chimera, f'{parent}_similarity'] = alignment.score(self.get_aln(chimera),
-                                                                            self.get_aln(parent)) / alignment.score(
-                    self.get_aln(parent), self.get_aln(parent))
+    def create_emboss_file(self, output_direc, needle_command='needle'):
+        for chi in self.index:
+            for parent in self.get_description(chi):
+                emb_file = Path(output_direc).joinpath(self.emboss_format.format(chi, parent))
+                emb_file = translate_windows_path(str(emb_file)) if str(emb_file).find('\\') != -1 else emb_file
+                run_emboss_needle(emb_file, self.get_sequence(chi), self.get_sequence(parent), needle_command)
+
+    def get_sequence_identity(self):
+        for chi in self.index:
+            #TODO make emboss if not the same length
+            identity = [calculate_sequence_identity(self.get_aln(chi),self.get_aln(parent)) for parent in self.get_description(chi)]
+            self.add_value(chi,'identity',max(identity))
 
 
 class EmbeddingAnalysis:
@@ -254,29 +298,65 @@ def save_esm_embedding_directory(directory, new_pkl_file):
     torch.save(embed_dict, new_pkl_file)
 
 
-def embedding_umap(embed_pkl_file: str):
+def embedding_umap_2d(embed_pkl_file: str):
     reducer = umap.UMAP(n_components=2)
-    embed_dict: dict[str, torch.Tensor] = torch.load(embed_pkl_file)
+    embed_dict: dict[str, torch.Tensor] = torch.load(embed_pkl_file, map_location=torch.device('cpu'))
     embed_dict = {label: torch.sum(tensor, dim=0) for label, tensor in embed_dict.items()}
     # rows in umap matrix are samples/proteins
     embedding_matrix = np.vstack(tuple(embed_dict.values()))
     umap_vectors = reducer.fit_transform(embedding_matrix)
     plt.scatter(umap_vectors[:, 0], umap_vectors[:, 1], marker='+')
+    for i in range(len(umap_vectors[:, 0])):
+        plt.text(umap_vectors[i, 0], umap_vectors[i, 1], f"{list(embed_dict.keys())[i]}", fontsize=10, ha="right",
+                 va="bottom")
     plt.show()
     return plt.gcf()
 
 
-def combine_w_schema(embed_pkl_file, aln_file, dist_func: list[NormType], new_distance_file=''):
-    schema_data = pd.read_csv(r"/scratch/jws6pq/Notebook/ESM/Schema_valdation/Chimeragenesis/schema_data.csv",
+def embedding_umap_3d(embed_pkl_file: str):
+    embed_dict: dict[str, torch.Tensor] = torch.load(embed_pkl_file, map_location=torch.device('cpu'))
+    embed_dict = {label: torch.sum(tensor, dim=0) for label, tensor in embed_dict.items()}
+    embedding_matrix = np.vstack(tuple(embed_dict.values()))
+    umap_3d = umap.UMAP(n_components=3, random_state=42)
+    X_umap = umap_3d.fit_transform(embedding_matrix)
+
+    # Create 3D scatter plot
+    fig = plt.figure(figsize=(8, 6))
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Scatter plot with colors based on labels
+    sc = ax.scatter(X_umap[:, 0], X_umap[:, 1], X_umap[:, 2], cmap='Spectral')
+    for i in range(len(X_umap[:, 0])):
+        ax.text(X_umap[i, 0], X_umap[i, 1], z=X_umap[i, 2], s=f"{list(embed_dict.keys())[i]}", fontsize=10, ha="right",
+                va="bottom")
+    # Add colorbar
+    cbar = plt.colorbar(sc)
+    cbar.set_label("Digit Label")
+
+    # Labels and title
+    ax.set_title("3D UMAP Projection of Digits Dataset")
+    ax.set_xlabel("UMAP 1")
+    ax.set_ylabel("UMAP 2")
+    ax.set_zlabel("UMAP 3")
+
+    plt.show()
+    return plt.gcf()
+
+
+def combine_w_schema(embed_pkl_file, aln_file, dist_func: list[NormType], evaluation_func, new_distance_file=''):
+    schema_data = pd.read_csv(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\schema_data.csv",
                               index_col='chimera_block_ID')
+
     combined_df = schema_data
     for func in dist_func:
         embeddings = SequenceDataframe(aln_file, embed_pkl_file)
-        embeddings.score_all_embeddings(func)
+        embeddings.score_all_embeddings(func, evaluation_func)
+        embeddings.get_sequence_identity(r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\Emboss\Schema')
         dist_type = func.name
         combined_df = pd.concat((combined_df, embeddings), axis=1)
         combined_df['exp_rank'] = combined_df['mKate_mean'].rank(ascending=False)
-        combined_df[f'{dist_type}_rank'] = combined_df[dist_type].rank(ascending=func != NormType.cosine)
+        combined_df[f'{dist_type}_rank'] = combined_df[dist_type].rank(
+            ascending=func != NormType.cosine and func != NormType.dot_product)
     combined_df = combined_df.loc[:, ~combined_df.columns.duplicated()]
 
     if new_distance_file:
@@ -284,54 +364,80 @@ def combine_w_schema(embed_pkl_file, aln_file, dist_func: list[NormType], new_di
     return combined_df
 
 
-def combine_w_randoms(embed_pkl_file, aln_file, dist_func: list[NormType], new_distance_file=''):
-    randoms_data = pd.read_csv("..\Data\processed_randoms.csv", index_col='Protein')
+def combine_w_randoms(embed_pkl_file, aln_file, dist_func: list[NormType], evaluation_func, new_distance_file=''):
+    randoms_data = pd.read_csv("..\Data\Randoms\processed_randoms.csv", index_col='Protein')
     combined_df = randoms_data
     for func in dist_func:
+        print(func)
         embeddings = SequenceDataframe(aln_file, embed_pkl_file)
-        embeddings.score_all_per_res(func)
+        embeddings.score_all_confs(func, SequenceDataframe(
+            r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\pdth_siblings.aln',
+            r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\llm_output\pdth_siblings.pkl'))
         dist_type = func.name
         combined_df = pd.concat((combined_df, embeddings), axis=1)
-        combined_df[f'{dist_type}_rank'] = combined_df[dist_type].rank(ascending=func != NormType.cosine)
+        combined_df[f'{dist_type}_rank'] = combined_df[dist_type].rank(
+            ascending=func != NormType.cosine and func != NormType.dot_product)
     combined_df = combined_df.loc[:, ~combined_df.columns.duplicated()]
-
     if new_distance_file:
         combined_df.to_csv(new_distance_file)
     return combined_df
+
+
+def translate_windows_path(windows_path: str):
+    drive = re.match(r'(\w):', windows_path)
+    windows_path = windows_path.replace('\\', '/')
+    if drive:
+        windows_path = windows_path.replace(drive.group(0), '/mnt/' + drive.group(1).lower())
+    return windows_path
 
 
 if __name__ == '__main__':
     # TODO do per res with 3di sequence and cosine similarity
     # TODO turn esm embeddings into pkl and put in rivanna
-    # randoms = SequenceDataframe('..\Data\PDTvPDK_chimera.aln', r'..\Data\PDTvPDK_prost.pkl')
-    # randoms.score_per_res('PDTwPDK_152', {'PDK6':(0,51),'PDTH-2':(51,None)})
-    # l1 = combine_w_schema(r"/scratch/jws6pq/Notebook/ESM/Schema_valdation/Chimeragenesis/15B_2d.pkl", '/scratch/jws6pq/Notebook/ESM/Schema_valdation/Chimeragenesis/labeled_schema_aln',
-    #                       [NormType.cosine, NormType.manhattan, NormType.euclidean], '15B_2d.csv')
-    mod = '_res'
-    # print('esm')
-    # l1 = combine_w_randoms(r"..\Data\150M_esm.pkl", '..\Data\PDTvPDK_chimera.aln',
+    # look at plot of sequence identity versus expression and see where there are ones that express high but are disimilar
+    schema_data = pd.read_csv(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\schema_data.csv",
+                              index_col='chimera_block_ID')
+    notag=SequenceDataframe(r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\schema_no_tag.aln')
+    notag.get_sequence_identity()
+    notag=pd.concat((notag, schema_data), axis=1)
+    notag=notag.dropna()
+    plt.scatter(notag['identity'].astype(float),notag['mKate_mean'].astype(float))
+    for label,data in notag.iterrows():
+        plt.text(float(data['identity']),float(data['mKate_mean']), str(label), fontsize=10, ha="right",
+                 va="bottom")
+    plt.xlabel('Sequence Identity')
+    plt.ylabel('Expression (mKate)')
+    plt.title('Contiguous Chimera Expression vs. Identity')
+    plt.show()
+    mod = 'mean'
+    # l1=combine_w_schema(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\llm_output\schema_notag_X_v2.pkl", r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\schema_no_tag.aln',
+    #                       [NormType.cosine, NormType.manhattan, NormType.euclidean,NormType.dot_product],
+    #                       np.mean,f'../Data/notag_{mod}_v2.csv')
+    # combine_w_randoms(r"..\Data\150M_esm.pkl", '..\Data\PDTvPDK_chimera.aln',
     #                        [NormType.cosine, NormType.manhattan, NormType.euclidean], rf'..\Data\randoms_150M_esm{mod}.csv')
-    print('prost')
-    l1 = combine_w_randoms(r"..\Data\PDTvPDK_prost.pkl", '..\Data\PDTvPDK_chimera.aln',
-                           [NormType.cosine, NormType.manhattan, NormType.euclidean], rf'..\Data\randoms_prost{mod}.csv')
+    # print('prost')
+    # combine_w_randoms(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\llm_output\randoms_prost_X.pkl",
+    #                   '..\Data\Randoms\PDTvPDK_chimera.aln',
+    #                   [NormType.cosine, NormType.manhattan, NormType.euclidean, NormType.dot_product],
+    #                   sum, rf'..\Data\randoms_prost_{mod}.csv')
     # print('ankh')
-    # l1 = combine_w_randoms(r"..\Data\PDTvPDK_ankh.pkl", '..\Data\PDTvPDK_chimera.aln',
-    #                        [NormType.cosine, NormType.manhattan, NormType.euclidean], rf'..\Data\randoms_ankh{mod}.csv')
-    parser = argparse.ArgumentParser(
-        description='Creating a fasta file of all potential chimeric proteins between two parents based on a sliding splice site')
-    parser.add_argument('-in', '--inputjson', type=str, required=True,
-                        help='alignment file in fasta style between 2 proteins')
-    args = parser.parse_args()
-
-    if args.inputjson:
-        esm_args = EmbeddingAnalysis(args.inputjson)
-        if esm_args.provided_full_aln:
-            get_esm_embeddings(esm_args.aln_file, esm_args.extract_py_file, esm_args.esm_output_directory,
-                               esm_args.embeddings_dimension, esm_args.esm_model)
-            # SequenceDataframe(esm_args.aln_file)
-        # if os.path.exists(esm_args.chimera_seq_fasta):
-        #     esm_args.get_esm_embeddings()
-        #     esm_args.create_embedding_container()
-        #     embeddings = esm_args.score_all_embeddings()
-        #     scores = score_all_embeddings(esm_args.esm_output_directory, esm_args.chimera_seq_output)
-        #     scores.to_csv(esm_args.distance_score_csv)
+    # combine_w_randoms(r"..\Data\PDTvPDK_ankh.pkl", '..\Data\PDTvPDK_chimera.aln',
+    #                      [NormType.cosine, NormType.manhattan, NormType.euclidean], rf'..\Data\randoms_ankh{mod}.csv')
+    # parser = argparse.ArgumentParser(
+    #     description='Creating a fasta file of all potential chimeric proteins between two parents based on a sliding splice site')
+    # parser.add_argument('-in', '--inputjson', type=str, required=True,
+    #                     help='alignment file in fasta style between 2 proteins')
+    # args = parser.parse_args()
+    #
+    # if args.inputjson:
+    #     esm_args = EmbeddingAnalysis(args.inputjson)
+    #     if esm_args.provided_full_aln:
+    #         get_esm_embeddings(esm_args.aln_file, esm_args.extract_py_file, esm_args.esm_output_directory,
+    #                            esm_args.embeddings_dimension, esm_args.esm_model)
+    # SequenceDataframe(esm_args.aln_file)
+    # if os.path.exists(esm_args.chimera_seq_fasta):
+    #     esm_args.get_esm_embeddings()
+    #     esm_args.create_embedding_container()
+    #     embeddings = esm_args.score_all_embeddings()
+    #     scores = score_all_embeddings(esm_args.esm_output_directory, esm_args.chimera_seq_output)
+    #     scores.to_csv(esm_args.distance_score_csv)

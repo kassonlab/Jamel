@@ -6,10 +6,6 @@
 from os import system, path
 from pathlib import Path
 
-SLURM_TEMPLATE = 'MultimerAlphaFold.slurm'
-SH_TEMPLATE = 'MultimerAlphaFold.sh'
-
-
 def prep(pdb, gmxbin, pdb2gmx):
     shortname = Path(pdb).stem
     system(f'{gmxbin} {pdb2gmx} -f {shortname}.pdb -o {shortname} -p {shortname} -i {shortname}')
@@ -65,17 +61,7 @@ def create_gmx_prod_slurm(pdb, gmxbin, slurm_template, slurm_file_name, output_f
 # TODO srun and ntomp for mdrun
 # TODO sbatch roduction run from inside setup
 
-def create_alphafold_slurm(iter_of_fastas, slurm_filename, output_directory,subunit_count):
-    system(f'cp {SLURM_TEMPLATE} {slurm_filename}')
-    subunits = 'monomer' if subunit_count==1 else 'multimer'
-    databases = 'full_dbs' if subunit_count == 1 else 'reduced_dbs'
-    with open(slurm_filename, 'a') as slurm_file:
-        output_file=Path(output_directory).joinpath(Path(slurm_filename).stem+'.out')
-        slurm_file.write(
-            f'\n#SBATCH -o {Path(output_directory).joinpath(Path(slurm_filename).stem+".out")}\n'
-            f'#SBATCH -e {Path(output_directory).joinpath(Path(slurm_filename).stem+".err")}\n#Run program\n')
-        proteins_to_run = ','.join(iter_of_fastas)
-        slurm_file.write(f'{SH_TEMPLATE} {proteins_to_run} {subunits} {databases} {output_directory}')
+
 
 
 

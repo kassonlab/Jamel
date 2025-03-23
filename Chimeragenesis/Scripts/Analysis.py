@@ -6,6 +6,8 @@ from pickle import load as p_load
 from json import load as j_load
 from os import system, path, strerror, listdir, makedirs
 from shutil import copy
+
+import numpy as np
 from numpy import savetxt, empty, zeros, array, mean
 from errno import ENOENT
 from Bio import SeqIO, PDB
@@ -38,7 +40,7 @@ def convert_array_to_file(arr, delimiter, file_name):
     savetxt(file_name, arr, fmt=delimiter.join(('%s' for x in arr)))
 
 
-def get_plddt_dict_from_pdb(pdb_file) -> dict:
+def get_plddt_dict_from_pdb(pdb_file) -> dict[str,tuple]:
     pdb = PDB.PDBParser().get_structure('pdb', pdb_file)[0]
     plddt_dict = defaultdict(tuple)
     chains = tuple(chain for chain in pdb)
@@ -62,7 +64,7 @@ def create_plddt_file_from_pdb(pdb_file, new_plddt_file):
     with open(new_plddt_file, 'w') as new_plddt:
         for sequence, plddt in get_plddt_dict_from_pdb(pdb_file).items():
             new_plddt.write(
-                '>{0}\n{1}'.format(sequence, "\t".join(plddt)))
+                f'>{0}\n{1}'.format(sequence, "\t".join(str(plddt))))
 
 
 def skeletonize_alphafold_folder(alphafold_dir, storage_dir):
@@ -101,7 +103,7 @@ def get_Foldx_results(foldx_file):
         return foldx_score.read().split()[1]
 
 
-def generate_alphafold_files(alphafold_folder, output_folder):
+def generate_alphafold_files(alphafold_folder, output_folder,make_plddt=False):
     """Creates a text file containing the plddt values of the highest_rank_model extracted from alphafold's result pkl file
     and renames the ranked_0.pdb file and places it in the desired directory."""
     # Checking to see if ranking_debug.json exists. This file is the last to be output by alphafold and is a check that
@@ -119,18 +121,16 @@ def generate_alphafold_files(alphafold_folder, output_folder):
             old_pdb = folder.joinpath('ranked_0.pdb')
             new_pdb = pdb_out.joinpath(f'{folder.stem}.pdb')
             copy(old_pdb, new_pdb)
-            create_plddt_file_from_pdb(new_pdb, plddt_out.joinpath(f'{folder.stem}.plddt'))
+            if make_plddt:
+                create_plddt_file_from_pdb(new_pdb, plddt_out.joinpath(f'{folder.stem}.plddt'))
 
 
-def get_sequence_similarity(emboss_file):
+def get_sequence_identity(emboss_file):
     """Returns sequence similarity from an emboss needle file."""
     with open(emboss_file, 'r') as infile:
-        infile = infile.read().split('#')
-        for line in infile:
-            if 'Similarity' in line:
-                emboss_score = line.split()[-1].replace('(', '').replace(')', '').replace('%', '')
+        infile = infile.read()
+    emboss_score = re.search(r'# Identity:.*\(([\d.]+)%',infile).group(1)
     return emboss_score
-
 
 def overall_confidence_from_file(plddt_file):
     """Returns the average confidence score from a protein's plddt file."""
@@ -146,12 +146,12 @@ def overall_confidence(plddt: tuple):
     return average_plddt
 
 
-def relative_stabilty(plddt_dict: dict[str, tuple], inheritance_dict: dict[str, set], chi_seq):
-    raw_stability = 0
-    calculations=0
+def relative_stabilty(plddt_dict: dict[str, tuple], inheritance_dict: dict[str, dict[tuple,tuple]]):
+    raw_stability = []
     chimera_label = (set(plddt_dict.keys()) - set(inheritance_dict.keys())).pop()
-    for parent, aln_positions in inheritance_dict.items():
-        for pos in aln_positions:
-            raw_stability += plddt_dict[parent][pos] - plddt_dict[chimera_label][pos]
-            calculations+=1
-    return raw_stability/calculations
+    for parent, boundaries in inheritance_dict.items():
+        for parent_bound,chimera_bound in boundaries.items():
+            if not all(bound==0 for bound in parent_bound):
+                for chi,native in zip(plddt_dict[chimera_label][slice(*chimera_bound)],plddt_dict[parent][slice(*parent_bound)]):
+                    raw_stability.append((chi - native) / native * 100)
+    return np.mean(raw_stability)

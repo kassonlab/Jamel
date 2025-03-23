@@ -1,29 +1,18 @@
-import os
-from os import path
-from pathlib import Path
 from sys import exit
 from json import load
-
-import pandas as pd
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
-from ChimeraClasses import HomomerChimeraArgs,HomomerAnalysisArguments,HomomerFastaArguments,HomomerNamingArguments,HomomerSubmissionArguments
-import AccessiontoAlignment, Analysis, ChimeraGenerator
-import ESM
-from setup import alphafold_submission_for_chimera_container
+from ChimeraClasses import HomomerChimeraArgs
+import ChimeraGenerator
 import argparse
 
 # TODO add autocomplete for changing keys?? readline
 # TODO be able to designate multiple seq_of_interest
-# TODO labeled_schema_aln.csv accession route
-# TODO labeled_schema_aln.csv this between Homomer proteins
 # TODO be able tos swap into the constant
 #TODO turn parser into function??
 parser = argparse.ArgumentParser(
     description='Creating chimeric proteins where a region from a constant protein is spliced into a list of '
                 'homologus regions between a protein family or vice versa')
 parser.add_argument('-u', '--updatejson', type=str, required=False,
-                    help='updating json configs. ex: default_json,old_json')
+                    help='updating json configs with current variables whether adding or taking away. ex: default_json,old_json')
 parser.add_argument('-i', '--jsoninput', dest='arg_jsons', required=False, type=str,
                     help='Comma seperated json config inputs. ex: constant_json,variant_json')
 parser.add_argument('-ch', '--change', required=False, type=str,
@@ -99,52 +88,10 @@ if __name__ == '__main__':
     # TODO easy msa creation
 
     if TOTAL_ARGS.operation_toggles['alphafold_submission']:
-        alphafold_submission_for_chimera_container(TOTAL_ARGS, TOTAL_ARGS.all_fastas)
+        TOTAL_ARGS.make_fasta_paths()
+        TOTAL_ARGS.alphafold_submission(TOTAL_ARGS.all_fastas)
 
     if TOTAL_ARGS.operation_toggles['run_analysis_operation']:
         TOTAL_ARGS.analysis_operations()
 
-    #     # TODO have a functiuon to proint pdbs and make pdbs for reference
-    #     # TODO make it to be able to simulate native pdb
-    # # TODO: Create a way for python to check periodically whether the setup slurms are done and then submit the prodcution
-    # # TODO make certain parts available from commandline
-    # if operation_toggles['run_gromacs_operation']=='True':
-    #     gromacs_data_dict={}
-    #     gromacs_arguments = argument_dict.gromacs_arguments
-    #     gromacs_toggles = gromacs_arguments.gromacs_toggles
-    #     # TODO if you hyand select make a file to resubmit with the choisces
-    #     if not path.exists(gromacs_arguments.pdbs_to_run) or gromacs_toggles['create new pdb list']:
-    #         with open(analysis_arguments.analysis_output_csv) as data:
-    #             pdbs_to_run=tuple(chimera.chi_pdb for chimera in list_of_chis)
-    #             for row in reader(data):
-    #                 print(row)
-    #             for index,pdb in enumerate(pdbs_to_run):
-    #                 print(f'{index}. {pdb}')
-    #             pdbs_to_run=tuple(pdbs_to_run[int(index)] for index in input("Submit comma separated list:\n Ex: 0,1,2,7,8\n Enter:").split(','))
-    #             with open(gromacs_arguments.pdbs_to_run,'w') as pdb_list:
-    #                 for pdb in pdbs_to_run:
-    #                     pdb_list.write(f'{pdb}\n')
-    #     else:
-    #         with open(gromacs_arguments.pdbs_to_run,'r') as pdbs_to_run:
-    #             pdbs_to_run=tuple(pdb.split()[0] for pdb in pdbs_to_run.readlines())
-    #     for pdb in pdbs_to_run:
-    #         system(f'cp {pdb} {container.naming_args["gromacs_slurm_dir"]}')
-    #     gromacs_data_dict.setup_slurms = tuple(
-    #         container.naming_args.gromacs_slurm_dir + Path(pdb).stem + container.naming_args.setup_extension for pdb in
-    #         pdbs_to_run)
-    #     # TODO make folders for gromacs
-    #     if gromacs_toggles['create setup slurms']=='True':
-    #         for index,(pdb,slurm) in enumerate(zip(pdbs_to_run,gromacs_data_dict.setup_slurms)):
-    #             create_setup_slurm(pdb,gromacs_arguments.gmxbin,gromacs_arguments.pdb2gmx,gromacs_arguments.slurm_template,slurm,gromacs_arguments.slurm_output.replace(placeholder,Path(pdb).stem),gromacs_arguments.slurm_error.replace(placeholder,Path(pdb).stem))
-    #     if gromacs_toggles['sbatch setup slurms']:
-    #         for slurm in gromacs_data_dict.setup_slurms:
-    #             system(f"sbatch {slurm}")
-    #     gromacs_data_dict.mdrun_slurms = tuple(
-    #         container.naming_args.gromacs_slurm_dir + Path(pdb).stem + container.naming_args.production_extension for pdb
-    #         in pdbs_to_run)
-    #     if gromacs_toggles['create mdrun slurms']:
-    #         for index, (pdb, slurm) in enumerate(zip(pdbs_to_run, gromacs_data_dict.mdrun_slurms)):
-    #             create_prod_slurm(pdb,gromacs_arguments.gmxbin,gromacs_arguments.slurm_template,slurm,gromacs_arguments.slurm_output.replace(placeholder,Path(pdb).stem),gromacs_arguments.slurm_error.replace(placeholder,Path(pdb).stem))
-    #     if gromacs_toggles['sbatch mdrun slurms']:
-    #         for slurm in gromacs_data_dict.mdrun_slurms:
-    #             system(f"sbatch {slurm}")
+
