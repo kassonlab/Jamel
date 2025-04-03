@@ -1,9 +1,9 @@
 from Bio import SeqIO
+from Bio.SeqRecord import SeqRecord
 from numpy import array
 from math import log
 from collections import Counter
-from Chimeragenesis.AccessiontoAlignment import create_dictionary_from_alignment
-from Chimeragenesis.ChimeraGenerator import fasta_creation
+from AccessiontoAlignment import create_dictionary_from_alignment,fasta_creation
 def blosum_62_matrix():
     """Simply returns the blosum 62 matrix"""
 
@@ -105,15 +105,14 @@ def shannons_entropy_for_residue_conservation(reference_label, alignment_file):
             entropy += -probability * log(probability, number_of_possible_bins)
         shannons_entropy.append((alignment_index,reference_sequence[alignment_index],entropy))
     return shannons_entropy
-def color_coding(pdb_name, list_of_values, scale_tuple, color_scheme_tuple):
+
+def color_coding(pdb_name, list_of_values, scale:tuple, color_scheme:tuple):
     """Takes a list_of_values and colors a residue of a pymol structure in the scale specified by
     scale_tuple:(min_value_in_scale,max_value_in_scale) and color_scheme_tuple:(low_color,high_color).
     This function has to be run in pymol to work and the protein that is being color coded has to already exist"""
     from pymol import cmd
-    minimum_value = scale_tuple[0]
-    maximum_value = scale_tuple[1]
-    low_color = color_scheme_tuple[0]
-    high_color = color_scheme_tuple[1]
+    minimum_value,maximum_value = scale
+    low_color,high_color = color_scheme
     # using list comprehension to normalize the given values between 0 and 1 with the given scale
     normalized_values = [(original_value - minimum_value) / (maximum_value - minimum_value) for original_value in
                          list_of_values]
@@ -135,5 +134,5 @@ def pdb_to_fasta(pdb,new_fasta):
     with open(pdb, 'r') as pdb_file:
         fasta_list=[]
         for record in SeqIO.parse(pdb_file, 'pdb-atom'):
-            fasta_list.append((record.seq,1,record.id))
+            fasta_list.append(SeqRecord(record.seq,record.id))
     fasta_creation(new_fasta,fasta_list)

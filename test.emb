@@ -1,0 +1,59 @@
+########################################
+# Program: needle
+# Rundate: Wed  5 Mar 2025 16:05:28
+# Commandline: needle
+#    -asequence asis:RMLFQTSYTLENNGSVICIPNNGQCFCLAWLKSNGTNAEKLAANILQWITFALSALCLMFYGYQTWKSTCGWEEIYVATIEMIKFIIEYFHEFDEPAVIYSSNGNKTVWLRYAEWLLTCPVILIHLSNLTGLANDYNKRTMGLLVSDIGTIVWGTTAALSKGYVRVIFFLMGLCYGIYTFFNAAKVYIEAYHTVPKGRCRQVVTGMAWLFFVSWGMFPILFILGPEGFGVLSVYGSTVGHTIIDLMSKNCWGLLGHYLRVLIHEHILIHGDIRKTTKLNIGGTEIEVETLVEDE
+#    -bsequence asis:EYHAPAGYQVNPPYHPVHGYEEQCSSIYIYYGALWEQETARGFQWFAVFLSALFLAFYGWHAYKASVGWEEVYVCSVELIKVILEIYFEFTEPAVIYSSNGNKTVWLRYAEWLLTCPVILIHLSNITGLSEAYNKRTMALLVSDLGTICMGVTAALATGWVKWLFYCIGLVYGTQTFYNAGIIYVESYYIMPAGGCKKLVLAMTAVYYSSWLMFPGLFIFGPEGMHTLSVAGSTIGHTIADLLSKNIWGLLGHFLRIKIHEHIIMYGDIRRPVSSQFLGRKVDVLAFVTEE
+#    -gapopen 5.0
+#    -gapextend 5.0
+#    -brief
+#    -outfile /mnt/c/Users/jamel/PycharmProjects/Jamel/test.emb
+# Align_format: srspair
+# Report_file: /mnt/c/Users/jamel/PycharmProjects/Jamel/test.emb
+########################################
+
+#=======================================
+#
+# Aligned_sequences: 2
+# 1: asis
+# 2: asis
+# Matrix: EBLOSUM62
+# Gap_penalty: 5.0
+# Extend_penalty: 5.0
+#
+# Length: 296
+# Identity:     155/296 (52.4%)
+# Similarity:   204/296 (68.9%)
+# Gaps:           7/296 ( 2.4%)
+# Score: 811.0
+# 
+#
+#=======================================
+
+asis               1 RMLFQTSYTLENNGSVICIPN-NGQCFCLAWLKSNGTNAEKLAANILQWI     49
+                       .:......:.|.....:.. ..||..: :: ..|...|:..|...||.
+asis               1 --EYHAPAGYQVNPPYHPVHGYEEQCSSI-YI-YYGALWEQETARGFQWF     46
+
+asis              50 TFALSALCLMFYGYQTWKSTCGWEEIYVATIEMIKFIIE-YFHEFDEPAV     98
+                     ...||||.|.|||:..:|::.||||:||.::|:||.|:| || ||.||||
+asis              47 AVFLSALFLAFYGWHAYKASVGWEEVYVCSVELIKVILEIYF-EFTEPAV     95
+
+asis              99 IYSSNGNKTVWLRYAEWLLTCPVILIHLSNLTGLANDYNKRTMGLLVSDI    148
+                     ||||||||||||||||||||||||||||||:|||:..||||||.|||||:
+asis              96 IYSSNGNKTVWLRYAEWLLTCPVILIHLSNITGLSEAYNKRTMALLVSDL    145
+
+asis             149 GTIVWGTTAALSKGYVRVIFFLMGLCYGIYTFFNAAKVYIEAYHTVPKGR    198
+                     |||..|.||||:.|:|:.:|:.:||.||..||:||..:|:|:|:.:|.|.
+asis             146 GTICMGVTAALATGWVKWLFYCIGLVYGTQTFYNAGIIYVESYYIMPAGG    195
+
+asis             199 CRQVVTGMAWLFFVSWGMFPILFILGPEGFGVLSVYGSTVGHTIIDLMSK    248
+                     |:::|..|..:::.||.|||.|||.||||...|||.|||:||||.||:||
+asis             196 CKKLVLAMTAVYYSSWLMFPGLFIFGPEGMHTLSVAGSTIGHTIADLLSK    245
+
+asis             249 NCWGLLGHYLRVLIHEHILIHGDIRKTTKLNIGGTEIEVETLVEDE    294
+                     |.||||||:||:.|||||:::||||:.......|.:::|...|.:|
+asis             246 NIWGLLGHFLRIKIHEHIIMYGDIRRPVSSQFLGRKVDVLAFVTEE    291
+
+
+#---------------------------------------
+#---------------------------------------

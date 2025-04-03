@@ -28,15 +28,7 @@ cuts=[152,350,416,647,821,996,1133,1274,1435] # RAndom CHimeras
 #     dna_aln[label]=protein_seq
 #
 # fasta_creation(f'../Data/PDTvPDK_chimera.aln', sum((create_seq_records(label, seq) for label,seq in dna_aln.items()), []))
-# seq_dict=create_dictionary_from_alignment('..\Data\PDTvPDK_chimera.aln')
-# labels=[]
-# for label, seq in seq_dict.items():
-#     cut=re.search(r'\d{2,9}',label)
-#     if cut:
-#         protein_cut=round(int(cut[0])/3)
-#         label=re.sub(cut[0],str(protein_cut),label)
-#     labels.append(f'/scratch/jws6pq/Notebook/ESM/RandomChimeras/{label}.fa')
-#     fasta_creation(f'..\Data\\{label}.fa',create_seq_records(label,seq.replace('-',''),))
+
 # aln_file='..\Data\PDTvPDK_chimera.aln'
 # seq_df = SequenceDataframe()
 # seq_dict = create_dictionary_from_alignment(aln_file)
@@ -81,20 +73,21 @@ cuts=[152,350,416,647,821,996,1133,1274,1435] # RAndom CHimeras
 
     # plt.show()
 # Creating inheritance file for schmea
-schema_cuts=[0,35,49,94,117,146,189,214,232,266,None]
-schema_dict=create_dictionary_from_alignment(r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\notag_schema_parents.aln')
-notag_df=SequenceDataframe(r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\schema_no_tag.aln')
-parent_dict={'0':'c0000000000','1':'c1111111111','2':'c2222222222'}
-for label in notag_df.index:
-    label=str(label).replace('c','')
-    counts=Counter(label)
-    partner_symbol=min(counts,key=counts.get)
-    base_symbol=max(counts,key=counts.get)
-    block_index=label.find(partner_symbol)
-    seq_of_int=schema_dict[parent_dict[base_symbol]][slice(*schema_cuts[block_index:block_index+2])].replace('-','')
-    _,inheritance=alignment_finder(seq_of_int,parent_dict[partner_symbol],parent_dict[base_symbol],r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\notag_schema_parents.aln')
-    notag_df.add_value('c'+label,'description',inheritance)
-notag_df.dataframe_to_aln(r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\notag_schema_parents.inh')
+# schema_cuts=[0,35,49,94,117,146,189,214,232,266,None]
+# schema_dict=create_dictionary_from_alignment(r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\notag_schema_parents.aln')
+# notag_df=SequenceDataframe(r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\schema_no_tag.aln')
+# parent_dict={'0':'c0000000000','1':'c1111111111','2':'c2222222222'}
+# for label in notag_df.index:
+#     label=str(label).replace('c','')
+#     counts=Counter(label)
+#     partner_symbol=min(counts,key=counts.get)
+#     base_symbol=max(counts,key=counts.get)
+#     block_index=label.find(partner_symbol)
+#     seq_of_int=schema_dict[parent_dict[base_symbol]][slice(*schema_cuts[block_index:block_index+2])].replace('-','')
+#     _,inheritance=alignment_finder(seq_of_int,parent_dict[partner_symbol],parent_dict[base_symbol],r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\notag_schema_parents.aln')
+#     notag_df.add_value('c'+label,'description',inheritance)
+# notag_df.dataframe_to_aln(r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\notag_schema_parents.inh')
 # TOTAL_ARGS = HomomerChimeraArgs("/sfs/weka/scratch/jws6pq/Notebook/ESM/Schema_valdation/notag_redo.json")
 #
 # TOTAL_ARGS.alphafold_submission([str(file) for file in Path("/scratch/jws6pq/Notebook/ESM/Schema_valdation/notag_fastas/").iterdir() if file.is_file()])
+print(torch.cuda.is_available())  # True if ROCm is working

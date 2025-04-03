@@ -4,10 +4,8 @@ from ChimeraClasses import HomomerChimeraArgs
 import ChimeraGenerator
 import argparse
 
-# TODO add autocomplete for changing keys?? readline
 # TODO be able to designate multiple seq_of_interest
 # TODO be able tos swap into the constant
-#TODO turn parser into function??
 parser = argparse.ArgumentParser(
     description='Creating chimeric proteins where a region from a constant protein is spliced into a list of '
                 'homologus regions between a protein family or vice versa')
@@ -31,8 +29,7 @@ parser.add_argument('-fr', '--findnreplace', required=False, type=str,
                          'recurring between a find:replace pair input within the json input in change flag. ex: '
                          'string_to_find:replacing_string')
 
-subparser = parser.add_subparsers(dest='cmdline_toggles')
-operations = subparser.add_parser('operations')
+operations = parser.add_subparsers(dest='cmdline_toggles').add_parser('operations')
 operations.add_argument('-fa', '--fasta', required=False, action='store_true', default=False,
                         help='turns on fasta operation. Flag must be called at the end of the command and '
                              'preceded by \'operations\' ex: python file.py -i json1,json2 operations -fa . Can be '
@@ -85,7 +82,6 @@ if __name__ == '__main__':
                 TOTAL_ARGS.operation_toggles[key] = False
     if TOTAL_ARGS.operation_toggles['run_fasta_operation']:
         TOTAL_ARGS.fasta_operations()
-    # TODO easy msa creation
 
     if TOTAL_ARGS.operation_toggles['alphafold_submission']:
         TOTAL_ARGS.make_fasta_paths()

@@ -2,18 +2,13 @@
 #
 # Code 2023 by Jamel Simpson
 import re
-from pickle import load as p_load
-from json import load as j_load
-from os import system, path, strerror, listdir, makedirs
+from os import system, path, listdir, makedirs
 from shutil import copy
-
 import numpy as np
-from numpy import savetxt, empty, zeros, array, mean
-from errno import ENOENT
+from numpy import savetxt, empty, mean
 from Bio import SeqIO, PDB
 from collections import defaultdict
 from pathlib import Path
-
 
 def determine_columns_from_container(container):
     data_columns = {}
@@ -28,24 +23,23 @@ def determine_columns_from_container(container):
     return data_columns
 
 
-def convert_data_dict_to_csv(data_dict, container):
-    data_array = empty(((len(container.chimeras) + 1), len(data_dict)), dtype=object)
-    for column_count, (column_name, data) in enumerate(data_dict.items()):
+def convert_data_dict_to_csv(data: dict, container):
+    data_array = empty(((len(container.chimeras) + 1), len(data)), dtype=object)
+    for column_count, (column_name, data) in enumerate(data.items()):
         data_array[0, column_count] = column_name
         data_array[1:, column_count] = data
-    savetxt(container.analysis_args.analysis_output_csv, data_array, fmt=','.join('%s' for x in data_dict))
+    savetxt(container.analysis_args.analysis_output_csv, data_array, fmt=','.join('%s' for _ in data))
 
 
 def convert_array_to_file(arr, delimiter, file_name):
-    savetxt(file_name, arr, fmt=delimiter.join(('%s' for x in arr)))
+    savetxt(file_name, arr, fmt=delimiter.join(('%s' for _ in arr)))
 
 
-def get_plddt_dict_from_pdb(pdb_file) -> dict[str,tuple]:
+def get_plddt_dict_from_pdb(pdb_file) -> dict[str, tuple]:
     pdb = PDB.PDBParser().get_structure('pdb', pdb_file)[0]
     plddt_dict = defaultdict(tuple)
-    chains = tuple(chain for chain in pdb)
     seq_dict = {chain.id.split(':')[-1]: str(chain.seq) for chain in SeqIO.parse(pdb_file, 'pdb-atom')}
-    for chain in chains:
+    for chain in pdb:
         sequence = seq_dict[chain.id]
         plddt = tuple(resi['CA'].bfactor for resi in chain)
         plddt_dict[sequence] += (plddt,)
@@ -68,6 +62,7 @@ def create_plddt_file_from_pdb(pdb_file, new_plddt_file):
 
 
 def skeletonize_alphafold_folder(alphafold_dir, storage_dir):
+    """Takes an alphafold output folder and copies the ranking_debug,the top ranked pdb and the corresponding plddt scores  into another directory."""
     rank_file = path.join(alphafold_dir, '../ranking_debug.json')
     makedirs(storage_dir, exist_ok=True)
     new_files = []
@@ -89,7 +84,6 @@ def skeletonize_alphafold_folder(alphafold_dir, storage_dir):
 
 
 def run_Foldx(foldx_file, pdb_file, foldx_command):
-    """Call FoldX.  This is optional functionality."""
     pdb_dir = path.dirname(pdb_file)
     foldx_dir = path.dirname(foldx_file)
     system(f'{foldx_command}  -c Stability --pdb {path.basename(pdb_file)} '
@@ -98,12 +92,11 @@ def run_Foldx(foldx_file, pdb_file, foldx_command):
 
 
 def get_Foldx_results(foldx_file):
-    """Read FoldX results."""
     with open(foldx_file, 'r') as foldx_score:
         return foldx_score.read().split()[1]
 
 
-def generate_alphafold_files(alphafold_folder, output_folder,make_plddt=False):
+def generate_alphafold_files(alphafold_folder, output_folder, make_plddt=False):
     """Creates a text file containing the plddt values of the highest_rank_model extracted from alphafold's result pkl file
     and renames the ranked_0.pdb file and places it in the desired directory."""
     # Checking to see if ranking_debug.json exists. This file is the last to be output by alphafold and is a check that
@@ -129,8 +122,9 @@ def get_sequence_identity(emboss_file):
     """Returns sequence similarity from an emboss needle file."""
     with open(emboss_file, 'r') as infile:
         infile = infile.read()
-    emboss_score = re.search(r'# Identity:.*\(([\d.]+)%',infile).group(1)
+    emboss_score = re.search(r'# Identity:.*\(([\d.]+)%', infile).group(1)
     return emboss_score
+
 
 def overall_confidence_from_file(plddt_file):
     """Returns the average confidence score from a protein's plddt file."""
@@ -146,12 +140,13 @@ def overall_confidence(plddt: tuple):
     return average_plddt
 
 
-def relative_stabilty(plddt_dict: dict[str, tuple], inheritance_dict: dict[str, dict[tuple,tuple]]):
+def relative_stabilty(plddt_dict: dict[str, tuple], inheritance_dict: dict[str, dict[tuple, tuple]]):
     raw_stability = []
     chimera_label = (set(plddt_dict.keys()) - set(inheritance_dict.keys())).pop()
     for parent, boundaries in inheritance_dict.items():
-        for parent_bound,chimera_bound in boundaries.items():
-            if not all(bound==0 for bound in parent_bound):
-                for chi,native in zip(plddt_dict[chimera_label][slice(*chimera_bound)],plddt_dict[parent][slice(*parent_bound)]):
+        for parent_bound, chimera_bound in boundaries.items():
+            if not all(bound == 0 for bound in parent_bound):
+                for chi, native in zip(plddt_dict[chimera_label][slice(*chimera_bound)],
+                                       plddt_dict[parent][slice(*parent_bound)]):
                     raw_stability.append((chi - native) / native * 100)
     return np.mean(raw_stability)

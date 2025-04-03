@@ -14,7 +14,6 @@ import numpy as np
 import pandas as pd
 from Bio import SeqIO
 from AccessiontoAlignment import create_seq_records, fasta_creation, run_emboss_needle, calculate_sequence_identity
-from Analysis import get_sequence_identity
 
 
 def word_match(word, choices, cutoff=0.5) -> str:
@@ -180,8 +179,9 @@ class SequenceDataframe(pd.DataFrame):
 
     def score_embedding_distance(self, chi_label, parent_labels, dist_func, evaluation_func=min):
         distance = []
+        device=torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         for parent in parent_labels:
-            distance.append(tensor_distance(self.EMBEDDINGS_DICT[chi_label], self.EMBEDDINGS_DICT[parent], dist_func))
+            distance.append(tensor_distance(self.EMBEDDINGS_DICT[chi_label].to(device), self.EMBEDDINGS_DICT[parent].to(device), dist_func))
         if dist_func == NormType.cosine or dist_func == NormType.dot_product:
             self.loc[chi_label, dist_func.name] = evaluation_pairs[evaluation_func](distance)
         else:
@@ -249,7 +249,6 @@ class SequenceDataframe(pd.DataFrame):
 
     def get_sequence_identity(self):
         for chi in self.index:
-            #TODO make emboss if not the same length
             identity = [calculate_sequence_identity(self.get_aln(chi),self.get_aln(parent)) for parent in self.get_description(chi)]
             self.add_value(chi,'identity',max(identity))
 
@@ -351,7 +350,7 @@ def combine_w_schema(embed_pkl_file, aln_file, dist_func: list[NormType], evalua
     for func in dist_func:
         embeddings = SequenceDataframe(aln_file, embed_pkl_file)
         embeddings.score_all_embeddings(func, evaluation_func)
-        embeddings.get_sequence_identity(r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\Emboss\Schema')
+        embeddings.get_sequence_identity()
         dist_type = func.name
         combined_df = pd.concat((combined_df, embeddings), axis=1)
         combined_df['exp_rank'] = combined_df['mKate_mean'].rank(ascending=False)

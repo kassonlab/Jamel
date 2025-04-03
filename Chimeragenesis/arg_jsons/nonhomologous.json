@@ -1,11 +1,11 @@
 {
     "operation_toggles": {
-        "run_fasta_operation": false, "alphafold_submission":false,"run_analysis_operation": true
+        "run_fasta_operation": true, "alphafold_submission":false,"run_analysis_operation": false
     },
     "fasta_arguments": {
-        "fasta_toggles": {"Make a list of created fasta files": true},
+        "fasta_toggles": {"Make a list of created fasta files": true, "Manually control number of scanner movements": false},
         "output_directory": "/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/",
-        "parent_aln_file": "/sfs/weka/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/eid_sars.aln",
+        "parent_mfa_file": "/sfs/weka/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/eid_sars.aln",
         "collective_fasta": "/sfs/weka/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/eid_sars_chimeras.inh",
         "number_of_subunits": 1
     },

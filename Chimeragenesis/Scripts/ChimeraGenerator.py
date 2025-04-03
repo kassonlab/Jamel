@@ -2,13 +2,11 @@
 #
 # Code 2023 by Jamel Simpson
 """Routines to generate chimeric sequences."""
+import numpy as np
+
 import AccessiontoAlignment
 from pathlib import Path
 from json import load, dump
-from os import path
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
-from Bio import SeqIO
 
 
 def general_attr_set(class_obj, dict_of_attrs):
@@ -30,13 +28,6 @@ def chimera_sequence_creation(section_being_spliced_in, marked_sequence, splice_
     return chimera_sequence
 
 
-def get_chimera_sequence(aln_file, base_label, partner_label, base_splice):
-    aln = AccessiontoAlignment.create_dictionary_from_alignment(aln_file)
-    marked_base = sequence_splice(AccessiontoAlignment.no_gap_sequence_from_alignment(aln[base_label]), base_splice)
-    partner_splice, inheritance = AccessiontoAlignment.alignment_finder(base_splice, partner_label, base_label, aln_file)
-    return chimera_sequence_creation(partner_splice, marked_base), inheritance
-
-
 def update_json(default_json, dilapidated_json, overwrite=False):
     try:
         with open(default_json, 'r') as f:
@@ -53,7 +44,6 @@ def update_json(default_json, dilapidated_json, overwrite=False):
             if key not in dilapidated_dict:
                 dilapidated_dict[key] = value
 
-    # TODO question marks ruin this
     def reduce_dict(default_dict, dilapidated_dict):
         for key, value in dilapidated_dict.copy().items():
             if key not in default_dict:
@@ -131,25 +121,59 @@ def print_keys(dictionary, key_of_interest=''):
 
 def create_chimera_combinations(two_parent_aln_file: str, scanner_length, scanner_start=0, scanner_rate=1,
                                 new_fasta_file=''):
-    """Takes two sequence dictionary and creates all possible chimeras with given splice length."""
+    """Takes two sequence dictionary and creates all possible chimeras with given scanner parameters."""
     from ESM import SequenceDataframe
     aln_df = SequenceDataframe(two_parent_aln_file)
     parent1, parent2 = aln_df.index
-    aln_df.add_value(parent1,'description',{})
-    aln_df.add_value(parent2, 'description', {})
+    aln_df.add_value(parent1,'description',{parent1:None})
+    aln_df.add_value(parent2, 'description', {parent2:None})
+
     def scanning_chimera_generator(base_label, partner_label):
         base_seq=aln_df.get_sequence(base_label)
         splice_boundaries: list[tuple] = [(x, x + scanner_length) for x in
                                           range(scanner_start, len(base_seq), scanner_rate) if
-                                          len(base_seq)-x>10]
+                                          len(base_seq)-x>=scanner_length]
         for boundary in splice_boundaries:
-            base_splice=base_seq[slice(*boundary)].replace('-','')
-            chi_seq,inheritance=get_chimera_sequence(two_parent_aln_file,base_label,partner_label,base_splice)
-            aln_df.add_protein(f'{base_label}_{partner_label}_{"_".join((str(x) for x in boundary))}',chi_seq,inheritance)
+            base_splice=base_seq[slice(*boundary)]
+            aln_df.add_protein(f'{base_label}_{partner_label}_{"_".join((str(np.clip(x,0,len(base_seq))) for x in boundary))}',*AccessiontoAlignment.alignment_finder(base_splice,partner_label,base_label,two_parent_aln_file))
 
     scanning_chimera_generator(parent1, parent2)
     scanning_chimera_generator(parent2, parent1)
     if new_fasta_file:
         aln_df.dataframe_to_aln(new_fasta_file)
-        aln_df.dataframe_to_aln(Path(new_fasta_file).with_suffix('.mfa'))
+        aln_df.dataframe_to_multi_fa(Path(new_fasta_file).with_suffix('.mfa'))
+    return aln_df
+
+def create_combinations_no_aln(two_parent_fa_file: str, percentage_cutoff:tuple=(0.35,0.65),new_fasta_file=''):
+    # TODO be able to choose different cutoff per protein
+    from ESM import SequenceDataframe
+    from itertools import product
+    aln_df = SequenceDataframe(two_parent_fa_file)
+    parent1, parent2 = aln_df.index
+    aln_df.add_value(parent1,'description',{parent1:None})
+    aln_df.add_value(parent2, 'description', {parent2:None})
+
+    def single_cut_chimera_generator(base_label, partner_label):
+        base_seq=aln_df.get_sequence(base_label)
+        base_len=len(base_seq)
+        base_cuts=range(*(round(base_len*fraction) for fraction in percentage_cutoff))
+
+        partner_seq = aln_df.get_sequence(partner_label)
+        partner_len = len(partner_seq)
+        partner_cuts = range(*(round(partner_len*fraction) for fraction in percentage_cutoff))
+
+        boundary_products=product(base_cuts,partner_cuts)
+        for base_cut,partner_cut in boundary_products:
+            base_splice=base_seq[0:base_cut]
+            partner_splice=partner_seq[partner_cut:]
+            chi_seq=base_splice+partner_splice
+
+            inheritance={base_label:{(0,len(base_splice)):(0,len(base_splice))},partner_label:{(partner_cut,None):(len(base_splice),None)}}
+            aln_df.add_protein(f'{base_label}_0_{base_cut}_{partner_label}_{partner_cut}_{partner_len}',chi_seq,inheritance)
+
+    single_cut_chimera_generator(parent1, parent2)
+    single_cut_chimera_generator(parent2, parent1)
+    if new_fasta_file:
+        aln_df.dataframe_to_aln(new_fasta_file)
+        aln_df.dataframe_to_multi_fa(Path(new_fasta_file).with_suffix('.mfa'))
     return aln_df

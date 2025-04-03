@@ -5,12 +5,12 @@
     "naming_arguments": {
         "file_stem_placeholder": "",
         "WT_convention": "",
-        "chimera_convention": "",
-        "output_directory": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\Data"
+        "chimera_convention": ""
     },
     "fasta_arguments": {
         "base_identifier": "PDTH-2",
         "number_of_subunits": 1,
+        "output_directory": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\Data",
         "sequence_of_interest": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\Data\\PDT0_139.fa",
         "fasta_list_file_name": "homo_test",
         "parent_msa": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\Data\\PDTvPDK_chimera.inh",
@@ -26,16 +26,7 @@
         "alphafold_shell_script": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/MultimerAlphaFold.sh"
     },
     "analysis_arguments": {
-        "analysis_output_csv": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\Data\\PDTvPDK_alphafold.csv",
-        "column_names": {"file_stem": [true,"Protein"], "rel_stability": [true,"Relative Stability (%)"], "overall_native_stability": [true,"Native Stability"], "overall_chimera_stability": [true,"Chimera Stability"]}
-    },
-    "gromacs_arguments": {
-        "gromacs_toggles": {"create_new_pdb_list": false,"create_setup_slurms": false, "sbatch_setup_slurms": false,"create_mdrun_slurms": false, "sbatch_mdrun_slurms": true},
-        "pdbs_to_run": "/gpfs/gpfs0/scratch/jws6pq/Gromacs/NTD_HA_pdbs",
-        "gmxbin": "gmx_mpi",
-        "pdb2gmx": "pdb2gmx -ff charmm36-jul2022 -chain_sep ter -water tip3p -ignh",
-        "slurm_template": "/gpfs/gpfs0/scratch/jws6pq/Gromacs/Production.slurm",
-        "slurm_output": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/*gromacs.out",
-        "slurm_error": "/gpfs/gpfs0/scratch/jws6pq/Notebook/NTD-HA_Files/*gromacs.err"
+        "analysis_toggles": {"make_plddts": true,"analyze_embeddings": true,"analyze_alphafold": false},
+        "analysis_output_file": "/sfs/weka/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/eid_sars.csv"
     }
 }
