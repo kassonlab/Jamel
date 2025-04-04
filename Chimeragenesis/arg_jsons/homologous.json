@@ -1,4 +1,5 @@
 {
+    "chimera_type": "Homology",
     "operation_toggles": {
         "run_fasta_operation": false, "alphafold_submission":false,"run_analysis_operation": true,"run_gromacs_operation": false
     },
