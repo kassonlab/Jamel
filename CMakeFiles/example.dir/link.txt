@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC -flto -shared  -o example.cpython-312-x86_64-linux-gnu.so CMakeFiles/example.dir/Chimeragenesis/Scripts/chi_cpp.cpp.o 

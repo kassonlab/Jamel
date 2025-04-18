@@ -3,6 +3,7 @@
 # Code 2023 by Jamel Simpson
 """Routines to generate chimeric sequences."""
 import numpy as np
+import pandas as pd
 
 import AccessiontoAlignment
 from pathlib import Path
@@ -146,6 +147,9 @@ def create_chimera_combinations(two_parent_aln_file: str, scanner_length, scanne
 
 def create_combinations_no_aln(two_parent_fa_file: str, percentage_cutoff:tuple=(0.35,0.65),new_fasta_file=''):
     # TODO be able to choose different cutoff per protein
+    import sys
+    sys.path.append('/scratch/jws6pq/Notebook/ESM/build/')
+    import chi_cpp
     from ESM import SequenceDataframe
     from itertools import product
     aln_df = SequenceDataframe(two_parent_fa_file)
@@ -153,27 +157,35 @@ def create_combinations_no_aln(two_parent_fa_file: str, percentage_cutoff:tuple=
     aln_df.add_value(parent1,'description',{parent1:None})
     aln_df.add_value(parent2, 'description', {parent2:None})
 
-    def single_cut_chimera_generator(base_label, partner_label):
-        base_seq=aln_df.get_sequence(base_label)
-        base_len=len(base_seq)
-        base_cuts=range(*(round(base_len*fraction) for fraction in percentage_cutoff))
-
-        partner_seq = aln_df.get_sequence(partner_label)
-        partner_len = len(partner_seq)
-        partner_cuts = range(*(round(partner_len*fraction) for fraction in percentage_cutoff))
-
-        boundary_products=product(base_cuts,partner_cuts)
-        for base_cut,partner_cut in boundary_products:
-            base_splice=base_seq[0:base_cut]
-            partner_splice=partner_seq[partner_cut:]
-            chi_seq=base_splice+partner_splice
-
-            inheritance={base_label:{(0,len(base_splice)):(0,len(base_splice))},partner_label:{(partner_cut,None):(len(base_splice),None)}}
-            aln_df.add_protein(f'{base_label}_0_{base_cut}_{partner_label}_{partner_cut}_{partner_len}',chi_seq,inheritance)
-
-    single_cut_chimera_generator(parent1, parent2)
-    single_cut_chimera_generator(parent2, parent1)
+    # def single_cut_chimera_generator(base_label, partner_label):
+    #     base_seq=aln_df.get_sequence(base_label)
+    #     base_len=len(base_seq)
+    #     base_cuts=range(*(round(base_len*fraction) for fraction in percentage_cutoff))
+    #
+    #     partner_seq = aln_df.get_sequence(partner_label)
+    #     partner_len = len(partner_seq)
+    #     partner_cuts = range(*(round(partner_len*fraction) for fraction in percentage_cutoff))
+    #
+    #     boundary_products=product(base_cuts,partner_cuts)
+    #     for base_cut,partner_cut in boundary_products:
+    #         base_splice=base_seq[0:base_cut]
+    #         partner_splice=partner_seq[partner_cut:]
+    #         chi_seq=base_splice+partner_splice
+    #
+    #         inheritance={base_label:{(0,len(base_splice)):(0,len(base_splice))},partner_label:{(partner_cut,None):(len(base_splice),None)}}
+    #         aln_df.add_protein(f'{base_label}_0_{base_cut}_{partner_label}_{partner_cut}_{partner_len}',chi_seq,inheritance)
+    # chi_cpp.single_cut_chimera_generator returns (chimera_labels:tuple,chimera_sequences:string,chimera_inheritance:dict)
+    partner_label,partner_seq,partner_inh=chi_cpp.single_cut_chimera_generator(parent2,aln_df.get_sequence(parent2),parent1,aln_df.get_sequence(parent1), *percentage_cutoff)
+    partner_info={'label':partner_label,"sequence":partner_seq,'aln_sequence':partner_seq,'description':partner_inh}
+    base_label, base_seq, base_inh =chi_cpp.single_cut_chimera_generator(parent1,aln_df.get_sequence(parent1), parent2,aln_df.get_sequence(parent2),*percentage_cutoff)
+    base_info={'label':base_label,"sequence":base_seq,'aln_sequence':base_seq,'description':base_inh}
+    base_df=pd.DataFrame(base_info).set_index('label')
+    partner_df=pd.DataFrame(partner_info).set_index('label')
+    aln_df=aln_df._append(partner_df)
+    aln_df=aln_df._append(base_df)
+    aln_df.__class__=SequenceDataframe
     if new_fasta_file:
+        #First place to implement multifile?
         aln_df.dataframe_to_aln(new_fasta_file)
         aln_df.dataframe_to_multi_fa(Path(new_fasta_file).with_suffix('.mfa'))
     return aln_df

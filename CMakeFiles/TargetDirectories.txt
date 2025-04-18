@@ -1,0 +1,3 @@
+/mnt/c/Users/jamel/PycharmProjects/Jamel/CMakeFiles/example.dir
+/mnt/c/Users/jamel/PycharmProjects/Jamel/CMakeFiles/edit_cache.dir
+/mnt/c/Users/jamel/PycharmProjects/Jamel/CMakeFiles/rebuild_cache.dir

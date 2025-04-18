@@ -6,6 +6,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import torch
 
 import AccessiontoAlignment, ESM, ChimeraGenerator, Analysis
 
@@ -355,7 +356,7 @@ class ShiftedChimeraArgs:
             aln_dfs.append(ChimeraGenerator.create_chimera_combinations(self.fasta_args.parent_aln_file,scanner,0,20))
         total=pd.concat(aln_dfs)
         fasta_dir = Path(self.fasta_args.output_directory).joinpath('Fasta')
-        os.makedirs(fasta_dir, exist_ok=True)
+        fasta_dir.mkdir(exist_ok=True)
         total.__class__=ESM.SequenceDataframe
         total.dataframe_to_aln(self.fasta_args.collective_fasta)
         total.dataframe_to_multi_fa(Path(self.fasta_args.collective_fasta).with_suffix('.mfa'))
@@ -489,34 +490,54 @@ class NonHomologyChimeraArgs:
         MAX_SPLICE_PERCENT=.65
 
         chimera_df=ChimeraGenerator.create_combinations_no_aln(self.fasta_args.parent_mfa_file,(MIN_SPLICE_PERCENT,MAX_SPLICE_PERCENT),self.fasta_args.collective_fasta)
-        fasta_dir = Path(self.fasta_args.output_directory).joinpath('Fasta')
-        print(chimera_df.shape)
-        os.makedirs(fasta_dir, exist_ok=True)
-        chimera_df.dataframe_to_aln(self.fasta_args.collective_fasta)
-        # chimera_df.dataframe_to_multi_fa(Path(self.fasta_args.collective_fasta).with_suffix('.mfa'))
+        fasta_dir = Path(self.fasta_args.output_directory).joinpath('FastaChunks')
+        fasta_dir.mkdir(exist_ok=True)
+        num_chunks=chimera_df.shape[0]/2000
+        chunks:list[ESM.SequenceDataframe]=[ESM.SequenceDataframe(unconverted_df=chunk) for chunk in np.array_split(chimera_df,num_chunks)]
+        aln_df = ESM.SequenceDataframe(self.fasta_args.parent_mfa_file)
+        parent1, parent2 = aln_df.index
+        aln_df.add_value(parent1, 'description', {parent1: None})
+        aln_df.add_value(parent2, 'description', {parent2: None})
+        for ind,chunk in enumerate(chunks):
+            chunk=ESM.SequenceDataframe(unconverted_df=chunk._append(aln_df))
+            chunk.dataframe_to_aln(fasta_dir.joinpath(Path(self.fasta_args.collective_fasta).stem+f'_{str(ind)}.inh'))
         # chimera_df.make_individual_fasta(fasta_dir, self.fasta_args.number_of_subunits)
 
     def submission_operations(self):
         submission_toggles = self.submission_args.submission_toggles
         if submission_toggles['get_embeddings']:
-            result = subprocess.run(['sbatch',
-                                     '-e', Path(self.fasta_args.output_directory).joinpath(
-                    self.submission_args.slurm_naming).with_suffix(".err"),
-                                     self.submission_args.embedding_script,
-                                     self.fasta_args.collective_fasta,
-                                     Path(self.fasta_args.collective_fasta).with_suffix('.pkl')], capture_output=True)
-            print(result.stdout)
+            Path(self.fasta_args.output_directory).joinpath('EmbedChunks').mkdir(exist_ok=True)
+            for chunk_fasta in Path(self.fasta_args.output_directory).joinpath('FastaChunks').iterdir():
+                result = subprocess.run(['sbatch',
+                                         '-e', Path(self.fasta_args.output_directory).joinpath(
+                        self.submission_args.slurm_naming).with_suffix(".err"),
+                                         self.submission_args.embedding_script,
+                                         chunk_fasta,Path(self.fasta_args.output_directory).joinpath('EmbedChunks').joinpath(chunk_fasta.stem).with_suffix('.pkl')], capture_output=True)
+                print(result.stdout,result.stderr)
 
     def analysis_operations(self):
         analysis_toggles = self.analysis_args.analysis_toggles
         if analysis_toggles['analyze_embeddings']:
-            embeddings = ESM.SequenceDataframe(Path(self.fasta_args.collective_fasta).__str__(),
-                                               Path(self.fasta_args.collective_fasta).with_suffix('.pkl').__str__())
-            for func in [ESM.NormType.cosine, ESM.NormType.manhattan, ESM.NormType.euclidean, ESM.NormType.dot_product]:
-                embeddings.score_all_embeddings(func, np.mean)
+            embeddings=[]
+            fastas=Path(self.fasta_args.output_directory).joinpath('FastaChunks')
+            embeds=Path(self.fasta_args.output_directory).joinpath('EmbedChunks')
+            for chunk_fasta in fastas.iterdir():
+                embed_file=embeds.joinpath(chunk_fasta.stem).with_suffix('.pkl')
+                # TODO change
+                if not chunk_fasta.exists() and embed_file.exists(): raise FileNotFoundError('One of the files is not like the other')
+                embedding_df = ESM.SequenceDataframe(chunk_fasta.__str__(),embed_file.__str__())
+                func=ESM.NormType.dot_product
+                embedding_df.score_all_per_res(func)
                 dist_type = func.name
-                embeddings[f'{dist_type}_rank'] = embeddings[dist_type].rank(
+                embedding_df[f'{dist_type}_rank'] = embedding_df[dist_type].rank(
                     ascending=func != ESM.NormType.cosine and func != ESM.NormType.dot_product)
-            embeddings.get_sequence_identity()
+                embedding_df.drop(columns=['aln_sequence', 'sequence', 'description'])
+                del embedding_df.EMBEDDINGS_DICT
+                embeddings.append(embedding_df)
+
+            embeddings=pd.concat(embeddings)
+            embeddings= embeddings.loc[:, ~embeddings.columns.duplicated()]
+            embeddings=ESM.SequenceDataframe(unconverted_df=embeddings)
+            embeddings.drop(columns=['aln_sequence', 'sequence', 'description'])
             if self.analysis_args.analysis_output_file:
                 embeddings.to_csv(self.analysis_args.analysis_output_file)

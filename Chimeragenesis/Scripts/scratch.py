@@ -1,10 +1,11 @@
 from collections import Counter
 from pathlib import Path
+
+import pandas as pd
 import torch
 import umap
 from matplotlib import pyplot as plt, colormaps
-from AccessiontoAlignment import create_dictionary_from_alignment, create_seq_records, fasta_creation, \
-    label_aln_w_inheritance, alignment_finder
+from AccessiontoAlignment import create_dictionary_from_alignment, create_seq_records, fasta_creation, alignment_finder
 from Bio.Seq import Seq
 
 from ChimeraClasses import HomomerChimeraArgs
@@ -87,7 +88,9 @@ cuts=[152,350,416,647,821,996,1133,1274,1435] # RAndom CHimeras
 #     _,inheritance=alignment_finder(seq_of_int,parent_dict[partner_symbol],parent_dict[base_symbol],r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\notag_schema_parents.aln')
 #     notag_df.add_value('c'+label,'description',inheritance)
 # notag_df.dataframe_to_aln(r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\notag_schema_parents.inh')
-# TOTAL_ARGS = HomomerChimeraArgs("/sfs/weka/scratch/jws6pq/Notebook/ESM/Schema_valdation/notag_redo.json")
-#
-# TOTAL_ARGS.alphafold_submission([str(file) for file in Path("/scratch/jws6pq/Notebook/ESM/Schema_valdation/notag_fastas/").iterdir() if file.is_file()])
-print(torch.cuda.is_available())  # True if ROCm is working
+
+df = pd.read_excel(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\eid_sars_v5.xlsx", sheet_name='sars_v5')
+print(df.columns)
+df.plot.scatter(x='base_len', y='dot_product_rank',s=1)
+df.plot.scatter(x='chimera_len', y='dot_product',s=1)
+plt.show()
