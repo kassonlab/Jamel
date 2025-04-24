@@ -5,9 +5,9 @@ import pandas as pd
 import torch
 import umap
 from matplotlib import pyplot as plt, colormaps
-from AccessiontoAlignment import create_dictionary_from_alignment, create_seq_records, fasta_creation, alignment_finder
+from AccessiontoAlignment import create_dictionary_from_alignment, create_seq_records, fasta_creation, alignment_finder,calculate_sequence_identity
 from Bio.Seq import Seq
-
+from Bio.Align import PairwiseAligner
 from ChimeraClasses import HomomerChimeraArgs
 from ESM import SequenceDataframe
 import numpy as np
@@ -88,9 +88,40 @@ cuts=[152,350,416,647,821,996,1133,1274,1435] # RAndom CHimeras
 #     _,inheritance=alignment_finder(seq_of_int,parent_dict[partner_symbol],parent_dict[base_symbol],r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\notag_schema_parents.aln')
 #     notag_df.add_value('c'+label,'description',inheritance)
 # notag_df.dataframe_to_aln(r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\notag_schema_parents.inh')
+# aligner = PairwiseAligner()
+# aligner.mode = 'global'
+# fig, ax = plt.subplots()
+# df = pd.read_excel(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\eid_sars_v5.xlsx", sheet_name='sars',index_col='label')
+# print(df.columns)
+# # get sequence Identity
+# df['normalized_dp']=df['dot_product']/df['chimera_len']
+# for label,data in df.iterrows():
+#     if label in ['6VSB', 'EidolonBat']: continue
+#     identity=[]
+#     for parent in [df.loc['6VSB','sequence'],df.loc['EidolonBat','sequence']]:
+#         identity.append(calculate_sequence_identity(*aligner.align(parent, data['sequence'])[0]))
+#     df.loc[label, 'identity']=max(identity)
+#
+# df.plot.scatter(x='identity', y='normalized_dp',s=1,ax=ax)
+# # df.to_csv('../Data/sars_w_identity.csv')
+# plt.show()
+# df = pd.read_excel(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\eid_sars_v5.xlsx",sheet_name='eid',index_col='label')
+# for label,data in df.iterrows():
+#     if label in ['6VSB', 'EidolonBat']: continue
+#     identity=[]
+#     for parent in [df.loc['6VSB','sequence'],df.loc['EidolonBat','sequence']]:
+#         identity.append(calculate_sequence_identity(*aligner.align(parent, data['sequence'])[0]))
+#     df.loc[label, 'identity']=max(identity)
+# # get sequence Identity
+# df['normalized_dp']=df['dot_product']/df['chimera_len']
+# df.plot.scatter(x='identity', y='normalized_dp',s=1,color='red',ax=ax)
+# # df.to_csv('../Data/eid_w_identity.csv')
+# plt.show()
 
-df = pd.read_excel(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\eid_sars_v5.xlsx", sheet_name='sars_v5')
-print(df.columns)
-df.plot.scatter(x='base_len', y='dot_product_rank',s=1)
-df.plot.scatter(x='chimera_len', y='dot_product',s=1)
+df=pd.read_csv('../Data/sars_w_identity.csv',index_col='label')
+df.plot.scatter(x='identity', y='normalized_dp',s=1)
+plt.show()
+
+df=pd.read_csv('../Data/eid_w_identity.csv',index_col='label')
+df.plot.scatter(x='identity', y='normalized_dp',s=1, color='red')
 plt.show()

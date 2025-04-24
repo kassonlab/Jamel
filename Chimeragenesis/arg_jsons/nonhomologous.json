@@ -1,18 +1,18 @@
 {
     "operation_toggles": {
-        "run_fasta_operation": true, "alphafold_submission":false,"run_analysis_operation": false
+        "run_fasta_operation": false, "alphafold_submission":true,"run_analysis_operation": false
     },
     "fasta_arguments": {
-        "fasta_toggles": {"Make a list of created fasta files": true, "Manually control number of scanner movements": false},
+        "fasta_toggles": {},
         "output_directory": "/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/",
         "parent_mfa_file": "/sfs/weka/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/eid_sars.aln",
         "collective_fasta": "/sfs/weka/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/eid_sars_chimeras.inh",
-        "number_of_subunits": 1
+        "number_of_subunits": 3
     },
     "submission_arguments": {
-        "submission_toggles": {"create_slurms":false,"sbatch_slurms": false,"stragglers_or_custom_or_all": "stragglers","create_file_of_stragglers": false,"get_embeddings": true},
-        "custom_list_to_run": "",
-        "proteins_per_slurm": 9,
+        "submission_toggles": {"run_custom_list": true, "get_embeddings": false,"run_AF": true},
+        "custom_fasta_list": "",
+        "proteins_per_slurm": 5,
         "slurm_naming": "eidsars_emb",
         "sbatch_group": "",
         "alphafold_shell_script": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/MultimerAlphaFold.sh",
@@ -20,6 +20,6 @@
     },
     "analysis_arguments": {
         "analysis_toggles": {"make_plddts": true,"analyze_embeddings": true,"analyze_alphafold": true},
-        "analysis_output_file": "/sfs/weka/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/eid_sars.csv"
+        "analysis_output_file": "/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/eid_sars.csv"
     }
 }

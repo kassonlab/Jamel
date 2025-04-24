@@ -157,7 +157,7 @@ def run_emboss_needle(new_emboss_file, sequence_one: str, sequence_two: str, emb
 def calculate_sequence_identity(aln_seq_1, aln_seq_2):
     if len(aln_seq_1) != len(aln_seq_2): raise ValueError(
         f'Alignment sequences are not equal length. aln_seq_1:{len(aln_seq_1)} aln_seq_2:{len(aln_seq_2)}')
-    identical_count = [resb == resa for resa, resb in zip(aln_seq_1, aln_seq_2) if resa != '-' and resb != '-']
+    identical_count = [resb == resa for resa, resb in zip(aln_seq_1, aln_seq_2) if resa != '-' or resb != '-']
     return identical_count.count(True) / len(identical_count)
 
 
@@ -169,11 +169,16 @@ def get_alignment_indexing(alignment_seq):
 def get_alignment_indexing_w_dashes(alignment_seq):
     return [ind if x != '-' else '-' for ind, x in enumerate(alignment_seq)]
 
+
 def no_gap_sequence_from_alignment(alignment_seq):
     """Removes gaps from an alignment sequence"""
     return re.sub(r'[^a-zA-Z]', '', alignment_seq)
+
+
 def find_overlapping_matches(string,substring):
     return [m.span()[0] for m in re.finditer(rf'(?={substring})', string)]
+
+
 def alignment_finder(sequence_of_interest, partner_label, base_label, aln_file):
     """Takes a fasta style alignment and a sequence_of_interest from a base_protein and returns the sequence of the
     comparison_protein that aligns with the sequence_of_interest in the base sequence, as well as the python index boundaries
@@ -225,7 +230,8 @@ def alignment_finder(sequence_of_interest, partner_label, base_label, aln_file):
         inheritance = {base_label: {(0, base_start): (0, base_start), (base_end, None): (base_start + len(found_alignment) - 1, None)},
             partner_label: {(partner_start, partner_end): (base_start, base_start + len(found_alignment) - 1)}}
         return chimera_aln_seq, inheritance
-# alignment_finder('NYGSSYLPSSITSVALSDVNF','6VSB','EidolonBat',r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\eid_sars.aln')
+
+
 def map_plddt_to_aln(aln_seq, plddt):
     aln_index = get_alignment_indexing(aln_seq)
     aln_plddt = []
@@ -284,14 +290,10 @@ def create_list_of_fasta_files(list_of_fastas, file_name):
         fasta_list_file.write("\n".join(list_of_fastas))
 
 
-
-
-
 def clustalw_to_fasta(clustal_aln_file, new_fasta_aln_file):
     """Converts clustal w aliignment file into a fasta alignment"""
     clw = SeqIO.parse(clustal_aln_file, "clustal")
     return SeqIO.write(clw, new_fasta_aln_file, "fasta")
-
 
 
 def extract_seq_from_fasta(fasta_file):

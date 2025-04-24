@@ -118,13 +118,12 @@ def generate_alphafold_files(alphafold_folder, output_folder, make_plddt=False):
                 create_plddt_file_from_pdb(new_pdb, plddt_out.joinpath(f'{folder.stem}.plddt'))
 
 
-def get_sequence_identity(emboss_file):
+def get_emboss_sequence_identity(emboss_file):
     """Returns sequence similarity from an emboss needle file."""
     with open(emboss_file, 'r') as infile:
         infile = infile.read()
     emboss_score = re.search(r'# Identity:.*\(([\d.]+)%', infile).group(1)
     return emboss_score
-
 
 def overall_confidence_from_file(plddt_file):
     """Returns the average confidence score from a protein's plddt file."""

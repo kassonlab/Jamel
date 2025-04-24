@@ -158,7 +158,7 @@ class SequenceDataframe(pd.DataFrame):
 
     def make_individual_fasta(self, output_direc, subunit_count=1):
         for protein, info in self.iterrows():
-            fasta_creation(Path(output_direc).joinpath(str(protein)).with_suffix('.fasta'),
+            fasta_creation(Path(output_direc).joinpath(str(protein)).with_suffix('.fa'),
                            create_seq_records(protein, info['sequence'], str(info['description']), subunit_count))
 
     def create_column(self, column_name):
