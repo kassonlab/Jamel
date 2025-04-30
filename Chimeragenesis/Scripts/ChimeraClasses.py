@@ -1,13 +1,11 @@
 import os
-import pathlib
 import subprocess
+import time
 from json import load
 from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import torch
-
 import AccessiontoAlignment, ESM, ChimeraGenerator, Analysis
 
 
@@ -120,7 +118,7 @@ class HomomerChimeraArgs:
     submission_args: HomomerSubmissionArguments
     analysis_args: HomomerAnalysisArguments
     all_fastas: list[str]
-    fasta_dir: pathlib.Path
+    fasta_dir: Path
 
     def __init__(self, arg_json,full_use=True):
         self.base_splice = None
@@ -485,8 +483,14 @@ class NonHomologyChimeraArgs:
         self.alphafold_dir=Path(self.fasta_args.output_directory).joinpath('AlphaFold')
         self.fasta_dir =Path(self.fasta_args.output_directory).joinpath('Fasta')
         if Path(self.fasta_args.collective_fasta).exists():
-            self.collective_df = ESM.SequenceDataframe(self.fasta_args.collective_fasta)
+            start=time.time()
+            fasta_dfs=[]
+            for chunk_fasta in self.fasta_chunk_dir.iterdir():
+                fasta_dfs.append(ESM.SequenceDataframe(chunk_fasta))
+            self.collective_df = ESM.SequenceDataframe(unconverted_df=pd.concat(fasta_dfs))
+            end = time.time()
             self.has_inheritance = True
+            print((end-start)/60)
     def get_dict_args(self, dict_class, attr_name, arg_key):
         dict_args = self.argument_dict[arg_key]
         setattr(self, attr_name, dict_class(dict_args))

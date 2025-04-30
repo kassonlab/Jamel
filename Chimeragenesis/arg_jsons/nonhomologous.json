@@ -10,7 +10,7 @@
         "number_of_subunits": 3
     },
     "submission_arguments": {
-        "submission_toggles": {"run_custom_list": true, "get_embeddings": false,"run_AF": true},
+        "submission_toggles": {"make_slurm_files": true,"run_custom_list": true, "get_embeddings": false,"run_AF": true},
         "custom_fasta_list": "",
         "proteins_per_slurm": 5,
         "slurm_naming": "eidsars_emb",

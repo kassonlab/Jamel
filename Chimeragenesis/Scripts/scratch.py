@@ -119,9 +119,9 @@ cuts=[152,350,416,647,821,996,1133,1274,1435] # RAndom CHimeras
 # plt.show()
 
 df=pd.read_csv('../Data/sars_w_identity.csv',index_col='label')
-df.plot.scatter(x='identity', y='normalized_dp',s=1)
+df.plot.scatter(x='base_len', y='partner_len',c='corrected_dp',colormap='viridis',s=1)
 plt.show()
 
 df=pd.read_csv('../Data/eid_w_identity.csv',index_col='label')
-df.plot.scatter(x='identity', y='normalized_dp',s=1, color='red')
+df.plot.scatter(x='base_len', y='partner_len',c='corrected_dp',colormap='viridis',s=1)
 plt.show()

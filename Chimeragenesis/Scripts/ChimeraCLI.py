@@ -1,4 +1,3 @@
-from enum import Enum
 from sys import exit
 from json import load
 import ChimeraClasses
@@ -14,6 +13,8 @@ parser.add_argument('-u', '--updatejson', type=str, required=False,
                     help='updating json configs with current variables whether adding or taking away. ex: default_json,old_json')
 parser.add_argument('-i', '--jsoninput', dest='arg_jsons', required=False, type=str,
                     help='Comma seperated json config inputs. ex: constant_json,variant_json')
+parser.add_argument('-m','--mode', dest='mode', required=False, type=str,choices=['h','nh'],default='h',
+                    help='h=homologous, nh=non-homologous')
 parser.add_argument('-ch', '--change', required=False, type=str,
                     help='input json with options you wish to change. ex: json')
 parser.add_argument('-nv', '--new_values', required=False, type=str,
@@ -47,13 +48,12 @@ operations.add_argument('-a', '--analysis', required=False, action='store_true',
 args = parser.parse_args()
 # All conditionals to check for flags related to manipulation or clarification of json config files: (u,ch,pr,nv,overwite,fr)
 # If any of them are called the program will cease after completion or error
-#python C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\HomomerChimeras.py -i C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\homologous.json
+#python C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\ChimeraCLI.py -i C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\homologous.json
 
 if args.updatejson:
     args.updatejson = args.updatejson.split(',')
     ChimeraGenerator.update_json(args.updatejson[0], args.updatejson[1], args.overwrite)
     exit()
-
 if args.prints:
     print_args = args.prints.split(',')
     with open(print_args[0], 'rb') as jfile:
@@ -74,25 +74,25 @@ if args.findnreplace and args.change:
     ChimeraGenerator.change_json_value(args.change, overwrite=args.overwrite, find_n_replace_tuple=pair)
     exit()
 
-ChimeraTypes={'Homomer':ChimeraClasses.HomomerChimeraArgs,'Scanner':ChimeraClasses.ShiftedChimeraArgs,'NonHomology':ChimeraClasses.NonHomologyChimeraArgs}
-
-
+chimera_types={'h':ChimeraClasses.HomomerChimeraArgs,'nh':ChimeraClasses.NonHomologyChimeraArgs}
 if __name__ == '__main__':
-    primary_json=args.arg_jsons.split(',')[0]
-    with open(arg_json, 'rb') as jfile:
-        self.argument_dict = load(jfile)
-    TOTAL_ARGS = ChimeraTypes[]()
-    if hasattr(args, 'fasta') or hasattr(args, 'submission') or hasattr(args, 'analysis'):
-        operation_args = (args.fasta, args.submission, args.analysis)
-        if any(operation_args) and operation_args:
-            for key in TOTAL_ARGS.operation_toggles:
-                TOTAL_ARGS.operation_toggles[key] = False
-    if TOTAL_ARGS.operation_toggles['run_fasta_operation']:
-        TOTAL_ARGS.fasta_operations()
+    print(args.mode)
 
-    if TOTAL_ARGS.operation_toggles['alphafold_submission']:
-        TOTAL_ARGS.make_fasta_paths()
-        TOTAL_ARGS.alphafold_submission(TOTAL_ARGS.all_fastas)
+    # chimera_type=chimera_types[args.mode]
+    # TOTAL_ARGS = chimera_type(args.arg_jsons)
+    # if hasattr(args, 'fasta') or hasattr(args, 'submission') or hasattr(args, 'analysis'):
+    #     operation_args = (args.fasta, args.submission, args.analysis)
+    #     if any(operation_args) and operation_args:
+    #         for key in TOTAL_ARGS.operation_toggles:
+    #             TOTAL_ARGS.operation_toggles[key] = False
+    # if TOTAL_ARGS.operation_toggles['run_fasta_operation']:
+    #     TOTAL_ARGS.fasta_operations()
+    #
+    # if TOTAL_ARGS.operation_toggles['alphafold_submission']:
+    #     TOTAL_ARGS.make_fasta_paths()
+    #     TOTAL_ARGS.alphafold_submission(TOTAL_ARGS.all_fastas)
+    #
+    # if TOTAL_ARGS.operation_toggles['run_analysis_operation']:
+    #     TOTAL_ARGS.analysis_operations()
 
-    if TOTAL_ARGS.operation_toggles['run_analysis_operation']:
-        TOTAL_ARGS.analysis_operations()
+
