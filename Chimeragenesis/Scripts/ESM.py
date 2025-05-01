@@ -66,11 +66,7 @@ def dot_product(tensor1: torch.Tensor, tensor2: torch.Tensor):
 
 
 def random_thing(tensor1: torch.Tensor, tensor2: torch.Tensor):
-    #I define new and usually temporary distance functions I want to try here
-    # Currently Chebyshev distance
-    tensor_a = tensor2.flatten().detach
-    tensor_b = tensor1.flatten()
-    c = tensor_b - tensor_a
+
 
     return c.max().item()
 
@@ -173,6 +169,7 @@ class SequenceDataframe(pd.DataFrame):
         # you can use it for traditional descriptions, but you cannot then use the embedding scoring functions
         if self.loc[chimera_label, 'description']:
             return ast.literal_eval(self.loc[chimera_label, 'description'])
+        return None
 
     def add_protein(self, label, aln_seq, description):
         self.loc[label] = {'sequence': str(aln_seq).replace('-', ''), 'aln_sequence': str(aln_seq),
@@ -235,12 +232,16 @@ class SequenceDataframe(pd.DataFrame):
         distance = []
         for parent, splices in inheritance.items():
             for parent_splice, chi_splice in splices.items():
-                distance.append(tensor_distance(self.EMBEDDINGS_DICT[chi_label][slice(*chi_splice)], self.EMBEDDINGS_DICT[parent][slice(*parent_splice)], dist_func))
+                # TODO need to ensure the shape matches with expectation, meaning embeddings are same length as sequences,
+                # TODO although not sure how to check because some will have paddings,
+                # TODO maybe i check for typical hidden dimension length??
+                for parent_pos,chi_pos in zip(range(*parent_splice), range(*chi_splice)):
+                    print(self.EMBEDDINGS_DICT[chi_label][slice(*chi_splice)].shape,self.EMBEDDINGS_DICT[chi_label][chi_pos])
+                    distance.append(tensor_distance(self.EMBEDDINGS_DICT[chi_label][chi_pos], self.EMBEDDINGS_DICT[parent][parent_pos], dist_func))
         self.loc[chi_label, dist_func.name] = np.mean(distance)
         return distance
 
     def score_all_per_res(self, dist_func: NormType):
-        #TODO Make inheritacne a class?
         for label in self.EMBEDDINGS_DICT.keys():
             if len(inheritance := self.get_description(label)) == 2:
                 self.score_per_res(label, inheritance, dist_func)
@@ -414,8 +415,8 @@ def translate_windows_path(windows_path: str):
 #     plt.title('Contiguous Chimera Expression vs. Identity')
 #     plt.show()
 #     mod = 'mean'
-#     # l1=combine_w_schema(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\llm_output\schema_notag_X_v2.pkl", r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\schema_no_tag.aln',
-#     #                       [NormType.cosine, NormType.manhattan, NormType.euclidean,NormType.dot_product],
+#     l1=combine_w_schema(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\llm_output\schema_notag_X_v2.pkl", r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\schema_no_tag.aln',
+#                           [NormType.cosine, NormType.manhattan, NormType.euclidean,NormType.dot_product],
 #     #                       np.mean,f'../Data/notag_{mod}_v2.csv')
 #     # combine_w_randoms(r"..\Data\150M_esm.pkl", '..\Data\PDTvPDK_chimera.aln',
 #     #                        [NormType.cosine, NormType.manhattan, NormType.euclidean], rf'..\Data\randoms_150M_esm{mod}.csv')

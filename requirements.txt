@@ -1,0 +1,9 @@
+regex
+torch
+umap
+matplotlib
+numpy
+transformers
+ankh
+pandas
+biopython

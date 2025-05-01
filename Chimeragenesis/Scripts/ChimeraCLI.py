@@ -76,23 +76,20 @@ if args.findnreplace and args.change:
 
 chimera_types={'h':ChimeraClasses.HomomerChimeraArgs,'nh':ChimeraClasses.NonHomologyChimeraArgs}
 if __name__ == '__main__':
-    print(args.mode)
+    chimera_type=chimera_types[args.mode]
+    TOTAL_ARGS = chimera_type(args.arg_jsons)
+    if hasattr(args, 'fasta') or hasattr(args, 'submission') or hasattr(args, 'analysis'):
+        operation_args = (args.fasta, args.submission, args.analysis)
+        if any(operation_args) and operation_args:
+            for key in TOTAL_ARGS.operation_toggles:
+                TOTAL_ARGS.operation_toggles[key] = False
+    if TOTAL_ARGS.operation_toggles['run_fasta_operation']:
+        TOTAL_ARGS.fasta_operations()
 
-    # chimera_type=chimera_types[args.mode]
-    # TOTAL_ARGS = chimera_type(args.arg_jsons)
-    # if hasattr(args, 'fasta') or hasattr(args, 'submission') or hasattr(args, 'analysis'):
-    #     operation_args = (args.fasta, args.submission, args.analysis)
-    #     if any(operation_args) and operation_args:
-    #         for key in TOTAL_ARGS.operation_toggles:
-    #             TOTAL_ARGS.operation_toggles[key] = False
-    # if TOTAL_ARGS.operation_toggles['run_fasta_operation']:
-    #     TOTAL_ARGS.fasta_operations()
-    #
-    # if TOTAL_ARGS.operation_toggles['alphafold_submission']:
-    #     TOTAL_ARGS.make_fasta_paths()
-    #     TOTAL_ARGS.alphafold_submission(TOTAL_ARGS.all_fastas)
-    #
-    # if TOTAL_ARGS.operation_toggles['run_analysis_operation']:
-    #     TOTAL_ARGS.analysis_operations()
+    if TOTAL_ARGS.operation_toggles['alphafold_submission']:
+        TOTAL_ARGS.alphafold_submission()
+
+    if TOTAL_ARGS.operation_toggles['run_analysis_operation']:
+        TOTAL_ARGS.analysis_operations()
 
 
