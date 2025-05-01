@@ -484,10 +484,10 @@ class NonHomologyChimeraArgs:
         self.fasta_dir =Path(self.fasta_args.output_directory).joinpath('Fasta')
         if Path(self.fasta_args.collective_fasta).exists():
             start=time.time()
-            fasta_dfs=[]
-            for chunk_fasta in self.fasta_chunk_dir.iterdir():
-                fasta_dfs.append(ESM.SequenceDataframe(chunk_fasta))
-            self.collective_df = ESM.SequenceDataframe(unconverted_df=pd.concat(fasta_dfs))
+            # fasta_dfs=[]
+            # for chunk_fasta in self.fasta_chunk_dir.iterdir():
+            #     fasta_dfs.append(ESM.SequenceDataframe(chunk_fasta))
+            # self.collective_df = ESM.SequenceDataframe(unconverted_df=pd.concat(fasta_dfs))
             end = time.time()
             self.has_inheritance = True
             print((end-start)/60)

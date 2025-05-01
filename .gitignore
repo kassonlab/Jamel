@@ -7,3 +7,4 @@ esm/
 *.pkl
 /Chimeragenesis/scrambled_data
 EMBOSS-6.6.0.tar.gz
+extern/pybind11
