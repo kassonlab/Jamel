@@ -9,6 +9,7 @@ from AccessiontoAlignment import create_dictionary_from_alignment, create_seq_re
 from Bio.Seq import Seq
 from Bio.Align import PairwiseAligner
 from ChimeraClasses import HomomerChimeraArgs
+from Analysis import get_plddt_dict_from_pdb
 from ESM import SequenceDataframe
 import numpy as np
 
@@ -53,26 +54,7 @@ cuts=[152,350,416,647,821,996,1133,1274,1435] # RAndom CHimeras
 #
 # randoms=SequenceDataframe(r'/Chimeragenesis/Data/Randoms/PDTvPDK_chimera.inh', embed_dict_pkl=r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\randoms_prost_X.pkl')
 
-# Looking at the umap of all 11 proteins for each residue position
-# for x in range(45,schema.EMBEDDINGS_DICT['PDTwPDK_647'].shape[0]):
-#     labels=[label for label in schema.EMBEDDINGS_DICT.keys()]
-#     res_stack=[res_tensor[x,:].shape for res_tensor in schema.EMBEDDINGS_DICT.values()]
-#     embedding_matrix = np.vstack(res_stack)
-#     umap_3d = umap.UMAP(n_components=2)
-#     X_umap = umap_3d.fit_transform(embedding_matrix)
-#
-#     # Create 3D scatter plot
-#     plt.scatter(X_umap[:, 0], X_umap[:, 1], marker='+')
-#     for i in range(len(X_umap[:, 0])):
-#         plt.text(X_umap[i, 0], X_umap[i, 1], s=f"{labels[i]}", fontsize=10, ha="right", va="bottom")
 
-    # # Labels and title
-    #
-    # ax.set_xlabel("UMAP 1")
-    # ax.set_ylabel("UMAP 2")
-    # ax.set_zlabel("UMAP 3")
-
-    # plt.show()
 # Creating inheritance file for schmea
 # schema_cuts=[0,35,49,94,117,146,189,214,232,266,None]
 # schema_dict=create_dictionary_from_alignment(r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\notag_schema_parents.aln')
@@ -88,6 +70,7 @@ cuts=[152,350,416,647,821,996,1133,1274,1435] # RAndom CHimeras
 #     _,inheritance=alignment_finder(seq_of_int,parent_dict[partner_symbol],parent_dict[base_symbol],r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\notag_schema_parents.aln')
 #     notag_df.add_value('c'+label,'description',inheritance)
 # notag_df.dataframe_to_aln(r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\notag_schema_parents.inh')
+
 # aligner = PairwiseAligner()
 # aligner.mode = 'global'
 # fig, ax = plt.subplots()
@@ -105,7 +88,6 @@ cuts=[152,350,416,647,821,996,1133,1274,1435] # RAndom CHimeras
 # df.plot.scatter(x='identity', y='normalized_dp',s=1,ax=ax)
 # # df.to_csv('../Data/sars_w_identity.csv')
 # plt.show()
-# df = pd.read_excel(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\eid_sars_v5.xlsx",sheet_name='eid',index_col='label')
 # for label,data in df.iterrows():
 #     if label in ['6VSB', 'EidolonBat']: continue
 #     identity=[]
@@ -118,10 +100,25 @@ cuts=[152,350,416,647,821,996,1133,1274,1435] # RAndom CHimeras
 # # df.to_csv('../Data/eid_w_identity.csv')
 # plt.show()
 
-df=pd.read_csv('../Data/sars_w_identity.csv',index_col='label')
-df.plot.scatter(x='base_len', y='partner_len',c='corrected_dp',colormap='viridis',s=1)
-plt.show()
+# df=pd.read_csv('../Data/sars_w_identity.csv',index_col='label')
+# df.plot.scatter(x='base_len', y='partner_len',c='corrected_dp',colormap='viridis',s=1,xlabel='SARS N-term Length',ylabel='Eid C-term Length')
+# plt.show()
 
 df=pd.read_csv('../Data/eid_w_identity.csv',index_col='label')
-df.plot.scatter(x='base_len', y='partner_len',c='corrected_dp',colormap='viridis',s=1)
-plt.show()
+
+print(df.loc['metadata','sequence'])
+# df.plot.scatter(x='base_len', y='partner_len',c='corrected_dp',colormap='viridis',s=1)
+# plt.show()
+
+# df=pd.read_csv(r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\eid_sars_perres_dot.csv',index_col='label')
+# df=df[[ind.startswith('6VSB') for ind in df.index]]
+# df.plot.scatter(x='chimera_len', y='dot_product',s=1)
+# plt.show()
+
+# for pdb in Path(r'/sfs/weka/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/Eid_sars_v3/SelectedMultimers/PDB/').iterdir():
+#     if (label:=pdb.stem) in ['6VSB_0_534_EidolonBat_548_1264','6VSB_0_534_EidolonBat_549_1264','6VSB_0_534_EidolonBat_550_1264','6VSB','EidolonBat']:
+#         plddt=next(iter(get_plddt_dict_from_pdb(pdb).values()))
+#         plt.plot(range(len(plddt)),plddt,label=label)
+#         plt.xticks(range(0,len(plddt),50))
+# plt.legend()
+# plt.show()

@@ -227,7 +227,7 @@ def alignment_finder(sequence_of_interest, partner_label, base_label, aln_file):
                                            partner_aln[alignment_base_start:alignment_base_end])
         # this inheritance dictionary shows the splice boundaries from a given parent and gives the corresponding boundary in the chimera where that parent sequence is.
         # data structure is {parent:{parent_splice:chimera_splice}}
-        inheritance = {base_label: {(0, base_start): (0, base_start), (base_end, None): (base_start + len(found_alignment) - 1, None)},
+        inheritance = {base_label: {(0, base_start): (0, base_start), (base_end, len(base_seq)): (base_start + len(found_alignment) - 1, len(chimera_aln_seq.replace('-','')))},
             partner_label: {(partner_start, partner_end): (base_start, base_start + len(found_alignment) - 1)}}
         return chimera_aln_seq, inheritance
 

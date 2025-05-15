@@ -66,7 +66,7 @@ def dot_product(tensor1: torch.Tensor, tensor2: torch.Tensor):
 
 
 def random_thing(tensor1: torch.Tensor, tensor2: torch.Tensor):
-
+    #TODO make a dot product that is truly
 
     return c.max().item()
 
@@ -176,10 +176,10 @@ class SequenceDataframe(pd.DataFrame):
                            'description': description}
 
     def get_sequence(self, chimera_label):
-        return self.loc[chimera_label, 'sequence']
+        return self.at[chimera_label, 'sequence']
 
     def get_aln(self, chimera_label):
-        return self.loc[chimera_label, 'aln_sequence']
+        return self.at[chimera_label, 'aln_sequence']
 
     def score_embedding_distance(self, chi_label, parent_labels, dist_func, evaluation_func=min):
         distance = []
@@ -190,10 +190,9 @@ class SequenceDataframe(pd.DataFrame):
         else:
             self.loc[chi_label, dist_func.name] = evaluation_func(distance)
         return evaluation_func(distance)
-
     def score_all_embeddings(self, dist_func: NormType, evaluation_func=min):
         self.create_column(dist_func.name)
-        for label in self.EMBEDDINGS_DICT.keys():
+        for label in self.index:
             if len(parent_label := self.get_description(label)) == 2:
                 self.score_embedding_distance(label, parent_label, dist_func, evaluation_func)
 
@@ -230,13 +229,13 @@ class SequenceDataframe(pd.DataFrame):
 
     def score_per_res(self, chi_label, inheritance: dict[str, dict[tuple, tuple]], dist_func):
         distance = []
+        # TODO add metadata about what parameters were used
         for parent, splices in inheritance.items():
             for parent_splice, chi_splice in splices.items():
                 # TODO need to ensure the shape matches with expectation, meaning embeddings are same length as sequences,
                 # TODO although not sure how to check because some will have paddings,
                 # TODO maybe i check for typical hidden dimension length??
                 for parent_pos,chi_pos in zip(range(*parent_splice), range(*chi_splice)):
-                    print(self.EMBEDDINGS_DICT[chi_label][slice(*chi_splice)].shape,self.EMBEDDINGS_DICT[chi_label][chi_pos])
                     distance.append(tensor_distance(self.EMBEDDINGS_DICT[chi_label][chi_pos], self.EMBEDDINGS_DICT[parent][parent_pos], dist_func))
         self.loc[chi_label, dist_func.name] = np.mean(distance)
         return distance
@@ -258,6 +257,11 @@ class SequenceDataframe(pd.DataFrame):
             identity = [calculate_sequence_identity(self.get_aln(chi), self.get_aln(parent)) for parent in
                         self.get_description(chi)]
             self.add_value(chi, 'identity', max(identity))
+
+    def save_df(self,file_name,metadata:dict=None):
+        self.loc['metadata', 'sequence'] = ""
+        self.at['metadata', 'sequence'] = metadata
+        self.to_csv(file_name)
 
 
 class EmbeddingAnalysis:
@@ -396,9 +400,11 @@ def translate_windows_path(windows_path: str):
         windows_path = windows_path.replace(drive.group(0), '/mnt/' + drive.group(1).lower())
     return windows_path
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
 #     # TODO do per res with 3di sequence and cosine similarity
 #     # TODO turn esm embeddings into pkl and put in rivanna
+#     save_esm_embedding_directory(r'C:\Users\jamel\PycharmProjects\Jamel\esm\3B_model\2d_schema_data',
+#                                  '../llm_output/schema_3Besm.pkl')
 #     # look at plot of sequence identity versus expression and see where there are ones that express high but are disimilar
 #     schema_data = pd.read_csv(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\schema_data.csv",
 #                               index_col='chimera_block_ID')
@@ -406,6 +412,7 @@ def translate_windows_path(windows_path: str):
 #     notag.get_sequence_identity()
 #     notag=pd.concat((notag, schema_data), axis=1)
 #     notag=notag.dropna()
+#     notag=notag.dropna(axis=1)
 #     plt.scatter(notag['identity'].astype(float),notag['mKate_mean'].astype(float))
 #     for label,data in notag.iterrows():
 #         plt.text(float(data['identity']),float(data['mKate_mean']), str(label), fontsize=10, ha="right",
@@ -414,10 +421,10 @@ def translate_windows_path(windows_path: str):
 #     plt.ylabel('Expression (mKate)')
 #     plt.title('Contiguous Chimera Expression vs. Identity')
 #     plt.show()
-#     mod = 'mean'
-#     l1=combine_w_schema(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\llm_output\schema_notag_X_v2.pkl", r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\schema_no_tag.aln',
-#                           [NormType.cosine, NormType.manhattan, NormType.euclidean,NormType.dot_product],
-#     #                       np.mean,f'../Data/notag_{mod}_v2.csv')
+    mod = 'mean'
+    # l1=combine_w_schema(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\llm_output\schema_notag_X_v2.pkl", r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\schema_no_tag.aln',
+    #                       [NormType.cosine, NormType.manhattan, NormType.euclidean,NormType.dot_product],
+    #                       np.mean,f'../Data/notag_perres_dot.csv')
 #     # combine_w_randoms(r"..\Data\150M_esm.pkl", '..\Data\PDTvPDK_chimera.aln',
 #     #                        [NormType.cosine, NormType.manhattan, NormType.euclidean], rf'..\Data\randoms_150M_esm{mod}.csv')
 #     # print('prost')
@@ -425,9 +432,12 @@ def translate_windows_path(windows_path: str):
 #     #                   '..\Data\Randoms\PDTvPDK_chimera.aln',
 #     #                   [NormType.cosine, NormType.manhattan, NormType.euclidean, NormType.dot_product],
 #     #                   sum, rf'..\Data\randoms_prost_{mod}.csv')
-#     # print('ankh')
-#     # combine_w_randoms(r"..\Data\PDTvPDK_ankh.pkl", '..\Data\PDTvPDK_chimera.aln',
-#     #                      [NormType.cosine, NormType.manhattan, NormType.euclidean], rf'..\Data\randoms_ankh{mod}.csv')
+    print('ankh')
+    # TODO ankh with dot
+    # combine_w_schema(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\llm_output\ankh_tensors.pkl", r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\schema_no_tag.aln',
+    #                      [NormType.cosine, NormType.manhattan, NormType.euclidean, NormType.dot_product], np.mean,rf'..\Data\ankh_w_dot.csv')
+    combine_w_schema(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\llm_output\schema_3Besm.pkl", r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\schema_no_tag.aln',
+                         [NormType.cosine, NormType.manhattan, NormType.euclidean, NormType.dot_product], np.mean,rf'..\Data\esm_3B_w_dot.csv')
 #     # parser = argparse.ArgumentParser(
 #     #     description='Creating a fasta file of all potential chimeric proteins between two parents based on a sliding splice site')
 #     # parser.add_argument('-in', '--inputjson', type=str, required=True,

@@ -13,7 +13,7 @@ parser.add_argument('-u', '--updatejson', type=str, required=False,
                     help='updating json configs with current variables whether adding or taking away. ex: default_json,old_json')
 parser.add_argument('-i', '--jsoninput', dest='arg_jsons', required=False, type=str,
                     help='Comma seperated json config inputs. ex: constant_json,variant_json')
-parser.add_argument('-m','--mode', dest='mode', required=False, type=str,choices=['h','nh'],default='h',
+parser.add_argument('-m','--mode', dest='mode', required=False, type=str,choices=['h','nh','sh'],default='h',
                     help='h=homologous, nh=non-homologous')
 parser.add_argument('-ch', '--change', required=False, type=str,
                     help='input json with options you wish to change. ex: json')
@@ -74,7 +74,7 @@ if args.findnreplace and args.change:
     ChimeraGenerator.change_json_value(args.change, overwrite=args.overwrite, find_n_replace_tuple=pair)
     exit()
 
-chimera_types={'h':ChimeraClasses.HomomerChimeraArgs,'nh':ChimeraClasses.NonHomologyChimeraArgs}
+chimera_types={'h':ChimeraClasses.HomomerChimeraArgs,'nh':ChimeraClasses.NonHomologyChimeraArgs,'sh':ChimeraClasses.ShiftedChimeraArgs}
 if __name__ == '__main__':
     chimera_type=chimera_types[args.mode]
     TOTAL_ARGS = chimera_type(args.arg_jsons)
@@ -83,13 +83,13 @@ if __name__ == '__main__':
         if any(operation_args) and operation_args:
             for key in TOTAL_ARGS.operation_toggles:
                 TOTAL_ARGS.operation_toggles[key] = False
-    if TOTAL_ARGS.operation_toggles['run_fasta_operation']:
+    if TOTAL_ARGS.operation_toggles['fasta_operations']:
         TOTAL_ARGS.fasta_operations()
 
-    if TOTAL_ARGS.operation_toggles['alphafold_submission']:
-        TOTAL_ARGS.alphafold_submission()
+    if TOTAL_ARGS.operation_toggles['submission_operations']:
+        TOTAL_ARGS.submission_operations()
 
-    if TOTAL_ARGS.operation_toggles['run_analysis_operation']:
+    if TOTAL_ARGS.operation_toggles['analysis_operations']:
         TOTAL_ARGS.analysis_operations()
 
 

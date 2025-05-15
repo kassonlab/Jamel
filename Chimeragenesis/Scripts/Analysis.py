@@ -149,3 +149,14 @@ def relative_stabilty(plddt_dict: dict[str, tuple], inheritance_dict: dict[str, 
                                        plddt_dict[parent][slice(*parent_bound)]):
                     raw_stability.append((chi - native) / native * 100)
     return np.mean(raw_stability)
+
+def relative_stabilty_v2(plddt_dict: dict[str, tuple], inheritance_dict: dict[str, dict[tuple, tuple]]):
+    raw_stability = []
+    chimera_label = (set(plddt_dict.keys()) - set(inheritance_dict.keys())).pop()
+    for parent, boundaries in inheritance_dict.items():
+        for parent_bound, chimera_bound in boundaries.items():
+            if not all(bound == 0 for bound in parent_bound):
+                chi=sum(plddt_dict[chimera_label][slice(*chimera_bound)])
+                native=sum(plddt_dict[parent][slice(*parent_bound)])
+                raw_stability.append((chi - native) / native * 100)
+    return np.mean(raw_stability)
