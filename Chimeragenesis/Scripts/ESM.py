@@ -3,6 +3,8 @@ import difflib
 import os
 import pickle
 import re
+from datetime import date
+
 import regex
 import torch
 import umap
@@ -229,7 +231,6 @@ class SequenceDataframe(pd.DataFrame):
 
     def score_per_res(self, chi_label, inheritance: dict[str, dict[tuple, tuple]], dist_func):
         distance = []
-        # TODO add metadata about what parameters were used
         for parent, splices in inheritance.items():
             for parent_splice, chi_splice in splices.items():
                 # TODO need to ensure the shape matches with expectation, meaning embeddings are same length as sequences,
@@ -259,9 +260,12 @@ class SequenceDataframe(pd.DataFrame):
             self.add_value(chi, 'identity', max(identity))
 
     def save_df(self,file_name,metadata:dict=None):
+        date_={'date':date.today().strftime('%Y-%m-%d')}
         self.loc['metadata', 'sequence'] = ""
-        self.at['metadata', 'sequence'] = metadata
-        self.to_csv(file_name)
+        if metadata:
+            date_.update(metadata) if metadata else date_
+        self.at['metadata', 'sequence'] = [date_]
+        self.to_csv(file_name,index_label='label')
 
 
 class EmbeddingAnalysis:
@@ -433,7 +437,6 @@ if __name__ == '__main__':
 #     #                   [NormType.cosine, NormType.manhattan, NormType.euclidean, NormType.dot_product],
 #     #                   sum, rf'..\Data\randoms_prost_{mod}.csv')
     print('ankh')
-    # TODO ankh with dot
     # combine_w_schema(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\llm_output\ankh_tensors.pkl", r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\schema_no_tag.aln',
     #                      [NormType.cosine, NormType.manhattan, NormType.euclidean, NormType.dot_product], np.mean,rf'..\Data\ankh_w_dot.csv')
     combine_w_schema(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\llm_output\schema_3Besm.pkl", r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\schema_no_tag.aln',

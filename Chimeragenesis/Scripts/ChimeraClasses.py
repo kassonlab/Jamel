@@ -484,6 +484,8 @@ class NonHomologySubmissionArguments:
     indiscriminately'''
     create_file_of_stragglers: bool
     slurm_naming: str
+    template_script: str
+    '''A slurm with just a shebang (#!/bin/bash) and some SBATCH settings that can be used to create other slurms for alphafold and pLM submission'''
     custom_fasta_list: str
     '''Path to file that for list that either be created by toggling on create_file_of_stragglers, or user-generated that should contain 
     line separated fastas of proteins you want predicted'''
@@ -629,7 +631,6 @@ class NonHomologyChimeraArgs:
         analysis_toggles = self.analysis_args.analysis_toggles
         if analysis_toggles['analyze_embeddings']:
             embeddings=[]
-
             for chunk_fasta in self.fasta_chunk_dir.iterdir():
                 embed_file=self.embed_chunk_dir.joinpath(chunk_fasta.stem).with_suffix('.pkl')
                 # TODO change
@@ -642,6 +643,7 @@ class NonHomologyChimeraArgs:
                     ascending=func != ESM.NormType.cosine and func != ESM.NormType.dot_product)
                 embedding_df.drop(columns=['aln_sequence', 'sequence', 'description'])
                 del embedding_df.EMBEDDINGS_DICT
+                print(embedding_df)
                 embeddings.append(embedding_df)
 
             embeddings=pd.concat(embeddings)
@@ -650,6 +652,7 @@ class NonHomologyChimeraArgs:
             embeddings.drop(columns=['aln_sequence'])
             if self.analysis_args.analysis_output_file:
                 embeddings.save_df(self.analysis_args.analysis_output_file,self.analysis_args.metadata)
+
         if analysis_toggles['analyze_alphafold']:
             for folder in self.alphafold_dir.iterdir():
                 chi_label=folder.stem
@@ -668,6 +671,5 @@ class NonHomologyChimeraArgs:
                     self.collective_df.loc[chi_label, 'Relative Stability (%)'] = relative_stability
             self.collective_df=self.collective_df.dropna()
             # self.collective_df.get_sequence_identity()
-            self.collective_df.to_csv(self.analysis_args.analysis_output_file)
-            print(self.analysis_args.metadata)
             self.collective_df.save_df(self.analysis_args.analysis_output_file,self.analysis_args.metadata)
+

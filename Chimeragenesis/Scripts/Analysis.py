@@ -9,7 +9,19 @@ from numpy import savetxt, empty, mean
 from Bio import SeqIO, PDB
 from collections import defaultdict
 from pathlib import Path
+from pandas import DataFrame
 
+from matplotlib import pyplot as plt
+
+def scatterplot_for_df(df:DataFrame, x, y, attr_mods:dict=None, scatter_args:dict=None):
+    if scatter_args is None:
+        scatter_args = {}
+    df.plot.scatter(x=x, y=y,**scatter_args)
+    if attr_mods:
+        for attr,mod in attr_mods.items():
+            plt.attr(mod)
+
+    plt.show()
 def determine_columns_from_container(container):
     data_columns = {}
     # Checks which data columns are wanted by the user by looking for True in the first index of each array in

@@ -1,10 +1,10 @@
+import re
 from collections import Counter
+from datetime import date
 from pathlib import Path
-
 import pandas as pd
-import torch
-import umap
-from matplotlib import pyplot as plt, colormaps
+import torch, umap, Analysis
+from matplotlib import pyplot as plt
 from AccessiontoAlignment import create_dictionary_from_alignment, create_seq_records, fasta_creation, alignment_finder,calculate_sequence_identity
 from Bio.Seq import Seq
 from Bio.Align import PairwiseAligner
@@ -95,25 +95,6 @@ cuts=[152,350,416,647,821,996,1133,1274,1435] # RAndom CHimeras
 #         identity.append(calculate_sequence_identity(*aligner.align(parent, data['sequence'])[0]))
 #     df.loc[label, 'identity']=max(identity)
 # # get sequence Identity
-# df['normalized_dp']=df['dot_product']/df['chimera_len']
-# df.plot.scatter(x='identity', y='normalized_dp',s=1,color='red',ax=ax)
-# # df.to_csv('../Data/eid_w_identity.csv')
-# plt.show()
-
-# df=pd.read_csv('../Data/sars_w_identity.csv',index_col='label')
-# df.plot.scatter(x='base_len', y='partner_len',c='corrected_dp',colormap='viridis',s=1,xlabel='SARS N-term Length',ylabel='Eid C-term Length')
-# plt.show()
-
-df=pd.read_csv('../Data/eid_w_identity.csv',index_col='label')
-
-print(df.loc['metadata','sequence'])
-# df.plot.scatter(x='base_len', y='partner_len',c='corrected_dp',colormap='viridis',s=1)
-# plt.show()
-
-# df=pd.read_csv(r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\eid_sars_perres_dot.csv',index_col='label')
-# df=df[[ind.startswith('6VSB') for ind in df.index]]
-# df.plot.scatter(x='chimera_len', y='dot_product',s=1)
-# plt.show()
 
 # for pdb in Path(r'/sfs/weka/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/Eid_sars_v3/SelectedMultimers/PDB/').iterdir():
 #     if (label:=pdb.stem) in ['6VSB_0_534_EidolonBat_548_1264','6VSB_0_534_EidolonBat_549_1264','6VSB_0_534_EidolonBat_550_1264','6VSB','EidolonBat']:
@@ -122,3 +103,8 @@ print(df.loc['metadata','sequence'])
 #         plt.xticks(range(0,len(plddt),50))
 # plt.legend()
 # plt.show()
+# sars_data=pd.read_excel(r"C:\Research\eid_sars_perres_check.xlsx", sheet_name='SARS',index_col='label')
+# sars_data=sars_data.assign(base_len=lambda x: [[int(end)-int(start) for start, end in re.findall(r'(\d+)_(\d+)',index)][0] for index in x.index],
+#                            partner_len=lambda x: [[int(end)-int(start) for start, end in re.findall(r'(\d+)_(\d+)',index)][1] for index in x.index])
+# Analysis.scatterplot_for_df(sars_data,'base_len','partner_len',scatter_args={'c':'dot_product','colormap':'viridis','s':2,'xlabel':'SARS N-term Length','ylabel':'Eid C-term Length'})
+# print(*(sars_data['dot_product'].iloc[:20].index.to_list()+sars_data['dot_product'].iloc[20::5000].index.to_list()),sep='\n')
