@@ -103,8 +103,11 @@ cuts=[152,350,416,647,821,996,1133,1274,1435] # RAndom CHimeras
 #         plt.xticks(range(0,len(plddt),50))
 # plt.legend()
 # plt.show()
-# sars_data=pd.read_excel(r"C:\Research\eid_sars_perres_check.xlsx", sheet_name='SARS',index_col='label')
-# sars_data=sars_data.assign(base_len=lambda x: [[int(end)-int(start) for start, end in re.findall(r'(\d+)_(\d+)',index)][0] for index in x.index],
-#                            partner_len=lambda x: [[int(end)-int(start) for start, end in re.findall(r'(\d+)_(\d+)',index)][1] for index in x.index])
-# Analysis.scatterplot_for_df(sars_data,'base_len','partner_len',scatter_args={'c':'dot_product','colormap':'viridis','s':2,'xlabel':'SARS N-term Length','ylabel':'Eid C-term Length'})
-# print(*(sars_data['dot_product'].iloc[:20].index.to_list()+sars_data['dot_product'].iloc[20::5000].index.to_list()),sep='\n')
+
+# cmy_tem=pd.read_csv(r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\cmy_tem_embed.csv',index_col='label')
+# cmy=cmy_tem[cmy_tem.index.str.startswith('CMY')]
+# cmy=cmy.sort_values(by='dot_product',ascending=False)
+# cmy=cmy.drop(index='CMY1')
+# Analysis.select_for_af_from_embedding_df(cmy,200,880,r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\selected_cmy',['TEM1','CMY1'])
+
+pd.concat([pd.read_csv("/sfs/weka/scratch/jws6pq/Notebook/ESM/B-lac/cmy_tem/cmy_tem_af.csv",index_col='label'),pd.read_csv("/sfs/weka/scratch/jws6pq/Notebook/ESM/B-lac/cmy_tem/cmy_tem_embed.csv",index_col='label')],axis=1).dropna(subset=['Relative Stability (%)']).to_csv('/scratch/jws6pq/Notebook/ESM/B-lac/cmy_tem/combined.csv',index_label='label')

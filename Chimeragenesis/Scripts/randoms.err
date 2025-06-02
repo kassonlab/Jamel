@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/sfs/weka/scratch/jws6pq/Notebook/ESM/Chimeragenesis/ChimeraCLI.py", line 86, in <module>
+    if TOTAL_ARGS.operation_toggles['fasta_operations']:
+KeyError: 'fasta_operations'

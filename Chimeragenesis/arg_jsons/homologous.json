@@ -1,7 +1,6 @@
 {
-    "chimera_type": "Homology",
     "operation_toggles": {
-        "run_fasta_operation": false, "alphafold_submission":false,"run_analysis_operation": true,"run_gromacs_operation": false
+        "fasta_operations": false, "submission_operations":true,"analysis_operations": false
     },
     "naming_arguments": {
         "file_stem_placeholder": "",
@@ -28,6 +27,7 @@
     },
     "analysis_arguments": {
         "analysis_toggles": {"make_plddts": true,"analyze_embeddings": true,"analyze_alphafold": false},
-        "analysis_output_file": "/sfs/weka/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/eid_sars.csv"
+        "analysis_output_file": "/sfs/weka/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/eid_sars.csv",
+        "metadata": {"function_used": "per_res", "averaging_used": "mean","selection": "top20+every5000"}
     }
 }

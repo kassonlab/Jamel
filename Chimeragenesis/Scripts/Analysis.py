@@ -9,19 +9,22 @@ from numpy import savetxt, empty, mean
 from Bio import SeqIO, PDB
 from collections import defaultdict
 from pathlib import Path
-from pandas import DataFrame
-
+import pandas as pd
 from matplotlib import pyplot as plt
 
-def scatterplot_for_df(df:DataFrame, x, y, attr_mods:dict=None, scatter_args:dict=None):
+
+def scatterplot_for_df(df:pd.DataFrame, x, y, attr_mods:dict=None, scatter_args:dict=None):
+    if attr_mods is None:
+        attr_mods = {plt.title: f'{x} vs. {y}'}
     if scatter_args is None:
         scatter_args = {}
     df.plot.scatter(x=x, y=y,**scatter_args)
     if attr_mods:
         for attr,mod in attr_mods.items():
-            plt.attr(mod)
-
+            attr(mod)
     plt.show()
+
+
 def determine_columns_from_container(container):
     data_columns = {}
     # Checks which data columns are wanted by the user by looking for True in the first index of each array in
@@ -162,13 +165,57 @@ def relative_stabilty(plddt_dict: dict[str, tuple], inheritance_dict: dict[str, 
                     raw_stability.append((chi - native) / native * 100)
     return np.mean(raw_stability)
 
-def relative_stabilty_v2(plddt_dict: dict[str, tuple], inheritance_dict: dict[str, dict[tuple, tuple]]):
-    raw_stability = []
-    chimera_label = (set(plddt_dict.keys()) - set(inheritance_dict.keys())).pop()
-    for parent, boundaries in inheritance_dict.items():
-        for parent_bound, chimera_bound in boundaries.items():
-            if not all(bound == 0 for bound in parent_bound):
-                chi=sum(plddt_dict[chimera_label][slice(*chimera_bound)])
-                native=sum(plddt_dict[parent][slice(*parent_bound)])
-                raw_stability.append((chi - native) / native * 100)
-    return np.mean(raw_stability)
+def embedding_heatmap(embedding_df:pd.DataFrame,attr_mods:dict=None, scatter_args:dict=None,new_csv=''):
+    """Creates a scatter plot where every chimera in the embedding df is plotted by the length that protein A
+    donated to its n-terminus in the x-axis and the length that protein B donated to its c-terminus in the y-axis"""
+    if scatter_args is None:
+        scatter_args={'c': 'dot_product', 'colormap': 'viridis', 's': 50, 'xlabel': 'N-term Length',
+         'ylabel': 'C-term Length'}
+    if attr_mods is None:
+        attr_mods = {plt.title: f'Dot Product Heat Map'}
+    embedding_df=embedding_df.assign(base_len=lambda series: [[int(end) - int(start) for start, end in re.findall(r'_(\d+)_(\d+)', index)][0] for index in series.index],
+                                     partner_len=lambda series: [[int(end) - int(start) for start, end in re.findall(r'_(\d+)_(\d+)', index)][1] for index in series.index],
+                                     chimera_len= lambda series: series['sequence'].apply(lambda element: len(element)))
+    scatterplot_for_df(embedding_df, 'base_len', 'partner_len',scatter_args=scatter_args,attr_mods=attr_mods)
+    if new_csv:
+        embedding_df.to_csv(new_csv,index_label='label')
+
+def embedding_dp_vs_length(embedding_df:pd.DataFrame,attr_mods:dict=None, scatter_args:dict=None):
+    if attr_mods is None:
+        attr_mods = {plt.title: f'Chimera Length vs. Dot Product'}
+    embedding_df = embedding_df.assign(
+        chimera_len=lambda series: series['sequence'].apply(lambda element: len(element)))
+    scatterplot_for_df(embedding_df, 'chimera_len', 'dot_product',scatter_args=scatter_args,attr_mods=attr_mods)
+def select_for_af_from_embedding_df(embedding_df:pd.DataFrame,amount_from_top:int,total_labels_wanted:int,file_for_selected_labels:str,parents:list):
+    """Based on cutoffs puts the corresponding chimera labels in a text file for alphafold submission"""
+    embedding_df = embedding_df.sort_values(by='dot_product', ascending=False)
+    search_interval=embedding_df.__len__()//(total_labels_wanted-amount_from_top)
+    with open(file_for_selected_labels, "w") as file:
+        print(*(embedding_df['dot_product'].iloc[:amount_from_top].index.to_list() + embedding_df['dot_product'].iloc[amount_from_top::search_interval].index.to_list()+parents),
+              sep='\n',file=file)
+def process_raw_embedding_csv(embedding_csv:str,parents:list):
+    embedding_df=pd.read_csv(embedding_csv,index_col='label')
+    embedding_df = embedding_df[~embedding_df.index.duplicated(keep='first')]
+    embedding_df.to_csv(embedding_csv,index_label='label')
+    for parent in parents:
+        parent_df = embedding_df[embedding_df.index.str.startswith(parent)]
+        parent_df = parent_df.drop(index=parent)
+        parent_df = parent_df.sort_values(by='dot_product')
+        embedding_heatmap(parent_df,scatter_args={'c':'dot_product','colormap':'viridis','s':25,'xlabel':f'{parent} N-term Length','ylabel':f'{parent} C-term Length'})
+        embedding_dp_vs_length(parent_df,scatter_args={'s':25,'xlabel':'Chimera Length','ylabel':'Dot Product'},attr_mods={plt.title:f'{parent} Chis Len v DP'})
+
+def graph_plddt_per_residue(pdb_list:list[str],attr_mods:dict=None, scatter_args:dict=None):
+    if attr_mods is None:
+        attr_mods = {plt.title: f'Residue # vs. Confidence',plt.xlabel: 'Residue #',plt.ylabel:"Confidence Score"}
+    if scatter_args is None:
+        scatter_args = {}
+    for pdb in pdb_list:
+        for seq,plddt in get_plddt_dict_from_pdb(pdb).items():
+            plt.plot(range(len(seq)),plddt,label=Path(pdb).stem,**scatter_args)
+
+    if attr_mods:
+        for attr,mod in attr_mods.items():
+            attr(mod)
+
+    plt.legend()
+    plt.show()

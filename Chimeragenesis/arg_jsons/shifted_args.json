@@ -3,23 +3,23 @@
         "run_fasta_operation": false, "alphafold_submission":false,"run_analysis_operation": true
     },
     "fasta_arguments": {
-        "fasta_toggles": {"Make a list of created fasta files": true},
         "output_directory": "/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/",
         "parent_aln_file": "/sfs/weka/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/eid_sars.aln",
         "collective_fasta": "/sfs/weka/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/eid_sars_chimeras.inh",
         "number_of_subunits": 1
     },
     "submission_arguments": {
-        "submission_toggles": {"create_slurms":false,"sbatch_slurms": false,"stragglers_or_custom_or_all": "stragglers","create_file_of_stragglers": false,"get_embeddings": true},
-        "custom_list_to_run": "",
+        "submission_toggles": {"create_slurms":false,"run_stragglers": "stragglers","get_embeddings": true},
+        "custom_label_list": "",
         "proteins_per_slurm": 9,
-        "slurm_naming": "eidsars_emb",
-        "sbatch_group": "",
         "alphafold_shell_script": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/MultimerAlphaFold.sh",
-        "embedding_script": "/scratch/jws6pq/Notebook/ESM/Schema_valdation/prost.slurm"
+        "embedding_shell_script": "/scratch/jws6pq/Notebook/ESM/Schema_valdation/prost.slurm",
+        "alphafold_settings": {"-p":"gpu", "--gres":"gpu:h200:1", "-N":1, "-n":3, "-A":"", "--mem":"400000", "--time":"72:00:00","-J": "eidsars_emb"},
+        "embedding_settings": {"-p":"gpu", "--gres":"gpu:a100:1", "-N":1, "-n":3, "-A":"", "--time":"72:00:00","-J": "swinesars"}
     },
     "analysis_arguments": {
         "analysis_toggles": {"make_plddts": true,"analyze_embeddings": true,"analyze_alphafold": true},
+        "metadata": {"function_used": "per_res", "averaging_used": "mean","selection": "top20+every5000"},
         "analysis_output_file": "/sfs/weka/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/eid_sars.csv"
     }
 }

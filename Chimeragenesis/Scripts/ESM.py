@@ -358,7 +358,7 @@ def embedding_umap_3d(embed_pkl_file: str):
 
 
 def combine_w_schema(embed_pkl_file, aln_file, dist_func: list[NormType], evaluation_func, new_distance_file=''):
-    schema_data = pd.read_csv(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\schema_data.csv",
+    schema_data = pd.read_csv(r"/Chimeragenesis/Data/schema_csvs/schema_data.csv",
                               index_col='chimera_block_ID')
 
     combined_df = schema_data
@@ -439,8 +439,9 @@ if __name__ == '__main__':
     print('ankh')
     # combine_w_schema(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\llm_output\ankh_tensors.pkl", r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\schema_no_tag.aln',
     #                      [NormType.cosine, NormType.manhattan, NormType.euclidean, NormType.dot_product], np.mean,rf'..\Data\ankh_w_dot.csv')
-    combine_w_schema(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\llm_output\schema_3Besm.pkl", r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\schema_no_tag.aln',
-                         [NormType.cosine, NormType.manhattan, NormType.euclidean, NormType.dot_product], np.mean,rf'..\Data\esm_3B_w_dot.csv')
+    combine_w_schema(r"C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\llm_output\schema_3Besm.pkl",
+                     r'/Chimeragenesis/Data/schema_csvs/schema_no_tag.aln',
+                     [NormType.cosine, NormType.manhattan, NormType.euclidean, NormType.dot_product], np.mean,rf'..\Data\esm_3B_w_dot.csv')
 #     # parser = argparse.ArgumentParser(
 #     #     description='Creating a fasta file of all potential chimeric proteins between two parents based on a sliding splice site')
 #     # parser.add_argument('-in', '--inputjson', type=str, required=True,

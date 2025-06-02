@@ -1,25 +1,27 @@
 {
     "operation_toggles": {
-        "run_fasta_operation": false, "alphafold_submission":true,"run_analysis_operation": false
+        "fasta_operations": false, "submission_operations":false,"analysis_operations": true
     },
     "fasta_arguments": {
-        "fasta_toggles": {},
-        "output_directory": "/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/",
-        "parent_mfa_file": "/sfs/weka/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/eid_sars.aln",
-        "collective_fasta": "/sfs/weka/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/eid_sars_chimeras.inh",
+        "output_directory": "/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/Eid_sars_v3/Selected_v2/",
+        "parent_mfa_file": "/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/Eid_sars_v3/Selected_v2/eid_sars.fa",
+        "collective_fasta": "/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/Eid_sars_v3/Selected_v2/eid_sars_chimeras.inh",
         "number_of_subunits": 3
     },
     "submission_arguments": {
-        "submission_toggles": {"make_slurm_files": true,"run_custom_list": true, "get_embeddings": false,"run_AF": true},
-        "custom_fasta_list": "",
-        "proteins_per_slurm": 5,
-        "slurm_naming": "eidsars_emb",
-        "sbatch_group": "",
-        "alphafold_shell_script": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/MultimerAlphaFold.sh",
-        "embedding_script": "/scratch/jws6pq/Notebook/ESM/Schema_valdation/prost.slurm"
+        "submission_toggles": {"make_slurm_files": true, "run_stragglers": false, "get_embeddings": false,"run_AF": true,"run_gromacs": true},
+        "custom_label_list": "/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/Eid_sars_v3/Selected_v2/eid_sars_selected.txt",
+        "proteins_per_slurm": 7,
+        "alphafold_settings": {"-p":"gpu", "--gres":"gpu:h200:1", "-N":1, "-n":3, "-A":"", "--mem":"400000", "--time":"72:00:00","-J": "eidsars_emb"},
+        "embedding_settings": {"-p":"gpu", "--gres":"gpu:a100:1", "-N":1, "-n":3, "-A":"", "--time":"72:00:00","-J": "swinesars"},
+        "gromacs_settings": {"-p":"gpu", "--gres":"gpu:1", "-N":1, "-A":"", "--time":"72:00:00","-J": "eidsars_emb","--ntasks-per-node":"10"},
+        "gromacs_commands": ["srun gmx_bin","module purge","module load gcc/11.4.0 openmpi/4.1.4 gromacs/2023.2"],
+        "alphafold_shell_script": "/scratch/jws6pq/Notebook/ESM/Chimeragenesis/MultimerAlphaFold.sh",
+        "embedding_shell_script": "/scratch/jws6pq/Notebook/ESM/Chimeragenesis/prost.slurm"
     },
     "analysis_arguments": {
-        "analysis_toggles": {"make_plddts": true,"analyze_embeddings": true,"analyze_alphafold": true},
-        "analysis_output_file": "/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/eid_sars.csv"
+        "analysis_toggles": {"make_plddts": true,"analyze_embeddings": false,"analyze_alphafold": false,"analyze_gromacs": true},
+        "metadata": {"function_used": "per_res", "averaging_used": "mean"},
+        "analysis_output_file": "/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/Eid_sars_v3/Selected_v2/eid_sars_sample_v2.csv"
     }
 }

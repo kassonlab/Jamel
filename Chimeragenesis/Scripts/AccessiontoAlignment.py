@@ -7,6 +7,7 @@ from os import system
 import json
 from pathlib import Path
 from Bio import Entrez, Phylo, AlignIO, SeqIO
+from Bio.Align import PairwiseAligner
 from random import choice
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
 from Bio.Seq import Seq
@@ -154,11 +155,18 @@ def run_emboss_needle(new_emboss_file, sequence_one: str, sequence_two: str, emb
                    shell=True)
 
 
-def calculate_sequence_identity(aln_seq_1, aln_seq_2):
-    if len(aln_seq_1) != len(aln_seq_2): raise ValueError(
-        f'Alignment sequences are not equal length. aln_seq_1:{len(aln_seq_1)} aln_seq_2:{len(aln_seq_2)}')
-    identical_count = [resb == resa for resa, resb in zip(aln_seq_1, aln_seq_2) if resa != '-' or resb != '-']
-    return identical_count.count(True) / len(identical_count)
+def calculate_sequence_identity(aln_seq_1='', aln_seq_2='',seq_1='',seq_2=''):
+    if seq_2 and seq_1:
+        aligner = PairwiseAligner()
+        aligner.mode = 'global'
+        return calculate_sequence_identity(*aligner.align(seq_1, seq_2)[0])
+    elif aln_seq_1 and aln_seq_2:
+        if len(aln_seq_1) != len(aln_seq_2): raise ValueError(
+            f'Alignment sequences are not equal length. aln_seq_1:{len(aln_seq_1)} aln_seq_2:{len(aln_seq_2)}')
+        identical_count = [resb == resa for resa, resb in zip(aln_seq_1, aln_seq_2) if resa != '-' or resb != '-']
+        return identical_count.count(True) / len(identical_count)
+    else:
+        raise ValueError('Did not provide sufficient pairs of either aligned or unligned sequences.')
 
 
 def get_alignment_indexing(alignment_seq):
