@@ -1,13 +1,5 @@
-import ast
-import difflib
-import os
-import pickle
-import re
+import ast,difflib,os,pickle,re,regex,torch
 from datetime import date
-
-import regex
-import torch
-import umap
 from enum import Enum
 from json import load
 from pathlib import Path
@@ -67,15 +59,15 @@ def dot_product(tensor1: torch.Tensor, tensor2: torch.Tensor):
     return torch.dot(tensor1, tensor2).item()
 
 
-def random_thing(tensor1: torch.Tensor, tensor2: torch.Tensor):
-    #TODO make a dot product that is truly
-
-    return c.max().item()
+# def random_thing(tensor1: torch.Tensor, tensor2: torch.Tensor):
+#     #TODO make a dot product that is truly
+#
+#     return c.max().item()
 
 
 # Used in conjunction with NormType enum for distance function selection
 func_dict = {'euclidean_norm': euclidean_norm, 'manhattan_norm': manhattan_norm, 'cosine_similarity': cosine_similarity,
-             'random': random_thing, 'dot_product': dot_product}
+              'dot_product': dot_product}
 
 
 class NormType(Enum):
@@ -192,6 +184,7 @@ class SequenceDataframe(pd.DataFrame):
         else:
             self.loc[chi_label, dist_func.name] = evaluation_func(distance)
         return evaluation_func(distance)
+
     def score_all_embeddings(self, dist_func: NormType, evaluation_func=min):
         self.create_column(dist_func.name)
         for label in self.index:
@@ -312,19 +305,19 @@ def save_esm_embedding_directory(directory, new_pkl_file):
     torch.save(embed_dict, new_pkl_file)
 
 
-def embedding_umap_2d(embed_pkl_file: str):
-    reducer = umap.UMAP(n_components=2)
-    embed_dict: dict[str, torch.Tensor] = torch.load(embed_pkl_file, map_location=torch.device('cpu'))
-    embed_dict = {label: torch.sum(tensor, dim=0) for label, tensor in embed_dict.items()}
-    # rows in umap matrix are samples/proteins
-    embedding_matrix = np.vstack(tuple(embed_dict.values()))
-    umap_vectors = reducer.fit_transform(embedding_matrix)
-    plt.scatter(umap_vectors[:, 0], umap_vectors[:, 1], marker='+')
-    for i in range(len(umap_vectors[:, 0])):
-        plt.text(umap_vectors[i, 0], umap_vectors[i, 1], f"{list(embed_dict.keys())[i]}", fontsize=10, ha="right",
-                 va="bottom")
-    plt.show()
-    return plt.gcf()
+# def embedding_umap_2d(embed_pkl_file: str):
+#     reducer = umap.UMAP(n_components=2)
+#     embed_dict: dict[str, torch.Tensor] = torch.load(embed_pkl_file, map_location=torch.device('cpu'))
+#     embed_dict = {label: torch.sum(tensor, dim=0) for label, tensor in embed_dict.items()}
+#     # rows in umap matrix are samples/proteins
+#     embedding_matrix = np.vstack(tuple(embed_dict.values()))
+#     umap_vectors = reducer.fit_transform(embedding_matrix)
+#     plt.scatter(umap_vectors[:, 0], umap_vectors[:, 1], marker='+')
+#     for i in range(len(umap_vectors[:, 0])):
+#         plt.text(umap_vectors[i, 0], umap_vectors[i, 1], f"{list(embed_dict.keys())[i]}", fontsize=10, ha="right",
+#                  va="bottom")
+#     plt.show()
+#     return plt.gcf()
 
 
 def embedding_umap_3d(embed_pkl_file: str):
@@ -351,10 +344,10 @@ def embedding_umap_3d(embed_pkl_file: str):
     ax.set_title("3D UMAP Projection of Digits Dataset")
     ax.set_xlabel("UMAP 1")
     ax.set_ylabel("UMAP 2")
-    ax.set_zlabel("UMAP 3")
-
-    plt.show()
-    return plt.gcf()
+    # ax.set_zlabel("UMAP 3")
+    #
+    # plt.show()
+    # return plt.gcf()
 
 
 def combine_w_schema(embed_pkl_file, aln_file, dist_func: list[NormType], evaluation_func, new_distance_file=''):
@@ -379,7 +372,7 @@ def combine_w_schema(embed_pkl_file, aln_file, dist_func: list[NormType], evalua
 
 
 def combine_w_randoms(embed_pkl_file, aln_file, dist_func: list[NormType], evaluation_func, new_distance_file=''):
-    randoms_data = pd.read_csv("..\Data\Randoms\processed_randoms.csv", index_col='Protein')
+    randoms_data = pd.read_csv(r"..\Data\Randoms\processed_randoms.csv", index_col='Protein')
     combined_df = randoms_data
     for func in dist_func:
         print(func)

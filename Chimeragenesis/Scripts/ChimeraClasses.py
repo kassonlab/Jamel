@@ -1,10 +1,10 @@
 import os,re,subprocess
-import AccessiontoAlignment, ESM, ChimeraGenerator, Analysis
-from Chimeragenesis.Scripts import GromacsAnalysis
+import AccessiontoAlignment, ESM, ChimeraGenerator, Analysis,GromacsAnalysis
 from json import load
 from pathlib import Path
 import numpy as np
 import pandas as pd
+
 
 """
 Contained below are all the arguments found in the chimera generation jsons that require deeper explanation outside their name. 
@@ -92,6 +92,11 @@ GMX_FOLDERNAME ='Gromacs'
 FASTA_EXT = '.fa'
 INHERITANCE_EXT = '.inh'
 
+def make_slurm_content(sbatch_flags:dict,commands:list,shebang='#!/bin/bash'):
+    flags=dict(sbatch_flags)
+    return '\n'.join(
+        [shebang] + [f'#SBATCH {flag}={arg}' if flag.startswith('--') else f'#SBATCH {flag} {arg}' for flag, arg
+                           in flags.items()] +[' && \n'.join(commands)])
 
 def alphafold_submission(fastas_to_run, alphafold_shell_script: str, output_directory: str, slurm_settings: dict,
                          proteins_per_slurm=7, make_slurms=False):
@@ -108,9 +113,7 @@ def alphafold_submission(fastas_to_run, alphafold_shell_script: str, output_dire
         settings['-J'] = job_id
         if not settings.get('-e', None):
             settings['-e'] = output_directory.joinpath('Slurms', job_id).with_suffix(".err")
-        input_slurm = '\n'.join(
-            ['#!/bin/bash'] + [f'#SBATCH {flag}={arg}' if flag.startswith('--') else f'#SBATCH {flag} {arg}' for
-                               flag, arg in settings.items()] + ['', ' '.join(submit_args)])
+        input_slurm=make_slurm_content(settings,[' '.join(submit_args)])
         if make_slurms:
             output_directory.joinpath('Slurms').mkdir(exist_ok=True)
             new_slurm = output_directory.joinpath('Slurms', job_id).with_suffix('.slurm')
@@ -121,10 +124,9 @@ def alphafold_submission(fastas_to_run, alphafold_shell_script: str, output_dire
 
 def prost_submission(fasta_file_to_run, new_pkl_file, output_directory, prost_shell_script, slurm_settings: dict,
                      make_slurms=False):
+    settings=dict(slurm_settings)
     submit_args = ['sh', prost_shell_script, fasta_file_to_run, new_pkl_file]
-    input_slurm = '\n'.join(
-        ['#!/bin/bash'] + [f'#SBATCH {flag}={arg}' if flag.startswith('--') else f'#SBATCH {flag} {arg}' for flag, arg
-                           in slurm_settings.items()] + ['', ' '.join(submit_args)])
+    input_slurm = make_slurm_content(settings, [' '.join(submit_args)])
     if make_slurms:
         output_directory.joinpath('Slurms').mkdir(exist_ok=True)
         new_slurm = output_directory.joinpath('Slurms', slurm_settings.get('-J', 'embed_slurm')).with_suffix('.slurm')
@@ -133,71 +135,59 @@ def prost_submission(fasta_file_to_run, new_pkl_file, output_directory, prost_sh
     print(result.stdout, result.stderr)
 
 
-def gmx_submission(pdb, slurm_settings: dict, output_directory, make_slurms, gmxbin='srun gmx_mpi',
-                   additional_commandline: list = None):
+def gmx_submission(pdb, slurm_settings: dict, output_directory,working_directory=None, forcefield='charmm36-jul2022',make_slurms=False, gmxbin='gmx_mpi',
+                   additional_commandline: list = None,gromacs_production_only=False):
     settings = dict(slurm_settings)
-    #TODO make a folder per simulation??
-    # gromacs setup
-    # TODO see if you can skip parts that are already done
+    if working_directory is None:
+        working_directory=output_directory
     # TODO mdp files must be in hte output directory
-    shortname = Path(pdb).stem
     output_directory = Path(output_directory)
-    job_id = settings.get('-J', shortname)
+    shortname = output_directory.joinpath(Path(pdb).stem)
+    job_id = settings.get('-J', shortname.stem)
     settings['-J'] = job_id
-    settings['--chdir']=output_directory.__str__()
+    settings['--chdir']=output_directory.__str__() if working_directory is None else working_directory
+    #export GMXLIB=(directory with custom forcefield)
     if not settings.get('-e', None):
-        settings['-e'] = output_directory.joinpath('Slurms', job_id).with_suffix(
-            ".err") if make_slurms else output_directory.joinpath(job_id).with_suffix(".err")
+        settings['-e'] = output_directory.joinpath(job_id).with_suffix(".err")
     if not settings.get('-o', None):
-        settings['-o'] = output_directory.joinpath('Slurms', job_id).with_suffix(
-            ".out") if make_slurms else output_directory.joinpath(job_id).with_suffix(".out")
+        settings['-o'] = output_directory.joinpath(job_id).with_suffix(".out")
+    if not gromacs_production_only:
+    # let you choose forcefield, maybe have symbolic ln or just put manually like mdp files
+        commands = [f'{gmxbin} pdb2gmx -f {pdb} -o {shortname} -p {shortname} -i {shortname} -ff {forcefield} -water tip3p -ignh',
+                    f'{gmxbin} editconf -f {shortname}.gro -o {shortname}_box -bt o -c -d 1',
+                    f'{gmxbin} grompp -p {shortname} -c {shortname}_box -f minim.mdp -o {shortname}_em -maxwarn 1',
+                    f'{gmxbin} mdrun -v -deffnm {shortname}_em',
+                    f'{gmxbin} grompp -p {shortname} -c {shortname} -f minim.mdp -o {shortname}_em -maxwarn 1',
+                    f'{gmxbin} solvate -cp {shortname}_em -o {shortname}_sol -p {shortname}',
+                    f'{gmxbin} grompp -p {shortname} -c {shortname}_sol -f minim.mdp -o {shortname}_preion -maxwarn 1',
+                    f'echo 13 | {gmxbin} genion -s {shortname}_preion -o {shortname}_ions -p {shortname} -neutral -conc 0.15',
+                    f'{gmxbin} grompp -p {shortname}.top -c {shortname}_ions -f minim.mdp -o {shortname}_em -maxwarn 1',
+                    f'{gmxbin} mdrun -v -deffnm {shortname}_em',
+                    f'{gmxbin} grompp -p {shortname} -c {shortname}_em -f startup.mdp -o {shortname}_start -maxwarn 1',
+                    f'{gmxbin} mdrun -v -deffnm {shortname}_start',
+                    f'{gmxbin} grompp -p {shortname} -c {shortname}_start -f prod.mdp -o {shortname}_prod -maxwarn 1']
+        input_slurm = make_slurm_content(settings, additional_commandline+commands)
+        if make_slurms:
+            new_slurm = output_directory.joinpath(job_id).with_suffix('.slurm')
+            new_slurm.write_text(input_slurm)
+        # TODO only submit setup if start.tpr doesnt, only make dependency of job when necessary
+        # TODO be able to submit only prod
+        result = subprocess.run(['sbatch'], text=True, input=input_slurm, capture_output=True)
+        print(result.stdout, result.stderr)
 
-    commands = [f'echo 8 | {gmxbin} pdb2gmx -f {pdb} -o {shortname} -p {shortname} -i {shortname} -water spce -ignh',
-                f'{gmxbin} editconf -f {shortname}.gro -o {shortname}_box -bt o -c -d 1',
-                f'{gmxbin} grompp -p {shortname} -c {shortname}_box -f minim.mdp -o {shortname}_em -maxwarn 1',
-                f'{gmxbin} mdrun -v -deffnm {shortname}_em',
-                f'{gmxbin} grompp -p {shortname} -c {shortname} -f minim.mdp -o {shortname}_em -maxwarn 1',
-                f'{gmxbin} solvate -cp {shortname}_em -o {shortname}_sol -p {shortname}',
-                f'{gmxbin} grompp -p {shortname} -c {shortname}_sol -f minim.mdp -o {shortname}_preion -maxwarn 1',
-                f'echo 13 | {gmxbin} genion -s {shortname}_preion -o {shortname}_ions -p {shortname} -neutral -conc 0.15',
-                f'{gmxbin} grompp -p {shortname}.top -c {shortname}_ions -f minim.mdp -o {shortname}_em -maxwarn 1',
-                f'{gmxbin} mdrun -v -deffnm {shortname}_em',
-                f'{gmxbin} grompp -p {shortname} -c {shortname}_em -f startup.mdp -o {shortname}_start -maxwarn 1',
-                f'{gmxbin} mdrun -v -deffnm {shortname}_start',
-                f'{gmxbin} grompp -p {shortname} -c {shortname}_start -f prod.mdp -o {shortname}_prod -maxwarn 1']
-    input_slurm = '\n'.join(
-        ['#!/bin/bash'] + [f'#SBATCH {flag}={arg}' if flag.startswith('--') else f'#SBATCH {flag} {arg}' for flag, arg
-                           in settings.items()] + additional_commandline + commands)
-    if make_slurms:
-        output_directory.joinpath('Slurms').mkdir(exist_ok=True)
-        new_slurm = output_directory.joinpath('Slurms', job_id).with_suffix('.slurm')
-        new_slurm.write_text(input_slurm)
-    # TODO only submit setup if grompp doesnt exist, only make dependency of job when necessary
-    result = subprocess.run(['sbatch'], text=True, input=input_slurm, capture_output=True)
-    print(result.stdout, result.stderr)
     #actual simulation
-    job_id = settings.get('-J', shortname)
     settings['-J'] = 'prod' + job_id
-    if not settings.get('-e', None):
-        settings['-e'] = output_directory.joinpath('Slurms', settings['-J']).with_suffix(
-            ".err") if make_slurms else output_directory.joinpath(settings['-J']).with_suffix(".err")
-    print(settings['-e'],settings['-J'])
-    if not settings.get('-o', None):
-        settings['-o'] = output_directory.joinpath('Slurms', settings['-J']).with_suffix(
-            ".out") if make_slurms else output_directory.joinpath(settings['-J']).with_suffix(".out")
+    settings['-e'] = output_directory.with_stem(settings['-J'])
+    settings['-o'] = output_directory.joinpath(settings['-J'])
     job_number = re.search(r'\d+', str(result.stdout)).group(0)
-    f'-d afterok:{job_number}'
-    input_slurm = '\n'.join(
-        ['#!/bin/bash'] + [f'#SBATCH {flag}={arg}' if flag.startswith('--') else f'#SBATCH {flag} {arg}' for flag, arg
-                           in settings.items()] + additional_commandline + [
-            f'{gmxbin} mdrun -cpi {shortname}_prod.cpt -v -deffnm {shortname}_prod\n'])
+    input_slurm = make_slurm_content(settings, additional_commandline + [
+            f'{gmxbin} mdrun -cpi {shortname}_prod.cpt -v -deffnm {shortname}_prod'])
 
     if make_slurms:
-        output_directory.joinpath('Slurms').mkdir(exist_ok=True)
-        new_slurm = output_directory.joinpath('Slurms', settings['-J']).with_suffix('.slurm')
+        new_slurm = output_directory.joinpath(settings['-J']).with_suffix('.slurm')
         new_slurm.write_text(input_slurm)
-
-    result = subprocess.run(['sbatch', '-d', job_number], text=True, input=input_slurm, capture_output=True)
+    command_list=['sbatch'] if gromacs_production_only else ['sbatch', '-d', f'afterok:{job_number}']
+    result = subprocess.run(command_list, text=True, input=input_slurm, capture_output=True)
     print(result.stdout, result.stderr)
 
 
@@ -436,7 +426,7 @@ class ShiftedFastaArguments:
     Make_pair_or_combo_heteromers: bool
     parent_aln_file: str
     number_of_subunits: int
-    output_directory: str
+    output_directory: Path
     collective_fasta: str
 
     def __init__(self, fasta_dict):
@@ -453,6 +443,7 @@ class ShiftedSubmissionArguments:
     proteins_per_slurm: int
     alphafold_shell_script: str
     embedding_shell_script: str
+    embedding_settings : dict
 
     def __init__(self, fasta_dict):
         for key, value in fasta_dict.items():
@@ -522,13 +513,24 @@ class ShiftedChimeraArgs:
         aln_dfs = []
         for scanner in range(round(MIN_SPLICE_PERCENT * aln_len), round(MAX_SPLICE_PERCENT * aln_len)):
             aln_dfs.append(
-                ChimeraGenerator.create_chimera_combinations(self.fasta_args.parent_aln_file, scanner, 0, 20))
-        total = pd.concat(aln_dfs)
+                ChimeraGenerator.create_chimera_combinations(self.fasta_args.parent_aln_file, scanner, 0))
+        chimera_df = pd.concat(aln_dfs)
 
-        self.fasta_dir.mkdir(exist_ok=True)
-        total.__class__ = ESM.SequenceDataframe
-        total.dataframe_to_aln(self.fasta_args.collective_fasta)
-        total.dataframe_to_multi_fa(Path(self.fasta_args.collective_fasta).with_suffix('.mfa'))
+        self.fasta_chunk_dir.mkdir(exist_ok=True)
+        chimera_df.__class__ = ESM.SequenceDataframe
+        chimera_df.dataframe_to_aln(self.fasta_args.collective_fasta)
+        chimera_df.dataframe_to_multi_fa(Path(self.fasta_args.collective_fasta).with_suffix('.mfa'))
+        num_chunks = chimera_df.shape[0] / 2000
+        chunks: list[ESM.SequenceDataframe] = [ESM.SequenceDataframe(unconverted_df=chunk) for chunk in
+                                               np.array_split(chimera_df, num_chunks)]
+        aln_df = ESM.SequenceDataframe(self.fasta_args.parent_aln_file)
+        parent1, parent2 = aln_df.index
+        aln_df.add_value(parent1, 'description', {parent1: None})
+        aln_df.add_value(parent2, 'description', {parent2: None})
+        for ind, chunk in enumerate(chunks):
+            chunk = ESM.SequenceDataframe(unconverted_df=chunk._append(aln_df))
+            chunk.dataframe_to_aln(self.fasta_chunk_dir.joinpath(Path(self.fasta_args.collective_fasta).stem + f'_{str(ind)}.inh'))
+
 
     def submission_operations(self):
         submission_toggles = self.submission_args.submission_toggles
@@ -564,13 +566,27 @@ class ShiftedChimeraArgs:
                                  self.fasta_args.number_of_subunits, submission_toggles['make_slurm_files'])
 
         if submission_toggles['get_embeddings']:
-            result = subprocess.run(['sbatch',
-                                     '-e', Path(self.fasta_args.output_directory).joinpath(
-                    self.submission_args.slurm_naming).with_suffix(".err"),
-                                     self.submission_args.embedding_script,
-                                     self.fasta_args.collective_fasta,
-                                     Path(self.fasta_args.collective_fasta).with_suffix('.pkl')], capture_output=True)
-            print(result.stdout)
+            # result = subprocess.run(['sbatch',
+            #                          '-e', Path(self.fasta_args.output_directory).joinpath(
+            #         self.submission_args.slurm_naming).with_suffix(".err"),
+            #                          self.submission_args.embedding_script,
+            #                          self.fasta_args.collective_fasta,
+            #                          Path(self.fasta_args.collective_fasta).with_suffix('.pkl')], capture_output=True)
+            # print(result.stdout)
+            self.embed_chunk_dir.mkdir(exist_ok=True)
+            for slurm_index, chunk_fasta in enumerate(self.fasta_chunk_dir.iterdir()):
+                settings = dict(self.submission_args.embedding_settings)
+                job_id = str(slurm_index) + settings.get('-J', 'embedding')
+                settings['-J'] = job_id
+                if (errorfile := settings.get('-e', None)) is not None:
+                    settings['-e'] = Path(errorfile).with_stem(str(slurm_index) + errorfile.stem)
+                else:
+                    settings['-e'] = self.fasta_args.output_directory.joinpath(job_id).with_suffix(".err")
+
+                prost_submission(chunk_fasta.__str__(),
+                                 self.embed_chunk_dir.joinpath(chunk_fasta.stem).with_suffix('.pkl').__str__(),
+                                 self.fasta_args.output_directory, self.submission_args.embedding_shell_script,
+                                 settings, submission_toggles['make_slurm_files'])
 
     def analysis_operations(self):
         analysis_toggles = self.analysis_args.analysis_toggles
@@ -613,7 +629,7 @@ class NonHomologySubmissionArguments:
     embedding_settings: dict = {"-p": "gpu", "--gres": "gpu:a100:1", "-N": 1, "-n": 3, "-A": "enter_here",
                                 "--time": "72:00:00", "-J": "enter_slurm_name"}
     gromacs_settings:dict = {"-p":"gpu", "--gres":"gpu:1", "-N":1, "-A":"", "--time":"72:00:00","-J": "eidsars_emb","--ntasks-per-node":"10"}
-    gromacs_commands:list =["srun gmx_mpi","module purge","module load gcc/11.4.0 openmpi/4.1.4 gromacs/2023.2"]
+    gromacs_setup:dict
     custom_label_list: str
     proteins_per_slurm: int
     alphafold_shell_script: str
@@ -657,8 +673,8 @@ class NonHomologyChimeraArgs:
         self.get_dict_args(NonHomologyAnalysisArguments, 'analysis_args', 'analysis_arguments')
         self.operation_toggles = self.argument_dict['operation_toggles']
         self.fasta_args.output_directory = Path(self.fasta_args.output_directory)
-        self.fasta_chunk_dir = self.fasta_args.output_directory.joinpath('FastaChunks')
         self.embed_chunk_dir = self.fasta_args.output_directory.joinpath('EmbedChunks')
+        self.fasta_chunk_dir = self.fasta_args.output_directory.joinpath('FastaChunks')
         self.alphafold_dir = self.fasta_args.output_directory.joinpath(ALPHAFOLD_FOLDERNAME)
         self.fasta_dir = self.fasta_args.output_directory.joinpath(FASTA_FOLDERNAME)
         self.gmx_dir=self.fasta_args.output_directory.joinpath(GMX_FOLDERNAME)
@@ -684,13 +700,13 @@ class NonHomologyChimeraArgs:
                                                                  self.fasta_args.collective_fasta)
         fasta_dir = self.fasta_chunk_dir
         fasta_dir.mkdir(exist_ok=True)
-        num_chunks = chimera_df.shape[0] / 2000
-        chunks: list[ESM.SequenceDataframe] = [ESM.SequenceDataframe(unconverted_df=chunk) for chunk in
-                                               np.array_split(chimera_df, num_chunks)]
         aln_df = ESM.SequenceDataframe(self.fasta_args.parent_mfa_file)
         parent1, parent2 = aln_df.index
         aln_df.add_value(parent1, 'description', {parent1: None})
         aln_df.add_value(parent2, 'description', {parent2: None})
+        num_chunks = chimera_df.shape[0] / 2000
+        chunks: list[ESM.SequenceDataframe] = [ESM.SequenceDataframe(unconverted_df=chunk) for chunk in
+                                               np.array_split(chimera_df, num_chunks)]
         for ind, chunk in enumerate(chunks):
             chunk = ESM.SequenceDataframe(unconverted_df=chunk._append(aln_df))
             chunk.dataframe_to_aln(fasta_dir.joinpath(Path(self.fasta_args.collective_fasta).stem + f'_{str(ind)}.inh'))
@@ -751,14 +767,19 @@ class NonHomologyChimeraArgs:
         if submission_toggles['run_gromacs']:
             if not Path(self.submission_args.custom_label_list).exists():
                 raise FileNotFoundError('Please submit a valid custom_label_list in the argument json.')
-            with open(self.submission_args.custom_label_list, 'r') as run_list:
+            with (open(self.submission_args.custom_label_list, 'r') as run_list):
+                gromacs_commands=self.submission_args.gromacs_setup
                 self.gmx_dir.mkdir(exist_ok=True)
-                gmx_bin = self.submission_args.gromacs_commands.pop(0) if self.submission_args.gromacs_commands else 'srun gmx_mpi'
+                gmx_bin = gromacs_commands['gmx_command']
                 for label in [x.replace('\n', '') for x in run_list.readlines() if x.replace('\n', '')]:
+                    label_dir=self.gmx_dir.joinpath(label)
+                    label_dir.mkdir(exist_ok=True)
                     pdb=self.alphafold_dir.joinpath(label, 'ranked_0').with_suffix('.pdb')
                     renamed_pdb=pdb.with_stem(label)
                     renamed_pdb.write_bytes(pdb.read_bytes())
-                    gmx_submission(renamed_pdb,self.submission_args.gromacs_settings,self.gmx_dir,submission_toggles['make_slurm_files'],gmx_bin,self.submission_args.gromacs_commands)
+                    gmx_submission(renamed_pdb,self.submission_args.gromacs_settings,label_dir.__str__(),
+                                   gromacs_commands['working_directory'],gromacs_commands['forcefield'],submission_toggles['make_slurm_files']
+                                   ,gmx_bin,gromacs_commands['necessary_commands'])
 
     def analysis_operations(self):
         analysis_toggles = self.analysis_args.analysis_toggles
@@ -791,20 +812,21 @@ class NonHomologyChimeraArgs:
                                self.analysis_args.analysis_output_file, self.analysis_args.metadata)
         if analysis_toggles['analyze_gromacs']:
             # get all directories that are not slurm
-            if self.submission_args.gromacs_commands: self.submission_args.gromacs_commands.pop(0)
-            for command in self.submission_args.gromacs_commands:
-                os.system(command)
-            rmsf_files=[]
-
+            rmsf_files={}
+            tpr_xtc_pairs={}
             for gmx_folder in [direc for direc in self.gmx_dir.iterdir() if direc.is_dir() and direc.stem!='Slurms']:
                 # create trajectory movies
                 label=gmx_folder.stem
-                GromacsAnalysis.create_trajectory_movie_pdb(gmx_folder.joinpath(label + '_prod.tpr'), gmx_folder.joinpath(label + '_prod.xtc'), gmx_folder.joinpath(label.replace("prod", "movie") + '.pdb'))
+                tpr_file=gmx_folder.joinpath(label + '_prod.tpr')
+                centered_xtc = gmx_folder.joinpath(label + '_center.xtc')
+                tpr_xtc_pairs[tpr_file.__str__()]=centered_xtc.__str__()
+                GromacsAnalysis.center_xtc(tpr_file, tpr_file.with_suffix('.xtc'), centered_xtc, self.submission_args.gromacs_setup['necessary_commands'])
+                # GromacsAnalysis.create_trajectory_movie_pdb(tpr_file, centered_xtc, gmx_folder.joinpath(label + '_movie.pdb'), self.submission_args.gromacs_setup['necessary_commands'])
                 # create rmsf files
                 rmsf_file=gmx_folder.joinpath(label.replace("prod","rmsf")+'.xvg')
-                rmsf_files.append(rmsf_file)
-                GromacsAnalysis.create_rmsf_file(gmx_folder.joinpath(label + '_prod.tpr'), gmx_folder.joinpath(label + '_prod.xtc'), rmsf_file)
-                #calculate rmsd from time 0 to the end
-                print(label, GromacsAnalysis.pymol_rmsd(gmx_folder.joinpath(label + '_prod.gro'), gmx_folder.joinpath(label + '.gro')))
-            #graph rmsf
-            GromacsAnalysis.graph_rmsf([file.__str__() for file in rmsf_files])
+                rmsf_files[label]=rmsf_file.__str__()
+                # GromacsAnalysis.create_rmsf_file(tpr_file, centered_xtc, rmsf_file, self.submission_args.gromacs_setup['necessary_commands'])
+            GromacsAnalysis.graph_rmsd_mdanalysis(tpr_xtc_pairs)
+            # GromacsAnalysis.graph_rmsf(rmsf_files)
+
+

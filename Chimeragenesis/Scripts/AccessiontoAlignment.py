@@ -110,7 +110,7 @@ def accession_to_fasta_nucleic(accession, email_for_Bio, monomer_file_name=''):
         handle = Entrez.efetch(db='gene', id=gi, retmode='text', rettype='seqid').readlines()
     except:
         print(monomer_file_name)
-        return
+        return None
     for x in handle:
         if 'Annotation' in x:
             nc_accession = x.split()[1]
@@ -124,6 +124,8 @@ def accession_to_fasta_nucleic(accession, email_for_Bio, monomer_file_name=''):
                 fasta_creation(monomer_file_name,
                                create_seq_records(Path(monomer_file_name).stem, sequence, subunit_count=1))
             return sequence
+        return None
+    return None
 
 
 def create_dictionary_from_alignment(alignment_file):

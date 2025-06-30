@@ -9,13 +9,20 @@
         "number_of_subunits": 3
     },
     "submission_arguments": {
-        "submission_toggles": {"make_slurm_files": true, "run_stragglers": false, "get_embeddings": false,"run_AF": true,"run_gromacs": true},
+        "submission_toggles": {"make_slurm_files": true, "run_stragglers": false, "get_embeddings": false,"run_AF": true,"run_gromacs": true,"gromacs_production_only": false},
         "custom_label_list": "/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/Eid_sars_v3/Selected_v2/eid_sars_selected.txt",
         "proteins_per_slurm": 7,
         "alphafold_settings": {"-p":"gpu", "--gres":"gpu:h200:1", "-N":1, "-n":3, "-A":"", "--mem":"400000", "--time":"72:00:00","-J": "eidsars_emb"},
         "embedding_settings": {"-p":"gpu", "--gres":"gpu:a100:1", "-N":1, "-n":3, "-A":"", "--time":"72:00:00","-J": "swinesars"},
         "gromacs_settings": {"-p":"gpu", "--gres":"gpu:1", "-N":1, "-A":"", "--time":"72:00:00","-J": "eidsars_emb","--ntasks-per-node":"10"},
-        "gromacs_commands": ["srun gmx_bin","module purge","module load gcc/11.4.0 openmpi/4.1.4 gromacs/2023.2"],
+        "gromacs_setup": {
+            "gmx_command":"gmx_mpi",
+            "forcefield":"charmm36-jul2022",
+            "working_directory":"/scratch/jws6pq/Notebook/ESM/Chimeragenesis/",
+            "necessary_commands":["module purge",
+            "module load nvompi apptainer gromacs/2025.1"]
+       },
+
         "alphafold_shell_script": "/scratch/jws6pq/Notebook/ESM/Chimeragenesis/MultimerAlphaFold.sh",
         "embedding_shell_script": "/scratch/jws6pq/Notebook/ESM/Chimeragenesis/prost.slurm"
     },
