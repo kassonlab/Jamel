@@ -12,6 +12,7 @@ from ChimeraClasses import HomomerChimeraArgs
 from Analysis import get_plddt_dict_from_pdb
 from ESM import SequenceDataframe
 import numpy as np
+from pandasgui import show
 
 cuts=[152,350,416,647,821,996,1133,1274,1435] # RAndom CHimeras
 # seq_dict=create_dictionary_from_alignment('..\Data\PDTvPDK_chimera.aln')
@@ -110,4 +111,6 @@ cuts=[152,350,416,647,821,996,1133,1274,1435] # RAndom CHimeras
 # cmy=cmy.drop(index='CMY1')
 # Analysis.select_for_af_from_embedding_df(cmy,200,880,r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\selected_cmy',['TEM1','CMY1'])
 
-pd.concat([pd.read_csv("/sfs/weka/scratch/jws6pq/Notebook/ESM/B-lac/cmy_tem/cmy_tem_af.csv",index_col='label'),pd.read_csv("/sfs/weka/scratch/jws6pq/Notebook/ESM/B-lac/cmy_tem/cmy_tem_embed.csv",index_col='label')],axis=1).dropna(subset=['Relative Stability (%)']).to_csv('/scratch/jws6pq/Notebook/ESM/B-lac/cmy_tem/combined.csv',index_label='label')
+# pd.concat([pd.read_csv("/sfs/weka/scratch/jws6pq/Notebook/ESM/B-lac/cmy_tem/cmy_tem_af.csv",index_col='label'),pd.read_csv("/sfs/weka/scratch/jws6pq/Notebook/ESM/B-lac/cmy_tem/cmy_tem_embed.csv",index_col='label')],axis=1).dropna(subset=['Relative Stability (%)']).to_csv('/scratch/jws6pq/Notebook/ESM/B-lac/cmy_tem/combined.csv',index_label='label')
+random_series = pd.Series(np.random.choice(np.arange(2, 8466), size=930, replace=False))
+show(random_series)

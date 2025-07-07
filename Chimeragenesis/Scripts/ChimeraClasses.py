@@ -546,7 +546,7 @@ class ShiftedChimeraArgs:
                     fasta_file = fasta_dir.joinpath(label).with_suffix(FASTA_EXT)
                     fastas_to_run.append(fasta_file)
                     AccessiontoAlignment.fasta_creation(fasta_file,
-                                                        AccessiontoAlignment.create_seq_records(label, seq_dict[label],
+                                                        AccessiontoAlignment.create_seq_records(label, seq_dict[label].replace('-',''),
                                                                                                 subunit_count=self.fasta_args.number_of_subunits))
             else:
                 df = ESM.SequenceDataframe(self.fasta_args.collective_fasta)
@@ -558,21 +558,15 @@ class ShiftedChimeraArgs:
             if submission_toggles['run_stragglers']:
                 stragglers = []
                 for fasta in fastas_to_run:
-                    if not Path(fasta).parent.joinpath(Path(fasta).stem, 'ranked_0').with_stem('.pdb').exists():
+                    if not Path(fasta).parent.joinpath(Path(fasta).stem, 'ranked_0.pdb').exists():
                         stragglers.append(fasta)
                 fastas_to_run = stragglers
             alphafold_submission(fastas_to_run, self.submission_args.alphafold_shell_script,
-                                 self.fasta_args.output_directory, self.submission_args.slurm_settings,
-                                 self.fasta_args.number_of_subunits, submission_toggles['make_slurm_files'])
+                                 self.fasta_args.output_directory.__str__(), self.submission_args.alphafold_settings,
+                                 self.submission_args.proteins_per_slurm, submission_toggles['make_slurm_files'])
 
         if submission_toggles['get_embeddings']:
-            # result = subprocess.run(['sbatch',
-            #                          '-e', Path(self.fasta_args.output_directory).joinpath(
-            #         self.submission_args.slurm_naming).with_suffix(".err"),
-            #                          self.submission_args.embedding_script,
-            #                          self.fasta_args.collective_fasta,
-            #                          Path(self.fasta_args.collective_fasta).with_suffix('.pkl')], capture_output=True)
-            # print(result.stdout)
+
             self.embed_chunk_dir.mkdir(exist_ok=True)
             for slurm_index, chunk_fasta in enumerate(self.fasta_chunk_dir.iterdir()):
                 settings = dict(self.submission_args.embedding_settings)
@@ -591,16 +585,30 @@ class ShiftedChimeraArgs:
     def analysis_operations(self):
         analysis_toggles = self.analysis_args.analysis_toggles
         if analysis_toggles['analyze_embeddings']:
-            embeddings = ESM.SequenceDataframe(Path(self.fasta_args.collective_fasta).__str__(),
-                                               Path(self.fasta_args.collective_fasta).with_suffix('.pkl').__str__())
-            for func in [ESM.NormType.cosine, ESM.NormType.manhattan, ESM.NormType.euclidean, ESM.NormType.dot_product]:
-                embeddings.score_all_embeddings(func, np.mean)
-                dist_type = func.name
-                embeddings[f'{dist_type}_rank'] = embeddings[dist_type].rank(
+            embeddings = []
+            func = ESM.NormType.dot_product
+            dist_type = func.name
+            for chunk_fasta in self.fasta_chunk_dir.iterdir():
+                embed_file = self.embed_chunk_dir.joinpath(chunk_fasta.stem).with_suffix('.pkl')
+                if not chunk_fasta.exists() and embed_file.exists():
+                    raise FileNotFoundError("Either the fasta or the corresponding embedding pkl file doesn't exist")
+                embedding_df = ESM.SequenceDataframe(chunk_fasta.__str__(), embed_file.__str__())
+                embedding_df.score_all_per_res(func)
+                embedding_df[f'{dist_type}_rank'] = embedding_df[dist_type].rank(
                     ascending=func != ESM.NormType.cosine and func != ESM.NormType.dot_product)
-            embeddings.get_sequence_identity()
+                embedding_df.drop(columns=['aln_sequence', 'sequence', 'description'])
+                embedding_df.get_sequence_identity()
+                del embedding_df.EMBEDDINGS_DICT
+                embeddings.append(embedding_df)
+
+            embeddings = pd.concat(embeddings)
+            embeddings = embeddings.loc[:, ~embeddings.columns.duplicated()]
+            embeddings = embeddings[~embeddings.index.duplicated(keep='first')]
+            embeddings = ESM.SequenceDataframe(unconverted_df=embeddings)
+            embeddings.drop(columns=['aln_sequence'])
             if self.analysis_args.analysis_output_file:
-                embeddings.to_csv(self.analysis_args.analysis_output_file)
+                embeddings.save_df(self.analysis_args.analysis_output_file, self.analysis_args.metadata)
+
 
         if analysis_toggles['analyze_alphafold']:
             alphafold_analysis(self.collective_df, self.alphafold_dir.__str__(),
@@ -821,12 +829,12 @@ class NonHomologyChimeraArgs:
                 centered_xtc = gmx_folder.joinpath(label + '_center.xtc')
                 tpr_xtc_pairs[tpr_file.__str__()]=centered_xtc.__str__()
                 GromacsAnalysis.center_xtc(tpr_file, tpr_file.with_suffix('.xtc'), centered_xtc, self.submission_args.gromacs_setup['necessary_commands'])
-                # GromacsAnalysis.create_trajectory_movie_pdb(tpr_file, centered_xtc, gmx_folder.joinpath(label + '_movie.pdb'), self.submission_args.gromacs_setup['necessary_commands'])
+                GromacsAnalysis.create_trajectory_movie_pdb(tpr_file, centered_xtc, gmx_folder.joinpath(label + '_movie.pdb'), self.submission_args.gromacs_setup['necessary_commands'])
                 # create rmsf files
                 rmsf_file=gmx_folder.joinpath(label.replace("prod","rmsf")+'.xvg')
                 rmsf_files[label]=rmsf_file.__str__()
-                # GromacsAnalysis.create_rmsf_file(tpr_file, centered_xtc, rmsf_file, self.submission_args.gromacs_setup['necessary_commands'])
+                GromacsAnalysis.create_rmsf_file(tpr_file, centered_xtc, rmsf_file, self.submission_args.gromacs_setup['necessary_commands'])
             GromacsAnalysis.graph_rmsd_mdanalysis(tpr_xtc_pairs)
-            # GromacsAnalysis.graph_rmsf(rmsf_files)
+            GromacsAnalysis.graph_rmsf(rmsf_files)
 
 
