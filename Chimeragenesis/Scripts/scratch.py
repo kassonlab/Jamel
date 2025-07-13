@@ -112,5 +112,17 @@ cuts=[152,350,416,647,821,996,1133,1274,1435] # RAndom CHimeras
 # Analysis.select_for_af_from_embedding_df(cmy,200,880,r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\selected_cmy',['TEM1','CMY1'])
 
 # pd.concat([pd.read_csv("/sfs/weka/scratch/jws6pq/Notebook/ESM/B-lac/cmy_tem/cmy_tem_af.csv",index_col='label'),pd.read_csv("/sfs/weka/scratch/jws6pq/Notebook/ESM/B-lac/cmy_tem/cmy_tem_embed.csv",index_col='label')],axis=1).dropna(subset=['Relative Stability (%)']).to_csv('/scratch/jws6pq/Notebook/ESM/B-lac/cmy_tem/combined.csv',index_label='label')
-random_series = pd.Series(np.random.choice(np.arange(2, 8466), size=930, replace=False))
-show(random_series)
+
+# df = pd.read_csv(r"..\Data\cmy_tem_embed_aligned.csv",index_col='label')
+# Analysis.embedding_dp_vs_length(df,attr_mods={plt.title: f'Total Identity vs. DP'})
+# Analysis.scatterplot_for_df(df,'identity','dot_product',attr_mods={plt.title: f'Total Identity vs. DP'})
+# cmy=df[df.index.str.startswith('CMY')]
+# Analysis.embedding_dp_vs_length(cmy,attr_mods={plt.title: f'CMY Identity vs. DP'})
+# Analysis.scatterplot_for_df(cmy,'identity','dot_product',attr_mods={plt.title: f'CMY Identity vs. DP'})
+# tem=df[df.index.str.startswith('TEM')]
+# Analysis.embedding_dp_vs_length(tem,attr_mods={plt.title: f'TEM Identity vs. DP'})
+# Analysis.scatterplot_for_df(tem,'identity','dot_product',attr_mods={plt.title: f'TEM Identity vs. DP'})
+
+df =pd.read_csv(r"..\Data\tem_cmy_aligned_af.csv",index_col='label').sort_values(by='dot_product').iloc[::42]
+print(*df['dot_product'],sep='\n')
+print(*df.index,sep='\n')

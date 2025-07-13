@@ -2,11 +2,6 @@
     "operation_toggles": {
         "fasta_operations": false, "submission_operations":true,"analysis_operations": false
     },
-    "naming_arguments": {
-        "file_stem_placeholder": "",
-        "WT_convention": "",
-        "chimera_convention": ""
-    },
     "fasta_arguments": {
         "base_identifier": "PDTH-2",
         "number_of_subunits": 1,
@@ -19,10 +14,12 @@
     },
     "submission_arguments": {
         "submission_toggles": {"create_slurms":false,"sbatch_slurms": false,"stragglers_or_custom_or_all": "stragglers","create_file_of_stragglers": false},
+        "file_stem_placeholder": "",
+        "WT_convention": "",
+        "chimera_convention": "",
         "custom_list_to_run": "",
         "proteins_per_slurm": 9,
         "slurm_naming": "P_M_ShiftedAlphaFold",
-        "sbatch_group": "",
         "alphafold_shell_script": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/MultimerAlphaFold.sh"
     },
     "analysis_arguments": {

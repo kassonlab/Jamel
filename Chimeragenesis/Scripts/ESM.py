@@ -235,7 +235,7 @@ class SequenceDataframe(pd.DataFrame):
         return distance
 
     def score_all_per_res(self, dist_func: NormType):
-        for label in self.EMBEDDINGS_DICT.keys():
+        for label in self.index:
             if len(inheritance := self.get_description(label)) == 2:
                 self.score_per_res(label, inheritance, dist_func)
 

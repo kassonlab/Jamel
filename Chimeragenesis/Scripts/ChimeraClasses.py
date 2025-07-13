@@ -1,10 +1,9 @@
-import os,re,subprocess
-import AccessiontoAlignment, ESM, ChimeraGenerator, Analysis,GromacsAnalysis
+import os, re, subprocess
+import AccessiontoAlignment, ESM, ChimeraGenerator, Analysis, GromacsAnalysis
 from json import load
 from pathlib import Path
 import numpy as np
 import pandas as pd
-
 
 """
 Contained below are all the arguments found in the chimera generation jsons that require deeper explanation outside their name. 
@@ -88,15 +87,17 @@ analysis_output_file: str:'''Path of the file you want created that will contain
 """
 ALPHAFOLD_FOLDERNAME = 'AlphaFold'
 FASTA_FOLDERNAME = 'Fasta'
-GMX_FOLDERNAME ='Gromacs'
+GMX_FOLDERNAME = 'Gromacs'
 FASTA_EXT = '.fa'
 INHERITANCE_EXT = '.inh'
 
-def make_slurm_content(sbatch_flags:dict,commands:list,shebang='#!/bin/bash'):
-    flags=dict(sbatch_flags)
+
+def make_slurm_content(sbatch_flags: dict, commands: list, shebang='#!/bin/bash'):
+    flags = dict(sbatch_flags)
     return '\n'.join(
         [shebang] + [f'#SBATCH {flag}={arg}' if flag.startswith('--') else f'#SBATCH {flag} {arg}' for flag, arg
-                           in flags.items()] +[' && \n'.join(commands)])
+                     in flags.items()] + [' && \n'.join(commands)])
+
 
 def alphafold_submission(fastas_to_run, alphafold_shell_script: str, output_directory: str, slurm_settings: dict,
                          proteins_per_slurm=7, make_slurms=False):
@@ -113,7 +114,7 @@ def alphafold_submission(fastas_to_run, alphafold_shell_script: str, output_dire
         settings['-J'] = job_id
         if not settings.get('-e', None):
             settings['-e'] = output_directory.joinpath('Slurms', job_id).with_suffix(".err")
-        input_slurm=make_slurm_content(settings,[' '.join(submit_args)])
+        input_slurm = make_slurm_content(settings, [' '.join(submit_args)])
         if make_slurms:
             output_directory.joinpath('Slurms').mkdir(exist_ok=True)
             new_slurm = output_directory.joinpath('Slurms', job_id).with_suffix('.slurm')
@@ -124,7 +125,7 @@ def alphafold_submission(fastas_to_run, alphafold_shell_script: str, output_dire
 
 def prost_submission(fasta_file_to_run, new_pkl_file, output_directory, prost_shell_script, slurm_settings: dict,
                      make_slurms=False):
-    settings=dict(slurm_settings)
+    settings = dict(slurm_settings)
     submit_args = ['sh', prost_shell_script, fasta_file_to_run, new_pkl_file]
     input_slurm = make_slurm_content(settings, [' '.join(submit_args)])
     if make_slurms:
@@ -135,38 +136,40 @@ def prost_submission(fasta_file_to_run, new_pkl_file, output_directory, prost_sh
     print(result.stdout, result.stderr)
 
 
-def gmx_submission(pdb, slurm_settings: dict, output_directory,working_directory=None, forcefield='charmm36-jul2022',make_slurms=False, gmxbin='gmx_mpi',
-                   additional_commandline: list = None,gromacs_production_only=False):
+def gmx_submission(pdb, slurm_settings: dict, output_directory, working_directory=None, forcefield='charmm36-jul2022',
+                   make_slurms=False, gmxbin='gmx_mpi',
+                   additional_commandline: list = None, gromacs_production_only=False):
     settings = dict(slurm_settings)
     if working_directory is None:
-        working_directory=output_directory
+        working_directory = output_directory
     # TODO mdp files must be in hte output directory
     output_directory = Path(output_directory)
     shortname = output_directory.joinpath(Path(pdb).stem)
     job_id = settings.get('-J', shortname.stem)
     settings['-J'] = job_id
-    settings['--chdir']=output_directory.__str__() if working_directory is None else working_directory
+    settings['--chdir'] = output_directory.__str__() if working_directory is None else working_directory
     #export GMXLIB=(directory with custom forcefield)
     if not settings.get('-e', None):
         settings['-e'] = output_directory.joinpath(job_id).with_suffix(".err")
     if not settings.get('-o', None):
         settings['-o'] = output_directory.joinpath(job_id).with_suffix(".out")
     if not gromacs_production_only:
-    # let you choose forcefield, maybe have symbolic ln or just put manually like mdp files
-        commands = [f'{gmxbin} pdb2gmx -f {pdb} -o {shortname} -p {shortname} -i {shortname} -ff {forcefield} -water tip3p -ignh',
-                    f'{gmxbin} editconf -f {shortname}.gro -o {shortname}_box -bt o -c -d 1',
-                    f'{gmxbin} grompp -p {shortname} -c {shortname}_box -f minim.mdp -o {shortname}_em -maxwarn 1',
-                    f'{gmxbin} mdrun -v -deffnm {shortname}_em',
-                    f'{gmxbin} grompp -p {shortname} -c {shortname} -f minim.mdp -o {shortname}_em -maxwarn 1',
-                    f'{gmxbin} solvate -cp {shortname}_em -o {shortname}_sol -p {shortname}',
-                    f'{gmxbin} grompp -p {shortname} -c {shortname}_sol -f minim.mdp -o {shortname}_preion -maxwarn 1',
-                    f'echo 13 | {gmxbin} genion -s {shortname}_preion -o {shortname}_ions -p {shortname} -neutral -conc 0.15',
-                    f'{gmxbin} grompp -p {shortname}.top -c {shortname}_ions -f minim.mdp -o {shortname}_em -maxwarn 1',
-                    f'{gmxbin} mdrun -v -deffnm {shortname}_em',
-                    f'{gmxbin} grompp -p {shortname} -c {shortname}_em -f startup.mdp -o {shortname}_start -maxwarn 1',
-                    f'{gmxbin} mdrun -v -deffnm {shortname}_start',
-                    f'{gmxbin} grompp -p {shortname} -c {shortname}_start -f prod.mdp -o {shortname}_prod -maxwarn 1']
-        input_slurm = make_slurm_content(settings, additional_commandline+commands)
+        # let you choose forcefield, maybe have symbolic ln or just put manually like mdp files
+        commands = [
+            f'{gmxbin} pdb2gmx -f {pdb} -o {shortname} -p {shortname} -i {shortname} -ff {forcefield} -water tip3p -ignh',
+            f'{gmxbin} editconf -f {shortname}.gro -o {shortname}_box -bt o -c -d 1',
+            f'{gmxbin} grompp -p {shortname} -c {shortname}_box -f minim.mdp -o {shortname}_em -maxwarn 1',
+            f'{gmxbin} mdrun -v -deffnm {shortname}_em',
+            f'{gmxbin} grompp -p {shortname} -c {shortname} -f minim.mdp -o {shortname}_em -maxwarn 1',
+            f'{gmxbin} solvate -cp {shortname}_em -o {shortname}_sol -p {shortname}',
+            f'{gmxbin} grompp -p {shortname} -c {shortname}_sol -f minim.mdp -o {shortname}_preion -maxwarn 1',
+            f'echo 13 | {gmxbin} genion -s {shortname}_preion -o {shortname}_ions -p {shortname} -neutral -conc 0.15',
+            f'{gmxbin} grompp -p {shortname}.top -c {shortname}_ions -f minim.mdp -o {shortname}_em -maxwarn 1',
+            f'{gmxbin} mdrun -v -deffnm {shortname}_em',
+            f'{gmxbin} grompp -p {shortname} -c {shortname}_em -f startup.mdp -o {shortname}_start -maxwarn 1',
+            f'{gmxbin} mdrun -v -deffnm {shortname}_start',
+            f'{gmxbin} grompp -p {shortname} -c {shortname}_start -f prod.mdp -o {shortname}_prod -maxwarn 1']
+        input_slurm = make_slurm_content(settings, additional_commandline + commands)
         if make_slurms:
             new_slurm = output_directory.joinpath(job_id).with_suffix('.slurm')
             new_slurm.write_text(input_slurm)
@@ -181,17 +184,17 @@ def gmx_submission(pdb, slurm_settings: dict, output_directory,working_directory
     settings['-o'] = output_directory.joinpath(settings['-J'])
     job_number = re.search(r'\d+', str(result.stdout)).group(0)
     input_slurm = make_slurm_content(settings, additional_commandline + [
-            f'{gmxbin} mdrun -cpi {shortname}_prod.cpt -v -deffnm {shortname}_prod'])
+        f'{gmxbin} mdrun -cpi {shortname}_prod.cpt -v -deffnm {shortname}_prod'])
 
     if make_slurms:
         new_slurm = output_directory.joinpath(settings['-J']).with_suffix('.slurm')
         new_slurm.write_text(input_slurm)
-    command_list=['sbatch'] if gromacs_production_only else ['sbatch', '-d', f'afterok:{job_number}']
+    command_list = ['sbatch'] if gromacs_production_only else ['sbatch', '-d', f'afterok:{job_number}']
     result = subprocess.run(command_list, text=True, input=input_slurm, capture_output=True)
     print(result.stdout, result.stderr)
 
 
-def alphafold_analysis(seq_df: ESM.SequenceDataframe, alphafold_directory: str, output_filename, metadata=None):
+def alphafold_analysis(seq_df: ESM.SequenceDataframe, alphafold_directory: str):
     alphafold_dir = Path(alphafold_directory)
     for folder in alphafold_dir.iterdir():
         chi_label = folder.stem
@@ -210,221 +213,13 @@ def alphafold_analysis(seq_df: ESM.SequenceDataframe, alphafold_directory: str, 
             relative_stability = Analysis.relative_stabilty(plddt_dict, inheritance_dict)
             seq_df.loc[chi_label, 'Relative Stability (%)'] = relative_stability
     seq_df = ESM.SequenceDataframe(unconverted_df=seq_df.dropna())
-    # seq_df.get_sequence_identity()
-    seq_df.save_df(output_filename, metadata)
+    return seq_df
 
 
-class HomomerNamingArguments:
-    file_stem_placeholder: str
-    WT_convention: str
-    chimera_convention: str
-
-    # All non-nested keys from the json are set as attributes to be called later
-    def __init__(self, naming_dict):
-        for key, value in naming_dict.items():
-            setattr(self, key, value)
-
-
-class HomomerFastaArguments:
-    output_directory: str
-    Make_a_lst_of_created_fasta_files: bool
+class FastaArguments:
+    fasta_toggles: dict
     Create_an_alignment: bool
-    number_of_subunits: int
-    sequence_of_interest: str
-    base_identifier: str
     parent_msa: str
-    collective_fasta: str
-    email_for_accession: str
-    fasta_file_list_name: str
-
-    def __init__(self, fasta_dict):
-        for key, value in fasta_dict.items():
-            setattr(self, key, value)
-
-
-class HomomerSubmissionArguments:
-    submission_toggles: dict
-    create_slurms: bool
-    sbatch_slurms: bool
-    create_file_of_stragglers: bool
-    slurm_naming: str
-    custom_label_list: str
-    proteins_per_slurm: int
-    alphafold_shell_script: str
-
-    def __init__(self, fasta_dict):
-        for key, value in fasta_dict.items():
-            setattr(self, key, value)
-
-
-class HomomerAnalysisArguments:
-    analysis_toggles: dict
-    make_plddts: bool
-    make_pdbs: bool
-    make_emboss_files: bool
-    analysis_output_file: str
-    emboss_command: str
-    analysis_output_csv: str
-    metadata: dict
-
-    def __init__(self, fasta_dict):
-        for key, value in fasta_dict.items():
-            setattr(self, key, value)
-
-
-class HomomerChimeraArgs:
-    argument_dict: dict
-    '''Dictionary containing all arguments for running the chimera script'''
-    operation_toggles: dict
-    '''Dictionary containing boolean toggles for all major operation:fasta creation, alphafold submission, 
-    analysis of alphafold results, and gromacs simulation submission.'''
-    run_fasta_operation: bool
-    alphafold_submission: bool
-    run_analysis_operation: bool
-    run_gromacs_operation: bool
-    fasta_args: HomomerFastaArguments
-    naming_args: HomomerNamingArguments
-    submission_args: HomomerSubmissionArguments
-    analysis_args: HomomerAnalysisArguments
-    all_fastas: list[str]
-    fasta_dir: Path
-
-    def __init__(self, arg_json, full_use=True):
-        self.base_splice = None
-        with open(arg_json, 'rb') as jfile:
-            self.argument_dict = load(jfile)
-        self.has_inheritance = False
-        self.operation_toggles = self.argument_dict['operation_toggles']
-        self.get_dict_args(HomomerFastaArguments, 'fasta_args', 'fasta_arguments')
-        self.get_dict_args(HomomerNamingArguments, 'naming_args', 'naming_arguments')
-        self.get_dict_args(HomomerSubmissionArguments, 'submission_args', 'submission_arguments')
-        self.get_dict_args(HomomerAnalysisArguments, 'analysis_args', 'analysis_arguments')
-        if Path(self.fasta_args.parent_msa).exists():
-            self.parent_df = ESM.SequenceDataframe(self.fasta_args.parent_msa)
-        elif full_use:
-            raise FileNotFoundError(f'Could not find parent msa {self.fasta_args.parent_msa}')
-        self.fasta_args.output_directory = Path(self.fasta_args.output_directory)
-        # TODO might need to change inh ending
-        self.fasta_args.collective_fasta = Path(self.fasta_args.collective_fasta).with_suffix(INHERITANCE_EXT)
-        if self.fasta_args.collective_fasta.exists():
-            self.collective_df = ESM.SequenceDataframe(self.fasta_args.collective_fasta)
-            self.has_inheritance = True
-        self.fasta_dir = self.fasta_args.output_directory.joinpath(FASTA_FOLDERNAME)
-        self.pdb_dir = self.fasta_args.output_directory.joinpath('PDB')
-        self.alphafold_dir = self.fasta_args.output_directory.joinpath(ALPHAFOLD_FOLDERNAME)
-
-    def get_dict_args(self, dict_class, attr_name, arg_key):
-        dict_args = self.argument_dict[arg_key]
-        setattr(self, attr_name, dict_class(dict_args))
-
-    def make_fasta_paths(self):
-        self.base_splice = AccessiontoAlignment.extract_seq_from_fasta(self.fasta_args.sequence_of_interest)
-        self.parent_df['chi_seq'] = self.parent_df.index.map(
-            lambda label: AccessiontoAlignment.alignment_finder(self.base_splice, label,
-                                                                self.fasta_args.base_identifier,
-                                                                self.fasta_args.parent_msa)[0].replace('-', ''))
-        self.parent_df['file_stem'] = self.parent_df.index.map(
-            lambda label: self.naming_args.WT_convention.replace(self.naming_args.file_stem_placeholder, label))
-        self.parent_df['chi_file_stem'] = self.parent_df.index.map(
-            lambda label: self.naming_args.chimera_convention.replace(self.naming_args.file_stem_placeholder, label))
-
-        fastas = self.parent_df['file_stem'].map(
-            lambda stem: self.fasta_dir.joinpath(stem).with_suffix(FASTA_EXT).__str__()).to_list()
-        chi_fastas = self.parent_df['chi_file_stem'].map(
-            lambda stem: self.fasta_dir.joinpath(stem).with_suffix(FASTA_EXT).__str__()).to_list()
-        self.all_fastas = fastas + chi_fastas
-        self.make_inheritance()
-
-    def make_inheritance(self):
-        for label, data in self.parent_df.iterrows():
-            self.collective_df.add_protein(label, data['sequence'], {})
-            self.collective_df.add_protein(data['chi_file_stem'],
-                                           *AccessiontoAlignment.alignment_finder(self.base_splice, label,
-                                                                                  self.fasta_args.base_identifier,
-                                                                                  self.fasta_args.parent_msa))
-        self.collective_df.dataframe_to_aln(self.fasta_args.collective_fasta)
-
-    def fasta_operations(self):
-        self.make_fasta_paths()
-        num_of_subunits = self.fasta_args.number_of_subunits
-        fasta_dir = self.fasta_args.output_directory.joinpath(FASTA_FOLDERNAME)
-        os.makedirs(fasta_dir, exist_ok=True)
-        for label, data in self.parent_df.iterrows():
-            AccessiontoAlignment.fasta_creation(fasta_dir.joinpath(data['file_stem']).with_suffix(FASTA_EXT),
-                                                AccessiontoAlignment.create_seq_records(label, data['sequence'],
-                                                                                        subunit_count=num_of_subunits))
-            AccessiontoAlignment.fasta_creation(fasta_dir.joinpath(data['chi_file_stem']).with_suffix(FASTA_EXT),
-                                                AccessiontoAlignment.create_seq_records(label, data['chi_seq'],
-                                                                                        subunit_count=num_of_subunits))
-
-    def alphafold_submission(self):
-        fasta_to_run = ()
-        submission_toggles = self.submission_args.submission_toggles
-        proteins_per_slurm = self.submission_args.proteins_per_slurm
-        # Loops through all fastas created and checks if they are complete by looking for their ranking_debug file
-        fastas = [Path(self.fasta_dir).joinpath(label).with_suffix(FASTA_EXT) for label in self.collective_df.index]
-        if submission_toggles['stragglers_or_custom_or_all'] == 'stragglers':
-            for fasta in fastas:
-                if not os.path.exists(Path(self.alphafold_dir).joinpath(Path(fasta).stem, '/ranking_debug.json')):
-                    fasta_to_run += (fasta,)
-            # Puts all fastas in a line separated file specified by custom_list_to_run
-            if submission_toggles['create_file_of_stragglers']:
-                with open(self.submission_args.custom_list_to_run, 'w') as run_list:
-                    run_list.write('\n'.join(fasta for fasta in fasta_to_run))
-            # if all of them are complete and fasta_to_run is empty then all slurm actions are toggled off
-            if not fasta_to_run:
-                self.submission_args.submission_toggles['create_slurms'] = self.submission_args.submission_toggles[
-                    'sbatch slurms'] = False
-                print('All Done')
-
-        elif submission_toggles['stragglers_or_custom_or_all'] == 'custom':
-            with open(self.submission_args.custom_list_to_run, 'r') as run_list:
-                fasta_to_run = [x.split()[0] for x in run_list.readlines()]
-
-        elif submission_toggles['stragglers_or_custom_or_all'] == 'all':
-            fasta_to_run = []
-        if self.submission_args.submission_toggles['sbatch_slurms']:
-            for slurm_index, file_index in enumerate(range(0, len(fasta_to_run), proteins_per_slurm)):
-                result = subprocess.run(['sbatch', '-J', str(slurm_index) + self.submission_args.slurm_naming, '-A',
-                                         self.submission_args.sbatch_group,
-                                         '-e', Path(self.fasta_args.output_directory).joinpath(
-                        self.submission_args.slurm_naming + str(slurm_index)).with_suffix(".err"),
-                                         self.submission_args.alphafold_shell_script,
-                                         ",".join(fasta_to_run[file_index:file_index + proteins_per_slurm]),
-                                         self.alphafold_dir], capture_output=True)
-                print(result.stdout)
-
-    def analysis_operations(self):
-        analysis_toggles = self.analysis_args.analysis_toggles
-        if not self.has_inheritance:
-            self.make_inheritance()
-        if analysis_toggles['analyze_alphafold']:
-            alphafold_analysis(self.collective_df, self.alphafold_dir.__str__(),
-                               self.analysis_args.analysis_output_file, self.analysis_args.metadata)
-            # Analysis.generate_alphafold_files(self.alphafold_dir, self.fasta_args.output_directory,
-            #                                   analysis_toggles['make_plddts'])
-            # for chi, data in self.collective_df.iterrows():
-            #     chi_plddt = Analysis.get_plddt_dict_from_pdb(
-            #         self.pdb_dir.joinpath(str(chi)).with_suffix('.pdb'))[self.collective_df.get_sequence(chi)]
-            #     self.collective_df.loc[chi, 'Overall Stability'] = Analysis.overall_confidence(chi_plddt)
-            #     if len(inheritance_dict := self.collective_df.get_description(chi)) == 2:
-            #         plddt_dict = {}
-            #         for parent in inheritance_dict.keys():
-            #             plddt_dict[parent] = Analysis.get_plddt_dict_from_pdb(
-            #                 self.pdb_dir.joinpath(parent).with_suffix('.pdb'))[self.collective_df.get_sequence(parent)]
-            #         plddt_dict[str(chi)] = chi_plddt
-            #         relative_stability = Analysis.relative_stabilty(plddt_dict, inheritance_dict)
-            #         self.collective_df.loc[chi, 'Relative Stability (%)'] = relative_stability
-            # self.collective_df.get_sequence_identity()
-            # self.collective_df.to_csv(self.analysis_args.analysis_output_csv)
-
-
-class ShiftedFastaArguments:
-    fasta_toggles: dict
-    Make_a_lst_of_created_fasta_files: bool
-    Create_an_alignment: bool
-    Make_pair_or_combo_heteromers: bool
-    parent_aln_file: str
     number_of_subunits: int
     output_directory: Path
     collective_fasta: str
@@ -434,201 +229,7 @@ class ShiftedFastaArguments:
             setattr(self, key, value)
 
 
-class ShiftedSubmissionArguments:
-    submission_toggles: dict
-    create_slurms: bool
-    sbatch_slurms: bool
-    alphafold_settings: dict
-    custom_label_list: str
-    proteins_per_slurm: int
-    alphafold_shell_script: str
-    embedding_shell_script: str
-    embedding_settings : dict
-
-    def __init__(self, fasta_dict):
-        for key, value in fasta_dict.items():
-            setattr(self, key, value)
-
-
-class ShiftedAnalysisArguments:
-    analysis_toggles: dict
-    make_plddts: str
-    make_pdbs: str
-
-    analysis_output_file: str
-    '''Path of the file you want created that will contain all analysis created.'''
-    column_names: dict
-    '''A dictionary containing a multiple keys and their list value that each correspond with a type of data that is 
-    output by the script, a user-selected title for the data column and whether that data is included in the final 
-    output'''
-    filename_stems: list
-    '''A list ["True","Protein"] that contains quotes that when filled with True, include a data column in the final 
-    output that contains the nicknames created from the naming convention previously established. The second index 
-    controls the column name in the final output'''
-    relative_stability: list
-    overall_chimera_stability: list
-    metadata: dict
-
-    def __init__(self, fasta_dict):
-        for key, value in fasta_dict.items():
-            setattr(self, key, value)
-
-
-class ShiftedChimeraArgs:
-    argument_dict: dict
-    operation_toggles: dict
-    run_fasta_operation: str
-    alphafold_submission: str
-    run_analysis_operation: str
-    fasta_args: ShiftedFastaArguments
-    submission_args: ShiftedSubmissionArguments
-    analysis_args: ShiftedAnalysisArguments
-
-    def __init__(self, shifted_json_file):
-        with open(shifted_json_file, 'rb') as jfile:
-            self.argument_dict = load(jfile)
-        self.get_dict_args(ShiftedFastaArguments, 'fasta_args', 'fasta_arguments')
-        self.get_dict_args(ShiftedSubmissionArguments, 'submission_args', 'submission_arguments')
-        self.get_dict_args(ShiftedAnalysisArguments, 'analysis_args', 'analysis_arguments')
-        self.operation_toggles = self.argument_dict['operation_toggles']
-        self.fasta_args.output_directory = Path(self.fasta_args.output_directory)
-        self.fasta_chunk_dir = self.fasta_args.output_directory.joinpath('FastaChunks')
-        self.embed_chunk_dir = self.fasta_args.output_directory.joinpath('EmbedChunks')
-        self.alphafold_dir = self.fasta_args.output_directory.joinpath(ALPHAFOLD_FOLDERNAME)
-        self.fasta_dir = self.fasta_args.output_directory.joinpath(FASTA_FOLDERNAME)
-        if Path(self.fasta_args.collective_fasta).exists():
-            self.collective_df = ESM.SequenceDataframe(self.fasta_args.collective_fasta)
-            self.has_inheritance = True
-
-    # TODO make uniform
-    def get_dict_args(self, dict_class, attr_name, arg_key):
-        dict_args = self.argument_dict[arg_key]
-        setattr(self, attr_name, dict_class(dict_args))
-
-    def fasta_operations(self):
-        MIN_SPLICE_PERCENT = .35
-        MAX_SPLICE_PERCENT = .65
-        seq_dict = AccessiontoAlignment.create_dictionary_from_alignment(self.fasta_args.parent_aln_file)
-        aln_len = len(list(seq_dict.values())[0])
-        aln_dfs = []
-        for scanner in range(round(MIN_SPLICE_PERCENT * aln_len), round(MAX_SPLICE_PERCENT * aln_len)):
-            aln_dfs.append(
-                ChimeraGenerator.create_chimera_combinations(self.fasta_args.parent_aln_file, scanner, 0))
-        chimera_df = pd.concat(aln_dfs)
-
-        self.fasta_chunk_dir.mkdir(exist_ok=True)
-        chimera_df.__class__ = ESM.SequenceDataframe
-        chimera_df.dataframe_to_aln(self.fasta_args.collective_fasta)
-        chimera_df.dataframe_to_multi_fa(Path(self.fasta_args.collective_fasta).with_suffix('.mfa'))
-        num_chunks = chimera_df.shape[0] / 2000
-        chunks: list[ESM.SequenceDataframe] = [ESM.SequenceDataframe(unconverted_df=chunk) for chunk in
-                                               np.array_split(chimera_df, num_chunks)]
-        aln_df = ESM.SequenceDataframe(self.fasta_args.parent_aln_file)
-        parent1, parent2 = aln_df.index
-        aln_df.add_value(parent1, 'description', {parent1: None})
-        aln_df.add_value(parent2, 'description', {parent2: None})
-        for ind, chunk in enumerate(chunks):
-            chunk = ESM.SequenceDataframe(unconverted_df=chunk._append(aln_df))
-            chunk.dataframe_to_aln(self.fasta_chunk_dir.joinpath(Path(self.fasta_args.collective_fasta).stem + f'_{str(ind)}.inh'))
-
-
-    def submission_operations(self):
-        submission_toggles = self.submission_args.submission_toggles
-        if submission_toggles['run_AF']:
-            fasta_dir = self.fasta_dir
-            fasta_dir.mkdir(exist_ok=True)
-            fastas_to_run = []
-            if self.submission_args.custom_label_list:
-                seq_dict = AccessiontoAlignment.create_dictionary_from_alignment(self.fasta_args.collective_fasta)
-                with open(self.submission_args.custom_label_list, 'r') as run_list:
-                    chimeras_to_run = [x.replace('\n', '') for x in run_list.readlines() if x.replace('\n', '')]
-                for label in chimeras_to_run:
-                    fasta_file = fasta_dir.joinpath(label).with_suffix(FASTA_EXT)
-                    fastas_to_run.append(fasta_file)
-                    AccessiontoAlignment.fasta_creation(fasta_file,
-                                                        AccessiontoAlignment.create_seq_records(label, seq_dict[label].replace('-',''),
-                                                                                                subunit_count=self.fasta_args.number_of_subunits))
-            else:
-                df = ESM.SequenceDataframe(self.fasta_args.collective_fasta)
-                df.make_individual_fasta(fasta_dir, self.fasta_args.number_of_subunits)
-                for label in df.index:
-                    fasta_file = fasta_dir.joinpath(label).with_suffix(FASTA_EXT)
-                    fastas_to_run.append(fasta_file)
-            fastas_to_run = [fasta.__str__() for fasta in fastas_to_run]
-            if submission_toggles['run_stragglers']:
-                stragglers = []
-                for fasta in fastas_to_run:
-                    if not Path(fasta).parent.joinpath(Path(fasta).stem, 'ranked_0.pdb').exists():
-                        stragglers.append(fasta)
-                fastas_to_run = stragglers
-            alphafold_submission(fastas_to_run, self.submission_args.alphafold_shell_script,
-                                 self.fasta_args.output_directory.__str__(), self.submission_args.alphafold_settings,
-                                 self.submission_args.proteins_per_slurm, submission_toggles['make_slurm_files'])
-
-        if submission_toggles['get_embeddings']:
-
-            self.embed_chunk_dir.mkdir(exist_ok=True)
-            for slurm_index, chunk_fasta in enumerate(self.fasta_chunk_dir.iterdir()):
-                settings = dict(self.submission_args.embedding_settings)
-                job_id = str(slurm_index) + settings.get('-J', 'embedding')
-                settings['-J'] = job_id
-                if (errorfile := settings.get('-e', None)) is not None:
-                    settings['-e'] = Path(errorfile).with_stem(str(slurm_index) + errorfile.stem)
-                else:
-                    settings['-e'] = self.fasta_args.output_directory.joinpath(job_id).with_suffix(".err")
-
-                prost_submission(chunk_fasta.__str__(),
-                                 self.embed_chunk_dir.joinpath(chunk_fasta.stem).with_suffix('.pkl').__str__(),
-                                 self.fasta_args.output_directory, self.submission_args.embedding_shell_script,
-                                 settings, submission_toggles['make_slurm_files'])
-
-    def analysis_operations(self):
-        analysis_toggles = self.analysis_args.analysis_toggles
-        if analysis_toggles['analyze_embeddings']:
-            embeddings = []
-            func = ESM.NormType.dot_product
-            dist_type = func.name
-            for chunk_fasta in self.fasta_chunk_dir.iterdir():
-                embed_file = self.embed_chunk_dir.joinpath(chunk_fasta.stem).with_suffix('.pkl')
-                if not chunk_fasta.exists() and embed_file.exists():
-                    raise FileNotFoundError("Either the fasta or the corresponding embedding pkl file doesn't exist")
-                embedding_df = ESM.SequenceDataframe(chunk_fasta.__str__(), embed_file.__str__())
-                embedding_df.score_all_per_res(func)
-                embedding_df[f'{dist_type}_rank'] = embedding_df[dist_type].rank(
-                    ascending=func != ESM.NormType.cosine and func != ESM.NormType.dot_product)
-                embedding_df.drop(columns=['aln_sequence', 'sequence', 'description'])
-                embedding_df.get_sequence_identity()
-                del embedding_df.EMBEDDINGS_DICT
-                embeddings.append(embedding_df)
-
-            embeddings = pd.concat(embeddings)
-            embeddings = embeddings.loc[:, ~embeddings.columns.duplicated()]
-            embeddings = embeddings[~embeddings.index.duplicated(keep='first')]
-            embeddings = ESM.SequenceDataframe(unconverted_df=embeddings)
-            embeddings.drop(columns=['aln_sequence'])
-            if self.analysis_args.analysis_output_file:
-                embeddings.save_df(self.analysis_args.analysis_output_file, self.analysis_args.metadata)
-
-
-        if analysis_toggles['analyze_alphafold']:
-            alphafold_analysis(self.collective_df, self.alphafold_dir.__str__(),
-                               self.analysis_args.analysis_output_file, self.analysis_args.metadata)
-
-
-class NonHomologyFastaArguments:
-    fasta_toggles: dict
-    Create_an_alignment: bool
-    parent_mfa_file: str
-    number_of_subunits: int
-    output_directory: Path
-    collective_fasta: str
-
-    def __init__(self, fasta_dict):
-        for key, value in fasta_dict.items():
-            setattr(self, key, value)
-
-
-class NonHomologySubmissionArguments:
+class SubmissionArguments:
     submission_toggles: dict
     create_slurms: bool
     sbatch_slurms: bool
@@ -636,8 +237,9 @@ class NonHomologySubmissionArguments:
                                 "--mem": "400000", "--time": "72:00:00", "-J": "enter_slurm_name"},
     embedding_settings: dict = {"-p": "gpu", "--gres": "gpu:a100:1", "-N": 1, "-n": 3, "-A": "enter_here",
                                 "--time": "72:00:00", "-J": "enter_slurm_name"}
-    gromacs_settings:dict = {"-p":"gpu", "--gres":"gpu:1", "-N":1, "-A":"", "--time":"72:00:00","-J": "eidsars_emb","--ntasks-per-node":"10"}
-    gromacs_setup:dict
+    gromacs_settings: dict = {"-p": "gpu", "--gres": "gpu:1", "-N": 1, "-A": "", "--time": "72:00:00",
+                              "-J": "eidsars_emb", "--ntasks-per-node": "10"}
+    gromacs_setup: dict
     custom_label_list: str
     proteins_per_slurm: int
     alphafold_shell_script: str
@@ -648,7 +250,7 @@ class NonHomologySubmissionArguments:
             setattr(self, key, value)
 
 
-class NonHomologyAnalysisArguments:
+class AnalysisArguments:
     analysis_toggles: dict
     make_plddts: str
     make_pdbs: str
@@ -663,29 +265,29 @@ class NonHomologyAnalysisArguments:
         [setattr(self, key, value) for key, value in fasta_dict.items()]
 
 
-class NonHomologyChimeraArgs:
+class ChimeraArgs:
     argument_dict: dict
     operation_toggles: dict
     run_fasta_operation: str
     alphafold_submission: str
     run_analysis_operation: str
-    fasta_args: NonHomologyFastaArguments
-    submission_args: NonHomologySubmissionArguments
-    analysis_args: NonHomologyAnalysisArguments
+    fasta_args: FastaArguments
+    submission_args: SubmissionArguments
+    analysis_args: AnalysisArguments
 
-    def __init__(self, NonHomology_json_file):
-        with open(NonHomology_json_file, 'rb') as jfile:
+    def __init__(self, json_file):
+        with open(json_file, 'rb') as jfile:
             self.argument_dict = load(jfile)
-        self.get_dict_args(NonHomologyFastaArguments, 'fasta_args', 'fasta_arguments')
-        self.get_dict_args(NonHomologySubmissionArguments, 'submission_args', 'submission_arguments')
-        self.get_dict_args(NonHomologyAnalysisArguments, 'analysis_args', 'analysis_arguments')
+        self.get_dict_args(FastaArguments, 'fasta_args', 'fasta_arguments')
+        self.get_dict_args(SubmissionArguments, 'submission_args', 'submission_arguments')
+        self.get_dict_args(AnalysisArguments, 'analysis_args', 'analysis_arguments')
         self.operation_toggles = self.argument_dict['operation_toggles']
         self.fasta_args.output_directory = Path(self.fasta_args.output_directory)
         self.embed_chunk_dir = self.fasta_args.output_directory.joinpath('EmbedChunks')
         self.fasta_chunk_dir = self.fasta_args.output_directory.joinpath('FastaChunks')
         self.alphafold_dir = self.fasta_args.output_directory.joinpath(ALPHAFOLD_FOLDERNAME)
         self.fasta_dir = self.fasta_args.output_directory.joinpath(FASTA_FOLDERNAME)
-        self.gmx_dir=self.fasta_args.output_directory.joinpath(GMX_FOLDERNAME)
+        self.gmx_dir = self.fasta_args.output_directory.joinpath(GMX_FOLDERNAME)
         if Path(self.fasta_args.collective_fasta).exists():
             fasta_dfs = []
             for chunk_fasta in self.fasta_chunk_dir.iterdir():
@@ -703,12 +305,12 @@ class NonHomologyChimeraArgs:
         MIN_SPLICE_PERCENT = .35
         MAX_SPLICE_PERCENT = .65
 
-        chimera_df = ChimeraGenerator.create_combinations_no_aln(self.fasta_args.parent_mfa_file,
+        chimera_df = ChimeraGenerator.create_combinations_no_aln(self.fasta_args.parent_msa,
                                                                  (MIN_SPLICE_PERCENT, MAX_SPLICE_PERCENT),
                                                                  self.fasta_args.collective_fasta)
         fasta_dir = self.fasta_chunk_dir
         fasta_dir.mkdir(exist_ok=True)
-        aln_df = ESM.SequenceDataframe(self.fasta_args.parent_mfa_file)
+        aln_df = ESM.SequenceDataframe(self.fasta_args.parent_msa)
         parent1, parent2 = aln_df.index
         aln_df.add_value(parent1, 'description', {parent1: None})
         aln_df.add_value(parent2, 'description', {parent2: None})
@@ -772,26 +374,186 @@ class NonHomologyChimeraArgs:
                                      self.fasta_args.output_directory.__str__(),
                                      self.submission_args.alphafold_settings,
                                      self.submission_args.proteins_per_slurm, submission_toggles['make_slurm_files'])
+
         if submission_toggles['run_gromacs']:
             if not Path(self.submission_args.custom_label_list).exists():
                 raise FileNotFoundError('Please submit a valid custom_label_list in the argument json.')
             with (open(self.submission_args.custom_label_list, 'r') as run_list):
-                gromacs_commands=self.submission_args.gromacs_setup
+                gromacs_commands = self.submission_args.gromacs_setup
                 self.gmx_dir.mkdir(exist_ok=True)
                 gmx_bin = gromacs_commands['gmx_command']
                 for label in [x.replace('\n', '') for x in run_list.readlines() if x.replace('\n', '')]:
-                    label_dir=self.gmx_dir.joinpath(label)
+                    label_dir = self.gmx_dir.joinpath(label)
                     label_dir.mkdir(exist_ok=True)
-                    pdb=self.alphafold_dir.joinpath(label, 'ranked_0').with_suffix('.pdb')
-                    renamed_pdb=pdb.with_stem(label)
+                    pdb = self.alphafold_dir.joinpath(label, 'ranked_0').with_suffix('.pdb')
+                    renamed_pdb = pdb.with_stem(label)
                     renamed_pdb.write_bytes(pdb.read_bytes())
-                    gmx_submission(renamed_pdb,self.submission_args.gromacs_settings,label_dir.__str__(),
-                                   gromacs_commands['working_directory'],gromacs_commands['forcefield'],submission_toggles['make_slurm_files']
-                                   ,gmx_bin,gromacs_commands['necessary_commands'])
+                    gmx_submission(renamed_pdb, self.submission_args.gromacs_settings, label_dir.__str__(),
+                                   gromacs_commands['working_directory'], gromacs_commands['forcefield'],
+                                   submission_toggles['make_slurm_files']
+                                   , gmx_bin, gromacs_commands['necessary_commands'])
+    def analyze_gromacs(self):
+        # get all directories that are not slurm
+        rmsf_files = {}
+        tpr_xtc_pairs = {}
+        for gmx_folder in [direc for direc in self.gmx_dir.iterdir() if direc.is_dir() and direc.stem != 'Slurms']:
+            # create trajectory movies
+            label = gmx_folder.stem
+            tpr_file = gmx_folder.joinpath(label + '_prod.tpr')
+            centered_xtc = gmx_folder.joinpath(label + '_center.xtc')
+            tpr_xtc_pairs[tpr_file.__str__()] = centered_xtc.__str__()
+            GromacsAnalysis.center_xtc(tpr_file, tpr_file.with_suffix('.xtc'), centered_xtc,
+                                       self.submission_args.gromacs_setup['necessary_commands'])
+            GromacsAnalysis.create_trajectory_movie_pdb(tpr_file, centered_xtc,
+                                                        gmx_folder.joinpath(label + '_movie.pdb'),
+                                                        self.submission_args.gromacs_setup['necessary_commands'])
+            # create rmsf files
+            rmsf_file = gmx_folder.joinpath(label.replace("prod", "rmsf") + '.xvg')
+            rmsf_files[label] = rmsf_file.__str__()
+            GromacsAnalysis.create_rmsf_file(tpr_file, centered_xtc, rmsf_file,
+                                             self.submission_args.gromacs_setup['necessary_commands'])
+        GromacsAnalysis.graph_rmsd_mdanalysis(tpr_xtc_pairs)
+        GromacsAnalysis.graph_rmsf(rmsf_files)
+    def analyze_embeddings(self):
+        embeddings = []
+        func = ESM.NormType.dot_product
+        dist_type = func.name
+        for chunk_fasta in self.fasta_chunk_dir.iterdir():
+            embed_file = self.embed_chunk_dir.joinpath(chunk_fasta.stem).with_suffix('.pkl')
+            if not chunk_fasta.exists() and embed_file.exists():
+                raise FileNotFoundError("Either the fasta or the corresponding embedding pkl file doesn't exist")
+            embedding_df = ESM.SequenceDataframe(chunk_fasta.__str__(), embed_file.__str__())
+            embedding_df.score_all_per_res(func)
+            embedding_df[f'{dist_type}_rank'] = embedding_df[dist_type].rank(
+                ascending=func != ESM.NormType.cosine and func != ESM.NormType.dot_product)
+            embedding_df.drop(columns=['aln_sequence', 'sequence', 'description'])
+            del embedding_df.EMBEDDINGS_DICT
+            embeddings.append(embedding_df)
+
+        embeddings = pd.concat(embeddings)
+        embeddings = embeddings.loc[:, ~embeddings.columns.duplicated()]
+        embeddings = embeddings[~embeddings.index.duplicated(keep='first')]
+        embeddings = ESM.SequenceDataframe(unconverted_df=embeddings)
+        embeddings.drop(columns=['aln_sequence'])
+        if self.analysis_args.analysis_output_file:
+            embeddings.save_df(self.analysis_args.analysis_output_file, self.analysis_args.metadata)
 
     def analysis_operations(self):
         analysis_toggles = self.analysis_args.analysis_toggles
         if analysis_toggles['analyze_embeddings']:
+            self.analyze_embeddings()
+
+        if analysis_toggles['analyze_alphafold']:
+            alphafold_df = alphafold_analysis(self.collective_df, self.alphafold_dir.__str__())
+            alphafold_df.save_df(self.analysis_args.analysis_output_file, self.analysis_args.metadata)
+
+        if analysis_toggles['analyze_gromacs']:
+           self.analyze_gromacs()
+
+class NonHomologyChimeraArgs(ChimeraArgs):
+    def __init__(self,nonhomology_json_file):
+        super().__init__(nonhomology_json_file)
+
+class HomomerChimeraArgs(ChimeraArgs):
+    def __init__(self, arg_json, full_use=True):
+        super().__init__(arg_json)
+        self.base_splice = None
+        self.operation_toggles = self.argument_dict['operation_toggles']
+        if Path(self.fasta_args.parent_msa).exists():
+            self.parent_df = ESM.SequenceDataframe(self.fasta_args.parent_msa)
+        elif full_use:
+            raise FileNotFoundError(f'Could not find parent msa {self.fasta_args.parent_msa}')
+
+    def make_fasta_paths(self):
+        self.base_splice = AccessiontoAlignment.extract_seq_from_fasta(self.fasta_args.sequence_of_interest)
+        self.parent_df['chi_seq'] = self.parent_df.index.map(
+            lambda label: AccessiontoAlignment.alignment_finder(self.base_splice, label,
+                                                                self.fasta_args.base_identifier,
+                                                                self.fasta_args.parent_msa)[0].replace('-', ''))
+        self.parent_df['file_stem'] = self.parent_df.index.map(
+            lambda label: self.naming_args.WT_convention.replace(self.naming_args.file_stem_placeholder, label))
+        self.parent_df['chi_file_stem'] = self.parent_df.index.map(
+            lambda label: self.naming_args.chimera_convention.replace(self.naming_args.file_stem_placeholder, label))
+
+        fastas = self.parent_df['file_stem'].map(
+            lambda stem: self.fasta_dir.joinpath(stem).with_suffix(FASTA_EXT).__str__()).to_list()
+        chi_fastas = self.parent_df['chi_file_stem'].map(
+            lambda stem: self.fasta_dir.joinpath(stem).with_suffix(FASTA_EXT).__str__()).to_list()
+        self.all_fastas = fastas + chi_fastas
+        self.make_inheritance()
+
+    def make_inheritance(self):
+        for label, data in self.parent_df.iterrows():
+            self.collective_df.add_protein(label, data['sequence'], {})
+            self.collective_df.add_protein(data['chi_file_stem'],
+                                           *AccessiontoAlignment.alignment_finder(self.base_splice, label,
+                                                                                  self.fasta_args.base_identifier,
+                                                                                  self.fasta_args.parent_msa))
+        self.collective_df.dataframe_to_aln(self.fasta_args.collective_fasta)
+
+    def fasta_operations(self):
+        self.make_fasta_paths()
+        num_of_subunits = self.fasta_args.number_of_subunits
+        fasta_dir = self.fasta_args.output_directory.joinpath(FASTA_FOLDERNAME)
+        os.makedirs(fasta_dir, exist_ok=True)
+        for label, data in self.parent_df.iterrows():
+            AccessiontoAlignment.fasta_creation(fasta_dir.joinpath(data['file_stem']).with_suffix(FASTA_EXT),
+                                                AccessiontoAlignment.create_seq_records(label, data['sequence'],
+                                                                                        subunit_count=num_of_subunits))
+            AccessiontoAlignment.fasta_creation(fasta_dir.joinpath(data['chi_file_stem']).with_suffix(FASTA_EXT),
+                                                AccessiontoAlignment.create_seq_records(label, data['chi_seq'],
+                                                                                        subunit_count=num_of_subunits))
+
+    def analysis_operations(self):
+        analysis_toggles = self.analysis_args.analysis_toggles
+        if not self.has_inheritance:
+            self.make_inheritance()
+        if analysis_toggles['analyze_alphafold']:
+            alphafold_df = alphafold_analysis(self.collective_df, self.alphafold_dir.__str__())
+            alphafold_df.save_df(self.analysis_args.analysis_output_file, self.analysis_args.metadata)
+
+
+class ShiftedChimeraArgs(ChimeraArgs):
+    argument_dict: dict
+    operation_toggles: dict
+    run_fasta_operation: str
+    alphafold_submission: str
+    run_analysis_operation: str
+
+    def __init__(self, shifted_json_file):
+        super().__init__(shifted_json_file)
+
+    def fasta_operations(self):
+        min_splice_percent = .35
+        max_splice_percent = .65
+        seq_dict = AccessiontoAlignment.create_dictionary_from_alignment(self.fasta_args.parent_msa)
+        aln_len = len(list(seq_dict.values())[0])
+        aln_dfs = []
+        for scanner in range(round(min_splice_percent * aln_len), round(max_splice_percent * aln_len)):
+            aln_dfs.append(
+                ChimeraGenerator.create_chimera_combinations(self.fasta_args.parent_msa, scanner, 0))
+        chimera_df = pd.concat(aln_dfs)
+
+        self.fasta_chunk_dir.mkdir(exist_ok=True)
+        chimera_df.__class__ = ESM.SequenceDataframe
+        chimera_df.dataframe_to_aln(self.fasta_args.collective_fasta)
+        chimera_df.dataframe_to_multi_fa(Path(self.fasta_args.collective_fasta).with_suffix('.mfa'))
+        num_chunks = chimera_df.shape[0] / 2000
+        chunks: list[ESM.SequenceDataframe] = [ESM.SequenceDataframe(unconverted_df=chunk) for chunk in
+                                               np.array_split(chimera_df, num_chunks)]
+        aln_df = ESM.SequenceDataframe(self.fasta_args.parent_msa)
+        parent1, parent2 = aln_df.index
+        aln_df.add_value(parent1, 'description', {parent1: None})
+        aln_df.add_value(parent2, 'description', {parent2: None})
+        for ind, chunk in enumerate(chunks):
+            chunk = ESM.SequenceDataframe(unconverted_df=chunk._append(aln_df))
+            chunk.dataframe_to_aln(
+                self.fasta_chunk_dir.joinpath(Path(self.fasta_args.collective_fasta).stem + f'_{str(ind)}.inh'))
+
+    def analysis_operations(self):
+        analysis_toggles = self.analysis_args.analysis_toggles
+        # TODO make this universal
+        if analysis_toggles['analyze_embeddings'] and not analysis_toggles['analyze_alphafold']:
             embeddings = []
             func = ESM.NormType.dot_product
             dist_type = func.name
@@ -804,6 +566,7 @@ class NonHomologyChimeraArgs:
                 embedding_df[f'{dist_type}_rank'] = embedding_df[dist_type].rank(
                     ascending=func != ESM.NormType.cosine and func != ESM.NormType.dot_product)
                 embedding_df.drop(columns=['aln_sequence', 'sequence', 'description'])
+                embedding_df.get_sequence_identity()
                 del embedding_df.EMBEDDINGS_DICT
                 embeddings.append(embedding_df)
 
@@ -816,25 +579,34 @@ class NonHomologyChimeraArgs:
                 embeddings.save_df(self.analysis_args.analysis_output_file, self.analysis_args.metadata)
 
         if analysis_toggles['analyze_alphafold']:
-            alphafold_analysis(self.collective_df, self.alphafold_dir.__str__(),
-                               self.analysis_args.analysis_output_file, self.analysis_args.metadata)
+            alphafold_df = alphafold_analysis(self.collective_df, self.alphafold_dir.__str__())
+            if analysis_toggles['analyze_embeddings']:
+                embeddings = []
+                temp_dict = {}
+                for chunk_fasta in self.fasta_chunk_dir.iterdir():
+                    embed_file = self.embed_chunk_dir.joinpath(chunk_fasta.stem).with_suffix('.pkl')
+                    if not chunk_fasta.exists() and embed_file.exists():
+                        raise FileNotFoundError(
+                            "Either the fasta or the corresponding embedding pkl file doesn't exist")
+                    embedding_df = ESM.SequenceDataframe(chunk_fasta.__str__(), embed_file.__str__())
+                    temp_dict = temp_dict | embedding_df.EMBEDDINGS_DICT
+                    embeddings.append(embedding_df)
+                embeddings = pd.concat(embeddings)
+                embeddings.drop(columns=['aln_sequence'])
+                embeddings = embeddings.loc[list(alphafold_df.index) + list(
+                    AccessiontoAlignment.create_dictionary_from_alignment(self.fasta_args.parent_msa).keys())]
+                embeddings = embeddings.loc[:, ~embeddings.columns.duplicated()]
+                embeddings = embeddings[~embeddings.index.duplicated(keep='first')]
+                embeddings = ESM.SequenceDataframe(unconverted_df=embeddings)
+                embeddings.EMBEDDINGS_DICT = {key: temp_dict[key] for key in list(embeddings.index) + list(
+                    AccessiontoAlignment.create_dictionary_from_alignment(self.fasta_args.parent_msa).keys())}
+                embeddings.score_all_per_res(ESM.NormType.dot_product)
+                embeddings = pd.concat([embeddings, alphafold_df], axis=1)
+                embeddings = embeddings.loc[:, ~embeddings.columns.duplicated(keep='first')]
+                embeddings = embeddings[~embeddings.index.duplicated(keep='first')]
+                alphafold_df = ESM.SequenceDataframe(unconverted_df=embeddings)
+            alphafold_df.get_sequence_identity()
+            alphafold_df.save_df(self.analysis_args.analysis_output_file, self.analysis_args.metadata)
+
         if analysis_toggles['analyze_gromacs']:
-            # get all directories that are not slurm
-            rmsf_files={}
-            tpr_xtc_pairs={}
-            for gmx_folder in [direc for direc in self.gmx_dir.iterdir() if direc.is_dir() and direc.stem!='Slurms']:
-                # create trajectory movies
-                label=gmx_folder.stem
-                tpr_file=gmx_folder.joinpath(label + '_prod.tpr')
-                centered_xtc = gmx_folder.joinpath(label + '_center.xtc')
-                tpr_xtc_pairs[tpr_file.__str__()]=centered_xtc.__str__()
-                GromacsAnalysis.center_xtc(tpr_file, tpr_file.with_suffix('.xtc'), centered_xtc, self.submission_args.gromacs_setup['necessary_commands'])
-                GromacsAnalysis.create_trajectory_movie_pdb(tpr_file, centered_xtc, gmx_folder.joinpath(label + '_movie.pdb'), self.submission_args.gromacs_setup['necessary_commands'])
-                # create rmsf files
-                rmsf_file=gmx_folder.joinpath(label.replace("prod","rmsf")+'.xvg')
-                rmsf_files[label]=rmsf_file.__str__()
-                GromacsAnalysis.create_rmsf_file(tpr_file, centered_xtc, rmsf_file, self.submission_args.gromacs_setup['necessary_commands'])
-            GromacsAnalysis.graph_rmsd_mdanalysis(tpr_xtc_pairs)
-            GromacsAnalysis.graph_rmsf(rmsf_files)
-
-
+            self.analyze_gromacs()

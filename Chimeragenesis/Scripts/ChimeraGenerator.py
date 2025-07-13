@@ -175,6 +175,7 @@ def create_combinations_no_aln(two_parent_fa_file: str, percentage_cutoff:tuple=
     #         inheritance={base_label:{(0,len(base_splice)):(0,len(base_splice))},partner_label:{(partner_cut,None):(len(base_splice),None)}}
     #         aln_df.add_protein(f'{base_label}_0_{base_cut}_{partner_label}_{partner_cut}_{partner_len}',chi_seq,inheritance)
     # chi_cpp.single_cut_chimera_generator returns (chimera_labels:tuple,chimera_sequences:string,chimera_inheritance:dict)
+
     partner_label,partner_seq,partner_inh=chi_cpp.single_cut_chimera_generator(parent2,aln_df.get_sequence(parent2),parent1,aln_df.get_sequence(parent1), *percentage_cutoff)
     partner_info={'label':partner_label,"sequence":partner_seq,'aln_sequence':partner_seq,'description':partner_inh}
     base_label, base_seq, base_inh =chi_cpp.single_cut_chimera_generator(parent1,aln_df.get_sequence(parent1), parent2,aln_df.get_sequence(parent2),*percentage_cutoff)
