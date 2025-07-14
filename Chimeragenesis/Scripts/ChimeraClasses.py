@@ -1,3 +1,4 @@
+import math
 import os, re, subprocess
 import AccessiontoAlignment, ESM, ChimeraGenerator, Analysis, GromacsAnalysis
 from json import load
@@ -19,6 +20,11 @@ from an alignment replaced'
 
 parent_msa: str
 '''Path to the multiple sequence alignment to be created or a user-generated msa of all parent sequences'''
+
+"wildtype_convention": ""
+
+"chimera_convention": str
+""
 
 collective_fasta: str
 '''Path to the fasta file to be created containing all sequences to be run on Alphafold (parents+chimeras) and their inheritance dicts. Path must have .inh suffix'''
@@ -223,6 +229,8 @@ class FastaArguments:
     number_of_subunits: int
     output_directory: Path
     collective_fasta: str
+    sequence_of_interest: str
+    base_identifier: str
 
     def __init__(self, fasta_dict):
         for key, value in fasta_dict.items():
@@ -314,7 +322,8 @@ class ChimeraArgs:
         parent1, parent2 = aln_df.index
         aln_df.add_value(parent1, 'description', {parent1: None})
         aln_df.add_value(parent2, 'description', {parent2: None})
-        num_chunks = chimera_df.shape[0] / 2000
+        chunk_size=2000
+        num_chunks = math.ceil(chimera_df.shape[0] / chunk_size)
         chunks: list[ESM.SequenceDataframe] = [ESM.SequenceDataframe(unconverted_df=chunk) for chunk in
                                                np.array_split(chimera_df, num_chunks)]
         for ind, chunk in enumerate(chunks):
@@ -330,7 +339,7 @@ class ChimeraArgs:
                 settings = dict(self.submission_args.embedding_settings)
                 job_id = str(slurm_index) + settings.get('-J', 'embedding')
                 settings['-J'] = job_id
-                if errorfile := settings.get('-e', None):
+                if errorfile := settings.get('-e', None) is not None:
                     settings['-e'] = Path(errorfile).with_stem(str(slurm_index) + errorfile.stem)
                 else:
                     settings['-e'] = self.fasta_args.output_directory.joinpath(job_id).with_suffix(".err")
@@ -455,6 +464,7 @@ class NonHomologyChimeraArgs(ChimeraArgs):
         super().__init__(nonhomology_json_file)
 
 class HomomerChimeraArgs(ChimeraArgs):
+
     def __init__(self, arg_json, full_use=True):
         super().__init__(arg_json)
         self.base_splice = None

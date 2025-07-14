@@ -5,6 +5,8 @@
     "fasta_arguments": {
         "base_identifier": "PDTH-2",
         "number_of_subunits": 1,
+        "wildtype_convention": "",
+        "chimera_convention": "",
         "output_directory": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\Data",
         "sequence_of_interest": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\Data\\PDT0_139.fa",
         "fasta_list_file_name": "homo_test",
@@ -15,8 +17,6 @@
     "submission_arguments": {
         "submission_toggles": {"create_slurms":false,"sbatch_slurms": false,"stragglers_or_custom_or_all": "stragglers","create_file_of_stragglers": false},
         "file_stem_placeholder": "",
-        "WT_convention": "",
-        "chimera_convention": "",
         "custom_list_to_run": "",
         "proteins_per_slurm": 9,
         "slurm_naming": "P_M_ShiftedAlphaFold",

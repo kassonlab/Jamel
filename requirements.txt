@@ -4,7 +4,6 @@ umap
 matplotlib
 numpy
 transformers
-ankh
 pandas
 biopython
 MDAnalysis
