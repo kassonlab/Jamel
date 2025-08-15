@@ -5,9 +5,9 @@
         "analysis_operations": false
     },
     "fasta_arguments": {
-        "output_directory": "/Notebook/ESM/B-lac/cmy_tem/SelectedTEM/",
-        "parent_mfa_file": "/Notebook/ESM/B-lac/cmy_tem/tem_cmy.fa",
-        "collective_fasta": "/Notebook/ESM/B-lac/cmy_tem/tem_cmy_chimeras.inh",
+        "output_directory": "/scratch/jws6pq/Notebook/ESM/B-lac/cmy_tem/SelectedTEM/",
+        "parent_mfa_file": "/scratch/jws6pq/Notebook/ESM/B-lac/cmy_tem/tem_cmy.fa",
+        "collective_fasta": "/scratch/jws6pq/Notebook/ESM/B-lac/cmy_tem/tem_cmy_chimeras.inh",
         "number_of_subunits": 1
     },
     "submission_arguments": {
@@ -18,14 +18,14 @@
             "run_AF": false,
             "run_gromacs": true
         },
-        "custom_label_list": "/sfs/weka/Notebook/ESM/B-lac/cmy_tem/SelectedTEM/gmx_select_v2",
+        "custom_label_list": "/sfs/weka/scratch/jws6pq/Notebook/ESM/B-lac/cmy_tem/SelectedTEM/gmx_select_v2",
         "proteins_per_slurm": 2,
         "alphafold_settings": {
             "-p": "gpu",
             "--gres": "gpu:1",
             "-N": 1,
             "-n": 3,
-            "-A": "",
+            "-A": "kassonlab",
             "--time": "32:00:00",
             "-J": "tem_cmy",
             "--mem": "350000"
@@ -35,14 +35,14 @@
             "--gres": "gpu:1",
             "-N": 1,
             "-n": 3,
-            "-A": "",
+            "-A": "kassonlab",
             "--time": "72:00:00",
             "-J": "tem_cmy"
         },"gromacs_settings": {
             "-p": "gpu",
             "--gres": "gpu:1",
             "-N": 1,
-            "-A": "",
+            "-A": "kassonlab",
             "--time": "72:00:00",
 	"--mail-user":"jws6pq@virginia.edu",
 	"--mail-type":"BEGIN,END,FAIL"
@@ -50,12 +50,12 @@
         "gromacs_setup": {
             "gmx_command":"gmx_mpi",
             "forcefield":"charmm36-jul2022",
-            "working_directory":"/Notebook/ESM/Chimeragenesis/",
+            "working_directory":"/scratch/jws6pq/Notebook/ESM/Chimeragenesis/",
             "necessary_commands":["module purge",
-            "module load nvompi apptainer gromacs/2025.1","export GMXLIB=/Notebook/ESM/Chimeragenesis/"]
+            "module load nvompi apptainer gromacs/2025.1","export GMXLIB=/scratch/jws6pq/Notebook/ESM/Chimeragenesis/"]
        },
-        "alphafold_shell_script": "/Notebook/ESM/Chimeragenesis/AlphaFold.sh",
-        "embedding_shell_script": "/Notebook/ESM/Chimeragenesis/prost.slurm"
+        "alphafold_shell_script": "/scratch/jws6pq/Notebook/ESM/Chimeragenesis/AlphaFold.sh",
+        "embedding_shell_script": "/scratch/jws6pq/Notebook/ESM/Chimeragenesis/prost.slurm"
     },
     "analysis_arguments": {
         "analysis_toggles": {
@@ -68,6 +68,6 @@
             "function_used": "per_res",
             "averaging_used": "mean"
         },
-        "analysis_output_file": "/Notebook/ESM/B-lac/cmy_tem/tem_cmy_af.csv"
+        "analysis_output_file": "/scratch/jws6pq/Notebook/ESM/B-lac/cmy_tem/tem_cmy_af.csv"
     }
 }

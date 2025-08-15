@@ -3,6 +3,7 @@
 # Code 2023 by Jamel Simpson
 import re
 from os import system, path, listdir, makedirs
+from pathlib import Path
 from shutil import copy
 import numpy as np
 from numpy import savetxt, empty, mean
@@ -77,26 +78,31 @@ def create_plddt_file_from_pdb(pdb_file, new_plddt_file):
 
 
 def skeletonize_alphafold_folder(alphafold_dir, storage_dir):
-    """Takes an alphafold output folder and copies the ranking_debug,the top ranked pdb and the corresponding plddt scores  into another directory."""
-    rank_file = path.join(alphafold_dir, '../ranking_debug.json')
-    makedirs(storage_dir, exist_ok=True)
+    """Takes an alphafold output folder and copies the ranking_debug,the top ranked pdb and the corresponding plddt scores into another directory."""
+    alphafold_dir=Path(alphafold_dir)
+    rank_file = alphafold_dir.joinpath('ranking_debug.json')
+    if not rank_file.exists(): return
+    storage_dir = Path(storage_dir)
+    storage_dir.mkdir(parents=True, exist_ok=True)
     new_files = []
-    dir_files = [file for file in listdir(alphafold_dir) if file.startswith('ranked')]
     try:
-        copy(rank_file, path.join(storage_dir, '../ranking_debug.json'))
-        for pdb_file in dir_files:
-            new_pdb = path.join(storage_dir, pdb_file)
-            new_plddt = path.join(storage_dir, str(Path(pdb_file).stem) + '.plddt')
+        for pdb_file in [file for file in alphafold_dir.iterdir() if re.search(r'ranked_\d\.pdb',file.name) is not None]:
+            new_pdb = storage_dir.joinpath(pdb_file.name)
+            new_plddt = storage_dir.joinpath(pdb_file.stem + '.plddt')
             new_files.append(new_pdb)
             new_files.append(new_plddt)
-            copy(path.join(alphafold_dir, pdb_file), new_pdb)
-            create_plddt_file_from_pdb(path.join(alphafold_dir, pdb_file), new_plddt)
-        if all(path.exists(file) for file in new_files):
+            copy(pdb_file, new_pdb)
+            create_plddt_file_from_pdb(pdb_file, new_plddt)
+        if all(file.exists() for file in new_files):
             return True
     except FileNotFoundError:
-        print('False')
         return False
 
+def skeletionize_gmx_folder(gmx_folder,storage_dir):
+    gmx_folder=Path(gmx_folder)
+    storage_dir=Path(storage_dir)
+    storage_dir.mkdir(parents=True,exist_ok=True)
+    [copy(gmx_file,storage_dir.joinpath(gmx_file.name)) for gmx_file in gmx_folder.iterdir() if gmx_file.stem.endswith('_prod')]
 
 def run_Foldx(foldx_file, pdb_file, foldx_command):
     pdb_dir = path.dirname(pdb_file)

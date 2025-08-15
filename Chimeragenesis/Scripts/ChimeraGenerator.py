@@ -130,13 +130,15 @@ def create_chimera_combinations(two_parent_aln_file: str, scanner_length, scanne
     aln_df.add_value(parent2, 'description', {parent2:None})
 
     def scanning_chimera_generator(base_label, partner_label):
-        base_seq=aln_df.get_sequence(base_label)
+        base_aln=aln_df.get_aln(base_label)
         splice_boundaries: list[tuple] = [(x, x + scanner_length) for x in
-                                          range(scanner_start, len(base_seq), scanner_rate) if
-                                          len(base_seq)-x>=scanner_length]
-        for boundary in splice_boundaries:
-            base_splice=base_seq[slice(*boundary)]
-            aln_df.add_protein(f'{base_label}_{partner_label}_{"_".join((str(np.clip(x,0,len(base_seq))) for x in boundary))}',*AccessiontoAlignment.alignment_finder(base_splice,partner_label,base_label,two_parent_aln_file))
+                                          range(scanner_start, len(base_aln)-scanner_length, scanner_rate)]
+        base_splices=set(base_aln[slice(*boundary)].replace("-","") for boundary in splice_boundaries)
+        for splice in base_splices:
+            chimera_aln,inheritance_dict,parent_splice=AccessiontoAlignment.alignment_finder(splice, partner_label, base_label, two_parent_aln_file)
+            parent_splice={key:str(value) for key,value in parent_splice.items()}
+            aln_df.add_protein('_'.join([base_label,parent_splice["base_start"],parent_splice['base_end'],
+                                         partner_label,parent_splice['partner_start'],parent_splice['partner_end']]),chimera_aln,inheritance_dict)
 
     scanning_chimera_generator(parent1, parent2)
     scanning_chimera_generator(parent2, parent1)
@@ -145,8 +147,8 @@ def create_chimera_combinations(two_parent_aln_file: str, scanner_length, scanne
         aln_df.dataframe_to_multi_fa(Path(new_fasta_file).with_suffix('.mfa'))
     return aln_df
 
+
 def create_combinations_no_aln(two_parent_fa_file: str, percentage_cutoff:tuple=(0.35,0.65),new_fasta_file=''):
-    # TODO be able to choose different cutoff per protein
     import sys
     sys.path.append('/scratch/jws6pq/Notebook/ESM/build/')
     import chi_cpp
@@ -186,7 +188,6 @@ def create_combinations_no_aln(two_parent_fa_file: str, percentage_cutoff:tuple=
     aln_df=aln_df._append(base_df)
     aln_df.__class__=SequenceDataframe
     if new_fasta_file:
-        #First place to implement multifile?
         aln_df.dataframe_to_aln(new_fasta_file)
         aln_df.dataframe_to_multi_fa(Path(new_fasta_file).with_suffix('.mfa'))
     return aln_df

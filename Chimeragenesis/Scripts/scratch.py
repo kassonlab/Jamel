@@ -1,3 +1,4 @@
+import ast
 import re
 from collections import Counter
 from datetime import date
@@ -5,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 import torch, umap, Analysis
 from matplotlib import pyplot as plt
-from AccessiontoAlignment import create_dictionary_from_alignment, create_seq_records, fasta_creation, alignment_finder,calculate_sequence_identity
+from AccessiontoAlignment import create_dictionary_from_alignment, create_seq_records, fasta_creation, alignment_finder,calculate_sequence_identity,convert_fasta_aln_to_clustal
 from Bio.Seq import Seq
 from Bio.Align import PairwiseAligner
 from ChimeraClasses import HomomerChimeraArgs
@@ -95,34 +96,23 @@ cuts=[152,350,416,647,821,996,1133,1274,1435] # RAndom CHimeras
 #     for parent in [df.loc['6VSB','sequence'],df.loc['EidolonBat','sequence']]:
 #         identity.append(calculate_sequence_identity(*aligner.align(parent, data['sequence'])[0]))
 #     df.loc[label, 'identity']=max(identity)
-# # get sequence Identity
 
-# for pdb in Path(r'/sfs/weka/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/Eid_sars_v3/SelectedMultimers/PDB/').iterdir():
-#     if (label:=pdb.stem) in ['6VSB_0_534_EidolonBat_548_1264','6VSB_0_534_EidolonBat_549_1264','6VSB_0_534_EidolonBat_550_1264','6VSB','EidolonBat']:
-#         plddt=next(iter(get_plddt_dict_from_pdb(pdb).values()))
-#         plt.plot(range(len(plddt)),plddt,label=label)
-#         plt.xticks(range(0,len(plddt),50))
-# plt.legend()
-# plt.show()
 
-# cmy_tem=pd.read_csv(r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\cmy_tem_embed.csv',index_col='label')
-# cmy=cmy_tem[cmy_tem.index.str.startswith('CMY')]
-# cmy=cmy.sort_values(by='dot_product',ascending=False)
-# cmy=cmy.drop(index='CMY1')
-# Analysis.select_for_af_from_embedding_df(cmy,200,880,r'C:\Users\jamel\PycharmProjects\Jamel\Chimeragenesis\Data\selected_cmy',['TEM1','CMY1'])
 
-# pd.concat([pd.read_csv("/sfs/weka/scratch/jws6pq/Notebook/ESM/B-lac/cmy_tem/cmy_tem_af.csv",index_col='label'),pd.read_csv("/sfs/weka/scratch/jws6pq/Notebook/ESM/B-lac/cmy_tem/cmy_tem_embed.csv",index_col='label')],axis=1).dropna(subset=['Relative Stability (%)']).to_csv('/scratch/jws6pq/Notebook/ESM/B-lac/cmy_tem/combined.csv',index_label='label')
+# df =pd.read_csv(r"..\Data\tem_cmy_aligned_af.csv",index_col='label').sort_values(by='dot_product').iloc[::42]
+# print(*df['dot_product'],sep='\n')
+# print(*df.index,sep='\n')
+# final_7=["CMY1",
+# "TEM1",
+# "CMY1_TEM1_142_299",
+# "CMY1_TEM1_163_326",
+# "CMY1_TEM1_12_160",
+# "CMY1_TEM1_26_235",
+# "CMY1_TEM1_138_307"]
+# tpr="/sfs/weka/scratch/jws6pq/Notebook/ESM/B-lac/aligned_cmy_tem/CMY1_chis/Gromacs/{0}/{0}_prod.tpr"
+# xtc="/sfs/weka/scratch/jws6pq/Notebook/ESM/B-lac/aligned_cmy_tem/CMY1_chis/Gromacs/{0}/{0}_center.xtc"
+# xvg="/sfs/weka/scratch/jws6pq/Notebook/ESM/B-lac/aligned_cmy_tem/CMY1_chis/Gromacs/{0}/{0}.xvg"
+# print({label:xvg.format(label) for label in final_7})
+show(pd.read_csv(r"C:\Users\jamel\Downloads\01mar2025-31may2025_form13f\INFOTABLE.tsv",delimiter='\t'))
+# print(pd.read_csv(r"C:\Users\jamel\Downloads\01mar2025-31may2025_form13f\INFOTABLE.tsv"))
 
-# df = pd.read_csv(r"..\Data\cmy_tem_embed_aligned.csv",index_col='label')
-# Analysis.embedding_dp_vs_length(df,attr_mods={plt.title: f'Total Identity vs. DP'})
-# Analysis.scatterplot_for_df(df,'identity','dot_product',attr_mods={plt.title: f'Total Identity vs. DP'})
-# cmy=df[df.index.str.startswith('CMY')]
-# Analysis.embedding_dp_vs_length(cmy,attr_mods={plt.title: f'CMY Identity vs. DP'})
-# Analysis.scatterplot_for_df(cmy,'identity','dot_product',attr_mods={plt.title: f'CMY Identity vs. DP'})
-# tem=df[df.index.str.startswith('TEM')]
-# Analysis.embedding_dp_vs_length(tem,attr_mods={plt.title: f'TEM Identity vs. DP'})
-# Analysis.scatterplot_for_df(tem,'identity','dot_product',attr_mods={plt.title: f'TEM Identity vs. DP'})
-
-df =pd.read_csv(r"..\Data\tem_cmy_aligned_af.csv",index_col='label').sort_values(by='dot_product').iloc[::42]
-print(*df['dot_product'],sep='\n')
-print(*df.index,sep='\n')

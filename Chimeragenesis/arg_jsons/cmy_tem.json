@@ -15,14 +15,16 @@
         "proteins_per_slurm": 60,
         "alphafold_shell_script": "/scratch/jws6pq/Notebook/ESM/Chimeragenesis/AlphaFold.sh",
         "embedding_shell_script": "/scratch/jws6pq/Notebook/ESM/Chimeragenesis/prost.slurm",
-        "alphafold_settings": {"-p":"gpu", "--gres":"gpu:a40:1", "-N":1, "-n":3, "-A":" ", "--mem":"350000", "--time":"72:00:00","-J": "cmytem"},
-        "embedding_settings": {"-p":"gpu", "--gres":"gpu:a100:1", "-N":1, "-n":3, "-A":"", "--time":"72:00:00","-J": "cmytem"},
+        "alphafold_settings": {"-p":"gpu", "--gres":"gpu:a40:1", "-N":1, "-n":3, "-A":" kassonlab", "--mem":"350000", "--time":"72:00:00","-J": "cmytem"},
+        "embedding_settings": {"-p":"gpu", "--gres":"gpu:a100:1", "-N":1, "-n":3, "-A":"kassonlab", "--time":"72:00:00","-J": "cmytem"},
         "gromacs_settings": {
             "-p": "gpu",
             "--gres": "gpu:1",
             "-N": 1,
-            "-A": "",
-            "--time": "72:00:00"
+            "-A": "kassonlab",
+            "--time": "72:00:00",
+	"--mail-user":"jws6pq@virginia.edu",
+	"--mail-type":"BEGIN,END,FAIL"
         },
         "gromacs_setup": {
             "gmx_command":"gmx_mpi",

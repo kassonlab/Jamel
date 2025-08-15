@@ -78,18 +78,18 @@ chimera_types={'h':ChimeraClasses.HomomerChimeraArgs,'nh':ChimeraClasses.NonHomo
 if __name__ == '__main__':
     chimera_type=chimera_types[args.mode]
     TOTAL_ARGS = chimera_type(args.arg_jsons)
-    if hasattr(args, 'fasta') or hasattr(args, 'submission') or hasattr(args, 'analysis'):
-        operation_args = (args.fasta, args.submission, args.analysis)
-        if any(operation_args) and operation_args:
-            for key in TOTAL_ARGS.operation_toggles:
-                TOTAL_ARGS.operation_toggles[key] = False
-    if TOTAL_ARGS.operation_toggles['fasta_operations']:
+    operation_args = (args.fasta, args.submission, args.analysis)
+    if any(operation_args):
+        for key in TOTAL_ARGS.operation_toggles:
+            TOTAL_ARGS.operation_toggles[key] = False
+
+    if TOTAL_ARGS.operation_toggles['fasta_operations'] or args.fasta:
         TOTAL_ARGS.fasta_operations()
 
-    if TOTAL_ARGS.operation_toggles['submission_operations']:
+    if TOTAL_ARGS.operation_toggles['submission_operations'] or args.submission:
         TOTAL_ARGS.submission_operations()
 
-    if TOTAL_ARGS.operation_toggles['analysis_operations']:
+    if TOTAL_ARGS.operation_toggles['analysis_operations'] or args.analysis:
         TOTAL_ARGS.analysis_operations()
 
 

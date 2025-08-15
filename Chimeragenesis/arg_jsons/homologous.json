@@ -1,30 +1,43 @@
 {
     "operation_toggles": {
-        "fasta_operations": false, "submission_operations":true,"analysis_operations": false
+        "fasta_operations": false, "submission_operations":false,"analysis_operations": true
     },
     "fasta_arguments": {
-        "base_identifier": "PDTH-2",
+        "output_directory": "/Notebook/ESM/B-lac/aligned_cmy_tem/CMY1_chis/",
+        "parent_msa": "/Notebook/ESM/B-lac/aligned_cmy_tem/cmy_tem.aln",
+        "collective_fasta": "/Notebook/ESM/B-lac/aligned_cmy_tem/cmy_tem.inh",
         "number_of_subunits": 1,
-        "wildtype_convention": "",
-        "chimera_convention": "",
-        "output_directory": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\Data",
-        "sequence_of_interest": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\Data\\PDT0_139.fa",
-        "fasta_list_file_name": "homo_test",
-        "parent_msa": "C:\\Users\\jamel\\PycharmProjects\\Jamel\\Chimeragenesis\\Data\\PDTvPDK_chimera.inh",
-        "collective_fasta": "",
-        "email_for_accession": "example@outlook.com"
+        "sequence_identity_cutoff": 0.75
     },
     "submission_arguments": {
-        "submission_toggles": {"create_slurms":false,"sbatch_slurms": false,"stragglers_or_custom_or_all": "stragglers","create_file_of_stragglers": false},
-        "file_stem_placeholder": "",
-        "custom_list_to_run": "",
-        "proteins_per_slurm": 9,
-        "slurm_naming": "P_M_ShiftedAlphaFold",
-        "alphafold_shell_script": "/gpfs/gpfs0/scratch/jws6pq/BridCMfiles/MultimerAlphaFold.sh"
+        "submission_toggles": {"make_slurm_files":false,"run_stragglers":false,"get_embeddings": false,"run_AF":false,
+            "run_gromacs": true},
+        "custom_label_list": "/sfs/weka/Notebook/ESM/B-lac/aligned_cmy_tem/CMY1_chis/gromacs_selected",
+        "proteins_per_slurm": 60,
+        "alphafold_shell_script": "/Notebook/ESM/Chimeragenesis/AlphaFold.sh",
+        "embedding_shell_script": "/Notebook/ESM/Chimeragenesis/prost.slurm",
+        "alphafold_settings": {"-p":"gpu", "--gres":"gpu:a40:1", "-N":1, "-n":3, "-A":" ", "--mem":"350000", "--time":"72:00:00","-J": "cmytem"},
+        "embedding_settings": {"-p":"gpu", "--gres":"gpu:a100:1", "-N":1, "-n":3, "-A":"", "--time":"72:00:00","-J": "cmytem"},
+        "gromacs_settings": {
+            "-p": "gpu",
+            "--gres": "gpu:1",
+            "-N": 1,
+            "-A": "",
+            "--time": "72:00:00",
+	"--mail-user":"jws6pq@virginia.edu",
+	"--mail-type":"BEGIN,END,FAIL"
+        },
+        "gromacs_setup": {
+            "gmx_command":"gmx_mpi",
+            "forcefield":"charmm36-jul2022",
+            "working_directory":"/Notebook/ESM/Chimeragenesis/",
+            "necessary_commands":["module purge",
+            "module load nvompi apptainer gromacs/2025.1","export GMXLIB=/Notebook/ESM/Chimeragenesis/"]
+       }
     },
     "analysis_arguments": {
-        "analysis_toggles": {"make_plddts": true,"analyze_embeddings": true,"analyze_alphafold": false},
-        "analysis_output_file": "/sfs/weka/scratch/jws6pq/Notebook/ESM/SARS_Embeddings/eid_sars.csv",
-        "metadata": {"function_used": "per_res", "averaging_used": "mean","selection": "top20+every5000"}
+        "analysis_toggles": {"make_plddts": true,"analyze_embeddings": false,"analyze_alphafold": false,"analyze_gromacs": true},
+        "metadata": {"function_used": "per_res", "averaging_used": "mean","selection": "aligned_b_lac"},
+        "analysis_output_file": "/Notebook/ESM/B-lac/aligned_cmy_tem/cmy_tem_aligned_af.csv"
     }
 }

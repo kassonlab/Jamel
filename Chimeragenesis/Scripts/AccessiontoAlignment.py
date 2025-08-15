@@ -157,7 +157,7 @@ def run_emboss_needle(new_emboss_file, sequence_one: str, sequence_two: str, emb
                    shell=True)
 
 
-def calculate_sequence_identity(aln_seq_1='', aln_seq_2='',seq_1='',seq_2=''):
+def calculate_sequence_identity(aln_seq_1='', aln_seq_2='', seq_1='', seq_2=''):
     if seq_2 and seq_1:
         aligner = PairwiseAligner()
         aligner.mode = 'global'
@@ -185,14 +185,14 @@ def no_gap_sequence_from_alignment(alignment_seq):
     return re.sub(r'[^a-zA-Z]', '', alignment_seq)
 
 
-def find_overlapping_matches(string,substring):
+def find_overlapping_matches(string, substring):
     return [m.span()[0] for m in re.finditer(rf'(?={substring})', string)]
 
 
 def alignment_finder(sequence_of_interest, partner_label, base_label, aln_file):
     """Takes a fasta style alignment and a sequence_of_interest from a base_protein and returns the sequence of the
     comparison_protein that aligns with the sequence_of_interest in the base sequence, as well as the python index boundaries
-     for the found_alignment of the comparison_protein. base_protein and comparison_protein must be the names following
+     for the found_seq of the comparison_protein. base_protein and comparison_protein must be the names following
       '>' in the alignment file"""
     # Matching python indexing for the indexing from the alignment with some amount of '-' and indexing in the regular sequence
     aln = create_dictionary_from_alignment(aln_file)
@@ -201,46 +201,58 @@ def alignment_finder(sequence_of_interest, partner_label, base_label, aln_file):
     base_aln_indexing = get_alignment_indexing(base_aln)
     # Creating a regular sequence without '-'
     base_seq = no_gap_sequence_from_alignment(base_aln)
-    interest_len=len(sequence_of_interest)
-    # TODO account for not finding in partner
-    # TODO account for finding multiple of the same sequence in both base and partner
-    matches=find_overlapping_matches(base_seq,sequence_of_interest)
-    if len(matches)==0:
+    interest_len = len(sequence_of_interest)
+    matches = find_overlapping_matches(base_seq, sequence_of_interest)
+    if len(matches) == 0:
         raise ValueError('Could not find sequence of interest in base sequence')
-    if len(matches)>1:
+    if len(matches) > 1:
         raise ValueError('Sequence of interest is non-specific. Found multiple occurences')
     else:
-        base_start=matches[0]
-        base_end=base_start+interest_len-1
+        base_start = matches[0]
+        base_end = base_start + interest_len - 1
         # Boundaries are given in python index
         alignment_base_start = base_aln_indexing[base_start]
         # Because indexing is exclusive the final index is put up one
         alignment_base_end = base_aln_indexing[base_end] + 1
         # Pulling the section of the comparison_sequence that overlaps with the sequence_of_interest
-        found_alignment = no_gap_sequence_from_alignment(partner_aln[alignment_base_start:alignment_base_end])
-        if found_alignment:
+        found_seq = no_gap_sequence_from_alignment(partner_aln[alignment_base_start:alignment_base_end])
+        if found_seq:
             # I'm finding the first occurence of an amino acid in the alignment that overlaps with the sequence of interest
             # in order to calculate the indices in the regular sequence
-            partner_indexing=get_alignment_indexing(partner_aln)
-            min_abs = sorted(partner_indexing,key=lambda x:abs(alignment_base_start-x))
-            lowest_2=list(alignment_base_start-x for x in min_abs[0:2])
-            if abs(lowest_2[0])==abs(lowest_2[1]):
-                closest_aln_pos=min(min_abs[0:2],key=lambda x:alignment_base_start-x)
+            partner_indexing = get_alignment_indexing(partner_aln)
+            min_abs = sorted(partner_indexing, key=lambda x: abs(alignment_base_start - x))
+            lowest_2 = list(alignment_base_start - x for x in min_abs[0:2])
+            if abs(lowest_2[0]) == abs(lowest_2[1]):
+                closest_aln_pos = min(min_abs[0:2], key=lambda x: alignment_base_start - x)
             else:
-                closest_aln_pos=min_abs[0]
-            partner_start=partner_indexing.index(closest_aln_pos)
-            partner_end=partner_start+len(found_alignment)-1
+                closest_aln_pos = min_abs[0]
+            partner_start = partner_indexing.index(closest_aln_pos)
+            partner_end = partner_start + len(found_seq) - 1
         else:
-            # if there are no amino acids in the complement (meaning found_alignment is empty) then the inheritance dict will show accordingly
-            partner_start=partner_end=0
+            # if there are no amino acids in the complement (meaning found_seq is empty) then the inheritance dict will show accordingly
+            partner_start = partner_end = 0
         chimera_aln_seq = base_aln.replace(base_aln[alignment_base_start:alignment_base_end],
                                            partner_aln[alignment_base_start:alignment_base_end])
         # this inheritance dictionary shows the splice boundaries from a given parent and gives the corresponding boundary in the chimera where that parent sequence is.
         # data structure is {parent:{parent_splice:chimera_splice}}
-        inheritance = {base_label: {(0, base_start): (0, base_start), (base_end, len(base_seq)): (base_start + len(found_alignment) - 1, len(chimera_aln_seq.replace('-','')))},
-            partner_label: {(partner_start, partner_end): (base_start, base_start + len(found_alignment) - 1)}}
-        return chimera_aln_seq, inheritance
+        inheritance = make_inheritance_dict(base_label, base_seq, (base_start, base_end), partner_label,
+                                            (partner_start, partner_end),
+                                            no_gap_sequence_from_alignment(chimera_aln_seq), len(found_seq))
+        splice_boundaries={'base_start':base_start,'base_end':base_end,'partner_start':partner_start,'partner_end':partner_end}
+        return chimera_aln_seq, inheritance,splice_boundaries
 
+
+def make_inheritance_dict(base_label: str, base_seq: str, base_boundaries: tuple, partner_label: str,
+                          partner_boundaries: tuple, chimera_seq: str, insertion_length: int):
+    base_start, base_end = base_boundaries
+    partner_start, partner_end = partner_boundaries
+    return {base_label: {(0, base_start): (0, base_start), (base_end, len(base_seq)): (
+        base_start + insertion_length - 1, len(chimera_seq))},
+            partner_label: {(partner_start, partner_end): (base_start, base_start + insertion_length - 1)}}
+
+def convert_fasta_aln_to_clustal(fasta_file,new_clustal):
+    records = SeqIO.parse(fasta_file, "fasta")
+    count = SeqIO.write(records, new_clustal, "clustal")
 
 def map_plddt_to_aln(aln_seq, plddt):
     aln_index = get_alignment_indexing(aln_seq)
@@ -274,7 +286,7 @@ def check_mutation_cutoff(cutoff, seq_1, seq_2):
 
 def exclude_related_sequences(cutoff, alignment_file, starting_sequence, included_file='', excluded_file=''):
     """Filters alignment sequences based on provided sequence identity cutoff"""
-    seq_dict=create_dictionary_from_alignment(alignment_file)
+    seq_dict = create_dictionary_from_alignment(alignment_file)
     included = {starting_sequence: seq_dict[starting_sequence]}
     excluded = {}
     for strain, sequence in seq_dict.items():
@@ -290,9 +302,9 @@ def exclude_related_sequences(cutoff, alignment_file, starting_sequence, include
     print('excluded:', len(excluded))
     print('included:', len(included))
     if included_file:
-        dictionary_to_fasta(included,included_file)
+        dictionary_to_fasta(included, included_file)
     if excluded_file:
-        dictionary_to_fasta(excluded,excluded_file)
+        dictionary_to_fasta(excluded, excluded_file)
 
 
 def create_list_of_fasta_files(list_of_fastas, file_name):
