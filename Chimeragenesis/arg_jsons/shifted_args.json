@@ -6,7 +6,8 @@
         "output_directory": "/scratch/jws6pq/Notebook/ESM/B-lac/aligned_cmy_tem/CMY1_chis/",
         "parent_msa": "/scratch/jws6pq/Notebook/ESM/B-lac/aligned_cmy_tem/cmy_tem.aln",
         "collective_fasta": "/scratch/jws6pq/Notebook/ESM/B-lac/aligned_cmy_tem/cmy_tem.inh",
-        "number_of_subunits": 1
+        "number_of_subunits": 1,
+        "scanner_size": {"lower": 0.35,"upper": 0.65}
     },
     "submission_arguments": {
         "submission_toggles": {"make_slurm_files":false,"run_stragglers":false,"get_embeddings": false,"run_AF":false,

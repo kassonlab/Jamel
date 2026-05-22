@@ -4,7 +4,6 @@
 """Routines to generate chimeric sequences."""
 import numpy as np
 import pandas as pd
-
 import AccessiontoAlignment
 from pathlib import Path
 from json import load, dump

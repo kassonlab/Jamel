@@ -5,13 +5,13 @@ from json import load
 from pathlib import Path
 import numpy as np
 import pandas as pd
-
+#TODO use gui to make json and save it if running for the first time
 """
 Contained below are all the arguments found in the chimera generation jsons that require deeper explanation outside their name. 
 This is not an exhaustive list
 
 #Fasta Arguments#
-number_of_subunits: int: 'Number representing how many homo-monomeric proteins make up the quartenary structure of your protein'
+number_of_subunits: int: 'Number representing how many homo-monomeric proteins make up the quaternary structure of your protein'
 
 sequence_of_interest: str: 'This is the path to the fasta containing the sequence of either the constant protein you want spliced into the 
 variant proteins, or the section of the variants you want replaced with the constant protein. Each sequence of 
@@ -34,6 +34,10 @@ Make_pair_or_combo_heteromers: bool
 is entered in the json file, if "pair" is entered all chimera lists in the per json file will be paired one to 
 one to one etc. or single file list will be created for homomeric proteins. Switch toggle to pair if you one of 
 your unique proteins will not be a chimera'
+
+scanner_size(%): = {"lower": 0.35,"upper": 0.65}
+'Controlling scanner size for "shifted chimeras" by clamping it length to a lower and upper fraction of the total length of the parent alignment. 
+E.g. if lower is set to 0.35, the smallest the scanner can be is 35% of the length of the parent alignment.'
 
 #Submission Argument#
 
@@ -108,22 +112,20 @@ def make_slurm_content(sbatch_flags: dict, commands: list, shebang='#!/bin/bash'
 def alphafold_submission(fastas_to_run, alphafold_shell_script: str, output_directory: str, slurm_settings: dict,
                          proteins_per_slurm=7, make_slurms=False):
     output_directory = Path(output_directory)
-    #TODO so alpha_Dir is output instead of crteating a directory
     output_directory.mkdir(exist_ok=True)
-    # TODO fix so this only does one at a time??
     for slurm_index, file_index in enumerate(range(0, len(fastas_to_run), proteins_per_slurm)):
         settings = dict(slurm_settings)
         fastas = ",".join(fastas_to_run[file_index:file_index + proteins_per_slurm])
         submit_args = ['sh', alphafold_shell_script, fastas, str(output_directory)]
         job_id = str(slurm_index) + settings.get('-J', 'slurm')
         settings['-J'] = job_id
+        slurm_directory = output_directory.parent.joinpath('Slurms')
+        slurm_directory.mkdir(exist_ok=True)
         if not settings.get('-e', None):
-            # TODO need to make it so Slurm is made as a sibling of output_directory
-            settings['-e'] = output_directory.joinpath('Slurms', job_id).with_suffix(".err")
+            settings['-e'] = slurm_directory.joinpath(job_id).with_suffix(".err")
         input_slurm = make_slurm_content(settings, [' '.join(submit_args)])
         if make_slurms:
-            output_directory.joinpath('Slurms').mkdir(exist_ok=True)
-            new_slurm = output_directory.joinpath('Slurms', job_id).with_suffix('.slurm')
+            new_slurm = slurm_directory.joinpath(job_id).with_suffix('.slurm')
             new_slurm.write_text(input_slurm)
         result = subprocess.run(['sbatch'], text=True, input=input_slurm, capture_output=True)
         print(result.stdout, result.stderr)
@@ -134,10 +136,11 @@ def prost_submission(fasta_file_to_run, new_pkl_file, output_directory, prost_sh
     settings = dict(slurm_settings)
     submit_args = ['sh', prost_shell_script, fasta_file_to_run, new_pkl_file]
     input_slurm = make_slurm_content(settings, [' '.join(submit_args)])
-    # TODO need to make it so Slurm is made as a sibling of output_directory
+
     if make_slurms:
-        output_directory.joinpath('Slurms').mkdir(exist_ok=True)
-        new_slurm = output_directory.joinpath('Slurms', slurm_settings.get('-J', 'embed_slurm')).with_suffix('.slurm')
+        slurm_directory=output_directory.parent.joinpath('Slurms')
+        slurm_directory.mkdir(exist_ok=True)
+        new_slurm = slurm_directory.joinpath(slurm_settings.get('-J', 'embed_slurm')).with_suffix('.slurm')
         new_slurm.write_text(input_slurm)
     result = subprocess.run(['sbatch'], text=True, input=input_slurm, capture_output=True)
     print(result.stdout, result.stderr)
@@ -229,7 +232,7 @@ class FastaArguments:
     sequence_of_interest: str
     base_identifier: str
     sequence_identity_cutoff: float
-
+    scanner_size:dict
     def __init__(self, fasta_dict):
         for key, value in fasta_dict.items():
             setattr(self, key, value)
@@ -461,12 +464,13 @@ class ChimeraArgs:
 
 
 class NonHomologyChimeraArgs(ChimeraArgs):
+    # Used to make termini stitched chimeras between non-homologous partners
     def __init__(self, nonhomology_json_file):
         super().__init__(nonhomology_json_file)
 
 
 class HomomerChimeraArgs(ChimeraArgs):
-
+    # Used to make single domain insertion chimeras between multiple homologous partners,
     def __init__(self, arg_json, full_use=True):
         super().__init__(arg_json)
         self.all_fastas = None
@@ -525,6 +529,7 @@ class HomomerChimeraArgs(ChimeraArgs):
 
 
 class ShiftedChimeraArgs(ChimeraArgs):
+    # Used to make multiple domain insertion chimeras between a single pair of homologous partners
     argument_dict: dict
     operation_toggles: dict
     run_fasta_operation: str
@@ -535,13 +540,16 @@ class ShiftedChimeraArgs(ChimeraArgs):
         super().__init__(shifted_json_file)
 
     def fasta_operations(self):
-        # TODO make splice_percents modular
-        min_splice_percent = .35
-        max_splice_percent = .65
+        min_splice_percent = self.fasta_args.scanner_size['lower']
+        max_splice_percent = self.fasta_args.scanner_size['upper']
         seq_dict = AccessiontoAlignment.create_dictionary_from_alignment(self.fasta_args.parent_msa)
         aln_len = len(list(seq_dict.values())[0])
-        aln_dfs = []
         #Could improve algorithm by only looking at full sequences instead of looking at gapped sequences
+        aln_df = ESM.SequenceDataframe(self.fasta_args.parent_msa)
+        parent1, parent2 = aln_df.index
+        aln_df.add_value(parent1, 'description', {parent1: None})
+        aln_df.add_value(parent2, 'description', {parent2: None})
+        aln_dfs = [aln_df]
         for scanner in range(round(min_splice_percent * aln_len), round(max_splice_percent * aln_len)):
             aln_dfs.append(
                 ChimeraGenerator.create_chimera_combinations(self.fasta_args.parent_msa, scanner, 0))
@@ -557,10 +565,6 @@ class ShiftedChimeraArgs(ChimeraArgs):
         num_chunks = chimera_df.shape[0] / 2000
         chunks: list[ESM.SequenceDataframe] = [ESM.SequenceDataframe(unconverted_df=chunk) for chunk in
                                                np.array_split(chimera_df, num_chunks)]
-        aln_df = ESM.SequenceDataframe(self.fasta_args.parent_msa)
-        parent1, parent2 = aln_df.index
-        aln_df.add_value(parent1, 'description', {parent1: None})
-        aln_df.add_value(parent2, 'description', {parent2: None})
         for ind, chunk in enumerate(chunks):
             chunk = ESM.SequenceDataframe(unconverted_df=chunk._append(aln_df))
             chunk.dataframe_to_aln(
@@ -569,23 +573,26 @@ class ShiftedChimeraArgs(ChimeraArgs):
 
     def analysis_operations(self):
         analysis_toggles = self.analysis_args.analysis_toggles
-        # TODO make this universal
         if analysis_toggles['analyze_embeddings'] and not analysis_toggles['analyze_alphafold']:
             embeddings = []
             func = ESM.NormType.dot_product
             dist_type = func.name
             for chunk_fasta in self.fasta_chunk_dir.iterdir():
                 embed_file = self.embed_chunk_dir.joinpath(chunk_fasta.stem).with_suffix('.pkl')
-                if not chunk_fasta.exists() and embed_file.exists():
-                    raise FileNotFoundError("Either the fasta or the corresponding embedding pkl file doesn't exist")
-                embedding_df = ESM.SequenceDataframe(chunk_fasta.__str__(), embed_file.__str__())
-                embedding_df.score_all_per_res(func)
-                embedding_df[f'{dist_type}_rank'] = embedding_df[dist_type].rank(
-                    ascending=func != ESM.NormType.cosine and func != ESM.NormType.dot_product)
-                embedding_df.drop(columns=['aln_sequence', 'sequence', 'description'])
-                embedding_df.get_sequence_identity()
-                del embedding_df.EMBEDDINGS_DICT
-                embeddings.append(embedding_df)
+                try:
+                    if not chunk_fasta.exists() and embed_file.exists():
+                        raise FileNotFoundError("Either the fasta or the corresponding embedding pkl file doesn't exist")
+                    embedding_df = ESM.SequenceDataframe(chunk_fasta.__str__(), embed_file.__str__())
+                    embedding_df.score_all_per_res(func)
+                    embedding_df[f'{dist_type}_rank'] = embedding_df[dist_type].rank(
+                        ascending=func != ESM.NormType.cosine and func != ESM.NormType.dot_product)
+                    embedding_df.drop(columns=['aln_sequence', 'sequence', 'description'])
+                    embedding_df.get_sequence_identity()
+                    del embedding_df.EMBEDDINGS_DICT
+                    embeddings.append(embedding_df)
+                except Exception as e:
+                    print(e)
+                    print(embed_file)
 
             embeddings = pd.concat(embeddings)
             embeddings = embeddings.loc[:, ~embeddings.columns.duplicated()]

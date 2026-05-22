@@ -327,3 +327,6 @@ def straighten_alignment(aln_file, new_aln_file):
     with open(aln_file, "r") as aln, open(new_aln_file, "w") as out:
         records = SeqIO.parse(aln, "fasta")
         SeqIO.write(records, out, 'fasta-2line')
+
+
+

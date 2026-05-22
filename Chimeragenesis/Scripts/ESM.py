@@ -58,12 +58,9 @@ def dot_product(tensor1: torch.Tensor, tensor2: torch.Tensor):
     tensor1 = tensor1.flatten()
     return torch.dot(tensor1, tensor2).item()
 
-
-
 # Used in conjunction with NormType enum for distance function selection
 func_dict = {'euclidean_norm': euclidean_norm, 'manhattan_norm': manhattan_norm, 'cosine_similarity': cosine_similarity,
               'dot_product': dot_product}
-
 
 class NormType(Enum):
     euclidean = 'euclidean_norm'
@@ -225,9 +222,6 @@ class SequenceDataframe(pd.DataFrame):
         distance = []
         for parent, splices in inheritance.items():
             for parent_splice, chi_splice in splices.items():
-                # TODO need to ensure the shape matches with expectation, meaning embeddings are same length as sequences,
-                # TODO although not sure how to check because some will have paddings,
-                # TODO maybe i check for typical hidden dimension length??
                 for parent_pos,chi_pos in zip(range(*parent_splice), range(*chi_splice)):
                     distance.append(tensor_distance(self.EMBEDDINGS_DICT[chi_label][chi_pos], self.EMBEDDINGS_DICT[parent][parent_pos], dist_func))
         self.loc[chi_label, dist_func.name] = np.mean(distance)

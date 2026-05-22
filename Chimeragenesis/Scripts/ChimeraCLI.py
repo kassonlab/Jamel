@@ -4,8 +4,6 @@ import ChimeraClasses
 import ChimeraGenerator
 import argparse
 
-# TODO be able to designate multiple seq_of_interest
-# TODO be able tos swap into the constant
 parser = argparse.ArgumentParser(
     description='Creating chimeric proteins where a region from a constant protein is spliced into a list of '
                 'homologus regions between a protein family or vice versa')
